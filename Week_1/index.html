@@ -73,27 +73,22 @@
         transform: translate(-50%, -50%);
         display: none;
         text-align: center;
-      }
-      #unity-logo {
-        width: 100px;
-        height: 100px;
-        margin: 0 auto 20px auto;
-        background: url('TemplateData/unity-logo-dark.png') no-repeat center;
-        background-size: contain;
+        z-index: 50;
       }
       #unity-progress-bar-empty {
-        width: 200px;
+        width: 240px;
         height: 12px;
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.15);
         border-radius: 6px;
         overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.25);
       }
       #unity-progress-bar-full {
         width: 0%;
         height: 100%;
         background: #409eff;
         border-radius: 6px;
-        transition: width 0.2s ease;
+        transition: width 0.1s ease;
       }
       #unity-warning {
         position: absolute;
@@ -182,9 +177,9 @@
       var buildUrl = "Build";
       var loaderUrl = buildUrl + "/Week_1.loader.js";
       var config = {
-        dataUrl: buildUrl + "/Week_1.data.br",
-        frameworkUrl: buildUrl + "/Week_1.framework.js.br",
-        codeUrl: buildUrl + "/Week_1.wasm.br",
+        dataUrl: buildUrl + "/Week_1.data",
+        frameworkUrl: buildUrl + "/Week_1.framework.js",
+        codeUrl: buildUrl + "/Week_1.wasm",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "DefaultCompany",
         productName: "My project",
