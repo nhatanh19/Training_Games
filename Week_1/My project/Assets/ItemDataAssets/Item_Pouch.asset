@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf03d18c799c75342bb614701414484b, type: 3}
+  m_Name: Item_Pouch
+  m_EditorClassIdentifier: 
+  _id: item_pouch
+  _itemName: Túi Vàng May Mắn
+  _icon: {fileID: 21300000, guid: 5fba9d0c4e294c97bb4ca15324d78cfb, type: 3}
+  _maxStack: 50
+  _type: 0
+  _description: Sử dụng để nhận ngay túi tiền thưởng giá trị.
