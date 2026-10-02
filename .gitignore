@@ -19,9 +19,12 @@
 # Allow WebGL builds placed under Week folders for GitHub Pages
 !**/Week_*/Build/
 !**/Week_*/Build/**
+!**/Week_*/Build_WebGL/
+!**/Week_*/Build_WebGL/**
 !**/Week_*/TemplateData/
 !**/Week_*/TemplateData/**
 !**/Week_*/index.html
+!**/Week_*/Build_WebGL/index.html
 
 # --- Asset / Package Cache ---
 AssetBundles/
