@@ -16,6 +16,9 @@ public class BottleController : MonoBehaviour
 
     [Header("VFX & SFX References")]
     [SerializeField] private ParticleSystem completeParticle;
+    
+    [Header("Mouth Reference")]
+    [SerializeField] private Transform _mouthPoint;
 
     private bool isLocked = false;
     public bool IsLocked => isLocked;
@@ -148,12 +151,16 @@ public class BottleController : MonoBehaviour
 
     public void PourInto(BottleController targetBottle, System.Action onFinish)
     {
+        int sourceColorCount = GetTopColorCount();
+        int targetSpace = targetBottle.AvailableSpace;
+        int amountToPour = Mathf.Min(sourceColorCount, targetSpace);
+
         bool isLeft = transform.position.x < targetBottle.transform.position.x;
 
         float xOffset = isLeft ? -0.55f : 0.55f;
         float targetAngle = isLeft ? -70f : 70f;
 
-        Vector3 pourPosition = targetBottle.transform.position + new Vector3(xOffset, 1.4f, 0);
+        Vector3 pourPosition = targetBottle.MouthPosition + new Vector3(xOffset, 0.2f, 0);
 
         Sequence pourSeq = DOTween.Sequence();
 
@@ -161,9 +168,12 @@ public class BottleController : MonoBehaviour
         pourSeq.Append(transform.DORotate(new Vector3(0, 0, targetAngle), 0.3f).SetEase(Ease.InOutSine));
         pourSeq.AppendCallback(() =>
         {
-            Color colorToTransfer = RemoveWater();
-            targetBottle.AddWater(colorToTransfer);
-            GameManager.Instance.PlayPourSFX();
+            for (int i = 0; i < amountToPour; i++)
+            {
+                Color colorToTransfer = RemoveWater();
+                targetBottle.AddWater(colorToTransfer);
+            }
+            WaterSortController.Instance.PlayPourSFX();
         });
         pourSeq.AppendInterval(0.25f);
         pourSeq.Append(transform.DORotate(Vector3.zero, 0.25f).SetEase(Ease.InSine));
@@ -174,14 +184,62 @@ public class BottleController : MonoBehaviour
         });
     }
 
-    public void ResetState()
+
+    //=====================
+    public void SetupBottle(Vector3 spawnPosition, List<Color> initialColors)
     {
         transform.DOKill();
-        transform.position = originalPosition;
+        originalPosition = spawnPosition;
+        transform.position = spawnPosition;
         transform.rotation = Quaternion.identity;
         isLocked = false;
         isSelected = false;
+        Initialize(initialColors);
+    }
+    public void ResetState()
+    {
+        transform.DOKill();
+        transform.rotation = Quaternion.identity;
+        isLocked = false;
+        isSelected = false;
+        if (completeParticle != null)
+        {
+            completeParticle.Stop();
+            completeParticle.Clear();
+        }
         colorStack.Clear();
         UpdateVisual();
+    }
+    //=====================
+
+
+    public void SetOriginPosition(Vector3 newPos)
+    {
+        originalPosition = newPos;
+        transform.position = newPos;
+    }
+
+    public int GetTopColorCount(){
+        if(IsEmpty) return 0;
+        Color topColor = colorStack.Peek();
+        int count  = 0;
+        foreach (Color color in colorStack){
+            if(color == topColor){
+                count++;
+            } else{
+                break;
+            }
+        }
+        return count;
+    }
+
+    //lấy dung tích còn lại của ống
+    public int AvailableSpace => MAX_CAPACITY - CurrentWaterCount;
+
+    //lấy tọa độ miệng ống
+    public Vector3 MouthPosition => _mouthPoint != null ? _mouthPoint.position : transform.position + Vector3.up * 1.5f;
+
+    private void OnDestroy(){
+        transform.DOKill();
     }
 }

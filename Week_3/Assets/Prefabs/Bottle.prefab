@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2227403072357094708
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3628453472028306913}
+  m_Layer: 0
+  m_Name: MouthPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3628453472028306913
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2227403072357094708}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.703, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1092324656375299247}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2389042146976870677
 GameObject:
   m_ObjectHideFlags: 0
@@ -279,8 +310,8 @@ Transform:
   m_GameObject: {fileID: 6341074414798369060}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.1081, y: 0.2703, z: 0}
-  m_LocalScale: {x: 0.51982003, y: 0.84567, z: 0.7}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.41232127, y: 0.6107601, z: 0.7}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 3708748948070490911}
@@ -289,6 +320,7 @@ Transform:
   - {fileID: 1368631514045371304}
   - {fileID: 3402229175607859352}
   - {fileID: 984920246067061321}
+  - {fileID: 3628453472028306913}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &743911715339493756
@@ -408,6 +440,7 @@ MonoBehaviour:
   - {fileID: 2894507201379057654}
   - {fileID: 2562349023545906510}
   completeParticle: {fileID: 697340796011226125}
+  _mouthPoint: {fileID: 0}
 --- !u!1 &7487169363798037414
 GameObject:
   m_ObjectHideFlags: 0
