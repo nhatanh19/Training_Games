@@ -12,16 +12,6 @@ public class WinPopupUI : MonoBehaviour
 
     void Awake()
     {
-        if (_nextLevelButton != null)
-        {
-            _nextLevelButton.onClick.AddListener(OnNextLevelClicked);
-        }
-
-        if (_replayButton != null)
-        {
-            _replayButton.onClick.AddListener(OnReplayClicked);
-        }
-
         Hide();
     }
 
@@ -46,13 +36,13 @@ public class WinPopupUI : MonoBehaviour
         }
     }
 
-    private void OnNextLevelClicked()
+    public void OnNextLevelClicked()
     {
         Hide();
         LevelManager.Instance.NextLevel();
     }
 
-    private void OnReplayClicked()
+    public void OnReplayClicked()
     {
         Hide();
         LevelManager.Instance.RestartCurrentLevel();

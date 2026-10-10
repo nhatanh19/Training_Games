@@ -46,22 +46,6 @@ public class WaterSortController : MonoBehaviour
     void Start()
     {
         _mainCamera = Camera.main;
-
-        if (_resetButton != null)
-        {
-            _resetButton.onClick.AddListener(() =>
-            {
-                LevelManager.Instance.RestartCurrentLevel();
-            });
-        }
-
-        if (_resetToLevelOneButton != null)
-        {
-            _resetToLevelOneButton.onClick.AddListener(() =>
-            {
-                LevelManager.Instance.ResetToLevelOne();
-            });
-        }
     }
 
     public void OnLevelLoaded(List<BottleController> newBottles)
