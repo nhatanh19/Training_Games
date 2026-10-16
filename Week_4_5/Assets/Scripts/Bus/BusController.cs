@@ -18,6 +18,8 @@ public class BusController : MonoBehaviour
     [SerializeField] private List<Transform> seatPoints = new List<Transform>();
 
     private GridManager _gridManager;
+    private BusStopSlot _assignedSlot;
+    private int _passengersCount = 0;
     private bool _isBusy = false;
 
     public BusColor Color => busColor;
@@ -25,6 +27,7 @@ public class BusController : MonoBehaviour
     public int Length => length;
     public Vector2Int RootGridPosition => rootGridPosition;
     public List<Transform> SeatPoints => seatPoints;
+    public bool HasEmptySeat => _passengersCount < 3;
 
     private void OnValidate()
     {
@@ -139,16 +142,85 @@ public class BusController : MonoBehaviour
 
     private void OnMouseDown()
     {
-        if (_isBusy) return;
+        if (_isBusy || _assignedSlot != null) return;
 
-        if (CanExit())
-        {
-            Debug.Log($"Xe {busColor} thông đường, sẵn sàng xuất bến!");
-        }
-        else
+        if (!CanExit())
         {
             PlayBlockedFeedback();
+            return;
         }
+
+        if (BusStopManager.Instance == null || !BusStopManager.Instance.HasAvailableSlot)
+        {
+            PlayBlockedFeedback();
+            Debug.LogWarning("Bến đón đã đầy hoặc chưa có BusStopManager!");
+            return;
+        }
+
+        DriveToBusStop();
+    }
+
+    private void DriveToBusStop()
+    {
+        _isBusy = true;
+        _assignedSlot = BusStopManager.Instance.GetAvailableSlot();
+        _assignedSlot.AssignBus(this);
+
+        if (_gridManager != null)
+        {
+            _gridManager.UnregisterBus(GetOccupiedCells());
+        }
+
+        Vector3 targetPos = _assignedSlot.SlotTransform.position;
+
+        Sequence seq = DOTween.Sequence();
+        seq.Append(transform.DOMove(targetPos, 0.45f).SetEase(Ease.OutQuad));
+        seq.Join(transform.DORotate(Vector3.zero, 0.3f));
+        seq.OnComplete(() =>
+        {
+            _isBusy = false;
+            BusStopManager.Instance.NotifyBusArrived(this);
+        });
+    }
+
+    public Transform GetNextSeatTransform()
+    {
+        if (!HasEmptySeat || _passengersCount >= seatPoints.Count) return null;
+        Transform seat = seatPoints[_passengersCount];
+        _passengersCount++;
+        return seat;
+    }
+
+    public void OnPassengerSeated(PassengerController passenger)
+    {
+        if (_passengersCount >= 3)
+        {
+            DepartFromStop();
+        }
+    }
+
+    private void DepartFromStop()
+    {
+        _isBusy = true;
+
+        Sequence seq = DOTween.Sequence();
+        seq.AppendInterval(0.3f);
+        seq.Append(transform.DOMoveX(transform.position.x + 8f, 0.6f).SetEase(Ease.InQuad));
+        seq.OnComplete(() =>
+        {
+            if (_assignedSlot != null)
+            {
+                _assignedSlot.ClearSlot();
+                _assignedSlot = null;
+            }
+
+            Destroy(gameObject);
+
+            if (PassengerQueueManager.Instance != null)
+            {
+                PassengerQueueManager.Instance.TryBoardNextPassenger();
+            }
+        });
     }
 
     private void PlayBlockedFeedback()
