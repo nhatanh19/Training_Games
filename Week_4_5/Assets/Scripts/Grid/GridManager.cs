@@ -15,8 +15,27 @@ public class GridManager : MonoBehaviour
     public int Cols => cols;
     public float CellSize => cellSize;
 
+    public static GridManager Instance { get; private set; }
+
     private void Awake()
     {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        InitializeGrid();
+    }
+
+    public void InitializeGrid(int newRows, int newCols)
+    {
+        rows = newRows;
+        cols = newCols;
         InitializeGrid();
     }
 

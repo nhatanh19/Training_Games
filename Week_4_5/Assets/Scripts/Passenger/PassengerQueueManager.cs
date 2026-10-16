@@ -69,6 +69,29 @@ public class PassengerQueueManager : MonoBehaviour
         }
     }
 
+    public void LoadPassengers(List<BusColor> colors, PassengerController prefab)
+    {
+        ClearQueue();
+
+        for (int i = 0; i < colors.Count; i++)
+        {
+            PassengerController passenger = Instantiate(prefab, transform);
+            passenger.transform.position = GetQueuePosition(i);
+            passenger.SetColor(colors[i]);
+            _queue.Enqueue(passenger);
+        }
+    }
+
+    public void ClearQueue()
+    {
+        while (_queue.Count > 0)
+        {
+            PassengerController p = _queue.Dequeue();
+            if (p != null) Destroy(p.gameObject);
+        }
+        _queue.Clear();
+    }
+
     public Vector3 GetQueuePosition(int index)
     {
         Vector3 origin = queueStartPoint != null ? queueStartPoint.position : transform.position;

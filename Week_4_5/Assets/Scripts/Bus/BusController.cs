@@ -36,7 +36,22 @@ public class BusController : MonoBehaviour
 
     private void Start()
     {
-        _gridManager = FindObjectOfType<GridManager>();
+        if (_gridManager == null)
+        {
+            _gridManager = GridManager.Instance != null ? GridManager.Instance : FindObjectOfType<GridManager>();
+            ApplyColor();
+            AlignToGrid();
+            RegisterToGrid();
+        }
+    }
+
+    public void Initialize(BusColor color, Direction dir, int len, Vector2Int rootPos)
+    {
+        busColor = color;
+        direction = dir;
+        length = len;
+        rootGridPosition = rootPos;
+        _gridManager = GridManager.Instance != null ? GridManager.Instance : FindObjectOfType<GridManager>();
         ApplyColor();
         AlignToGrid();
         RegisterToGrid();
