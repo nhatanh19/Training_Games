@@ -17,6 +17,11 @@ public class BusController : MonoBehaviour
     [Header("Seats (Must be 3 points)")]
     [SerializeField] private List<Transform> seatPoints = new List<Transform>();
 
+    [Header("Movement Settings")]
+    [SerializeField] private float driveToStopDuration = 0.9f;
+    [SerializeField] private float departDuration = 1.0f;
+    [SerializeField] private float departDelay = 0.4f;
+
     private GridManager _gridManager;
     private BusStopSlot _assignedSlot;
     private int _passengersCount = 0;
@@ -157,6 +162,11 @@ public class BusController : MonoBehaviour
 
     private void OnMouseDown()
     {
+        OnClicked();
+    }
+
+    public void OnClicked()
+    {
         if (_isBusy || _assignedSlot != null) return;
 
         if (!CanExit())
@@ -178,6 +188,7 @@ public class BusController : MonoBehaviour
     private void DriveToBusStop()
     {
         _isBusy = true;
+        GameInputManager.SetLock(true);
         _assignedSlot = BusStopManager.Instance.GetAvailableSlot();
         _assignedSlot.AssignBus(this);
 
@@ -189,11 +200,12 @@ public class BusController : MonoBehaviour
         Vector3 targetPos = _assignedSlot.SlotTransform.position;
 
         Sequence seq = DOTween.Sequence();
-        seq.Append(transform.DOMove(targetPos, 0.45f).SetEase(Ease.OutQuad));
-        seq.Join(transform.DORotate(Vector3.zero, 0.3f));
+        seq.Append(transform.DOMove(targetPos, driveToStopDuration).SetEase(Ease.InOutQuad));
+        seq.Join(transform.DORotate(Vector3.zero, driveToStopDuration * 0.6f));
         seq.OnComplete(() =>
         {
             _isBusy = false;
+            GameInputManager.SetLock(false);
             BusStopManager.Instance.NotifyBusArrived(this);
         });
     }
@@ -219,8 +231,8 @@ public class BusController : MonoBehaviour
         _isBusy = true;
 
         Sequence seq = DOTween.Sequence();
-        seq.AppendInterval(0.3f);
-        seq.Append(transform.DOMoveX(transform.position.x + 8f, 0.6f).SetEase(Ease.InQuad));
+        seq.AppendInterval(departDelay);
+        seq.Append(transform.DOMoveX(transform.position.x + 8f, departDuration).SetEase(Ease.InQuad));
         seq.OnComplete(() =>
         {
             if (_assignedSlot != null)

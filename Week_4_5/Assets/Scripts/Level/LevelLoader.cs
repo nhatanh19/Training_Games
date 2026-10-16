@@ -39,6 +39,7 @@ public class LevelLoader : MonoBehaviour
     {
         if (levelData == null) return;
 
+        GameInputManager.SetLock(true);
         currentLevelData = levelData;
         ClearCurrentLevel();
 
@@ -62,6 +63,8 @@ public class LevelLoader : MonoBehaviour
         {
             PassengerQueueManager.Instance.LoadPassengers(levelData.passengerColors, passengerPrefab);
         }
+
+        GameInputManager.SetLock(false);
     }
 
     public void ClearCurrentLevel()
