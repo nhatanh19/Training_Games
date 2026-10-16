@@ -112,7 +112,7 @@ public class PassengerQueueManager : MonoBehaviour
         if (head == null) return;
 
         List<BusController> activeBuses = BusStopManager.Instance != null ? BusStopManager.Instance.GetActiveBuses() : new List<BusController>();
-        BusController matchingBus = activeBuses.Find(b => b.Color == head.Color && b.HasEmptySeat);
+        BusController matchingBus = activeBuses.Find(b => b.Color == head.Color && b.HasEmptySeat && b.IsReadyForPassengers);
 
         if (matchingBus != null)
         {

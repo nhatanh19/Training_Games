@@ -492,3 +492,6 @@ MonoBehaviour:
   - {fileID: 4904472405259790041}
   - {fileID: 4759276428770753556}
   - {fileID: 2831578323834723608}
+  driveToStopDuration: 0.9
+  departDuration: 1
+  departDelay: 0.4

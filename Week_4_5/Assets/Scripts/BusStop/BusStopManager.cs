@@ -40,7 +40,7 @@ public class BusStopManager : MonoBehaviour
         List<BusController> activeBuses = new List<BusController>();
         foreach (var slot in slots)
         {
-            if (slot != null && slot.CurrentBus != null)
+            if (slot != null && slot.CurrentBus != null && slot.CurrentBus.IsReadyForPassengers)
             {
                 activeBuses.Add(slot.CurrentBus);
             }

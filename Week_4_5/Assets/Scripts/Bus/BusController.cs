@@ -33,6 +33,7 @@ public class BusController : MonoBehaviour
     public Vector2Int RootGridPosition => rootGridPosition;
     public List<Transform> SeatPoints => seatPoints;
     public bool HasEmptySeat => _passengersCount < 3;
+    public bool IsReadyForPassengers { get; private set; } = false;
 
     private void OnValidate()
     {
@@ -188,6 +189,7 @@ public class BusController : MonoBehaviour
     private void DriveToBusStop()
     {
         _isBusy = true;
+        IsReadyForPassengers = false;
         GameInputManager.SetLock(true);
         _assignedSlot = BusStopManager.Instance.GetAvailableSlot();
         _assignedSlot.AssignBus(this);
@@ -205,6 +207,7 @@ public class BusController : MonoBehaviour
         seq.OnComplete(() =>
         {
             _isBusy = false;
+            IsReadyForPassengers = true;
             GameInputManager.SetLock(false);
             BusStopManager.Instance.NotifyBusArrived(this);
         });
@@ -229,6 +232,7 @@ public class BusController : MonoBehaviour
     private void DepartFromStop()
     {
         _isBusy = true;
+        IsReadyForPassengers = false;
 
         Sequence seq = DOTween.Sequence();
         seq.AppendInterval(departDelay);

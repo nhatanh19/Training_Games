@@ -408,6 +408,9 @@ MonoBehaviour:
   - {fileID: 2133508249786308037}
   - {fileID: 8713072676597503528}
   - {fileID: 1169993413067376392}
+  driveToStopDuration: 0.9
+  departDuration: 1
+  departDelay: 0.4
 --- !u!1 &9051335313611964670
 GameObject:
   m_ObjectHideFlags: 0
