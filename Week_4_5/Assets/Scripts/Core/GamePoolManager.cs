@@ -115,6 +115,7 @@ public class GamePoolManager : MonoBehaviour
                 actionOnGet: passenger => passenger.gameObject.SetActive(true),
                 actionOnRelease: passenger =>
                 {
+                    passenger.ResetPassenger();
                     passenger.gameObject.SetActive(false);
                     passenger.transform.SetParent(transform);
                 },

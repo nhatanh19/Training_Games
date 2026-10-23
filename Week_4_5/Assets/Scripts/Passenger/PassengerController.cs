@@ -76,4 +76,11 @@ public class PassengerController : MonoBehaviour
             .SetEase(Ease.OutQuad)
             .OnComplete(() => onComplete?.Invoke());
     }
+
+    public void ResetPassenger()
+    {
+        transform.DOKill();
+        transform.localScale = new Vector3(0.4f, 0.4f, 1f);
+        transform.localRotation = Quaternion.identity;
+    }
 }

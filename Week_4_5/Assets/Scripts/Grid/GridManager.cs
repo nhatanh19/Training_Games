@@ -6,10 +6,10 @@ public class GridManager : MonoBehaviour
     [Header("Grid Settings")]
     [SerializeField] private int rows = 6;
     [SerializeField] private int cols = 6;
-    [SerializeField] private float cellSize = 1.2f;
+    [SerializeField] private float cellSize = 0.95f;
 
     [Header("Road Corridor Settings")]
-    [SerializeField] private float roadOffset = 1.0f;
+    [SerializeField] private float roadOffset = 0.65f;
 
     private GridCell[,] _grid;
     private Vector3 _originPosition;
@@ -34,6 +34,16 @@ public class GridManager : MonoBehaviour
         {
             Destroy(gameObject);
             return;
+        }
+
+        if (transform.position.y < -0.8f)
+        {
+            transform.position = new Vector3(transform.position.x, -0.6f, transform.position.z);
+        }
+
+        if (Camera.main != null && Camera.main.orthographic)
+        {
+            Camera.main.orthographicSize = Mathf.Max(Camera.main.orthographicSize, 7.8f);
         }
 
         InitializeGrid();

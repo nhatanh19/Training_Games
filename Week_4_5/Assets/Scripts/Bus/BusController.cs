@@ -235,6 +235,7 @@ public class BusController : MonoBehaviour
         float rightX = _gridManager != null ? _gridManager.RightLaneX : currentPos.x + 4f;
         float leftX = _gridManager != null ? _gridManager.LeftLaneX : currentPos.x - 4f;
         float bottomY = _gridManager != null ? _gridManager.BottomLaneY : currentPos.y - 4f;
+        float approachY = targetPos.y - 1.1f;
 
         float GetDuration(Vector3 from, Vector3 to)
         {
@@ -247,39 +248,53 @@ public class BusController : MonoBehaviour
             case Direction.Right:
             {
                 Vector3 p1 = new Vector3(rightX, currentPos.y, 0f);
-                Vector3 p2 = new Vector3(rightX, targetPos.y, 0f);
+                Vector3 p2 = new Vector3(rightX, approachY, 0f);
+                Vector3 p3 = new Vector3(targetPos.x, approachY, 0f);
 
                 seq.Append(transform.DOMove(p1, GetDuration(currentPos, p1)).SetEase(Ease.Linear));
                 seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
                 seq.Append(transform.DOMove(p2, GetDuration(p1, p2)).SetEase(Ease.Linear));
                 seq.Append(transform.DORotate(new Vector3(0, 0, 180f), turnDuration));
-                seq.Append(transform.DOMove(targetPos, GetDuration(p2, targetPos)).SetEase(Ease.Linear));
-                seq.Append(transform.DORotate(Vector3.zero, turnDuration));
+                seq.Append(transform.DOMove(p3, GetDuration(p2, p3)).SetEase(Ease.Linear));
+                seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
+                seq.Append(transform.DOMove(targetPos, GetDuration(p3, targetPos)).SetEase(Ease.Linear));
                 break;
             }
 
             case Direction.Left:
             {
                 Vector3 p1 = new Vector3(leftX, currentPos.y, 0f);
-                Vector3 p2 = new Vector3(leftX, targetPos.y, 0f);
+                Vector3 p2 = new Vector3(leftX, approachY, 0f);
+                Vector3 p3 = new Vector3(targetPos.x, approachY, 0f);
 
                 seq.Append(transform.DOMove(p1, GetDuration(currentPos, p1)).SetEase(Ease.Linear));
                 seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
                 seq.Append(transform.DOMove(p2, GetDuration(p1, p2)).SetEase(Ease.Linear));
                 seq.Append(transform.DORotate(Vector3.zero, turnDuration));
-                seq.Append(transform.DOMove(targetPos, GetDuration(p2, targetPos)).SetEase(Ease.Linear));
+                seq.Append(transform.DOMove(p3, GetDuration(p2, p3)).SetEase(Ease.Linear));
+                seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
+                seq.Append(transform.DOMove(targetPos, GetDuration(p3, targetPos)).SetEase(Ease.Linear));
                 break;
             }
 
             case Direction.Up:
             {
-                Vector3 p1 = new Vector3(currentPos.x, targetPos.y, 0f);
+                if (Mathf.Abs(currentPos.x - targetPos.x) < 0.05f)
+                {
+                    seq.Append(transform.DOMove(targetPos, GetDuration(currentPos, targetPos)).SetEase(Ease.Linear));
+                }
+                else
+                {
+                    Vector3 p1 = new Vector3(currentPos.x, approachY, 0f);
+                    Vector3 p2 = new Vector3(targetPos.x, approachY, 0f);
+                    float angleToBay = targetPos.x >= currentPos.x ? 0f : 180f;
 
-                seq.Append(transform.DOMove(p1, GetDuration(currentPos, p1)).SetEase(Ease.Linear));
-                float targetAngle = (targetPos.x >= currentPos.x) ? 0f : 180f;
-                seq.Append(transform.DORotate(new Vector3(0, 0, targetAngle), turnDuration));
-                seq.Append(transform.DOMove(targetPos, GetDuration(p1, targetPos)).SetEase(Ease.Linear));
-                seq.Append(transform.DORotate(Vector3.zero, turnDuration));
+                    seq.Append(transform.DOMove(p1, GetDuration(currentPos, p1)).SetEase(Ease.Linear));
+                    seq.Append(transform.DORotate(new Vector3(0, 0, angleToBay), turnDuration));
+                    seq.Append(transform.DOMove(p2, GetDuration(p1, p2)).SetEase(Ease.Linear));
+                    seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
+                    seq.Append(transform.DOMove(targetPos, GetDuration(p2, targetPos)).SetEase(Ease.Linear));
+                }
                 break;
             }
 
@@ -290,7 +305,8 @@ public class BusController : MonoBehaviour
                 float sideX = goRight ? rightX : leftX;
 
                 Vector3 p2 = new Vector3(sideX, bottomY, 0f);
-                Vector3 p3 = new Vector3(sideX, targetPos.y, 0f);
+                Vector3 p3 = new Vector3(sideX, approachY, 0f);
+                Vector3 p4 = new Vector3(targetPos.x, approachY, 0f);
 
                 seq.Append(transform.DOMove(p1, GetDuration(currentPos, p1)).SetEase(Ease.Linear));
                 seq.Append(transform.DORotate(new Vector3(0, 0, goRight ? 0f : 180f), turnDuration));
@@ -298,8 +314,9 @@ public class BusController : MonoBehaviour
                 seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
                 seq.Append(transform.DOMove(p3, GetDuration(p2, p3)).SetEase(Ease.Linear));
                 seq.Append(transform.DORotate(new Vector3(0, 0, goRight ? 180f : 0f), turnDuration));
-                seq.Append(transform.DOMove(targetPos, GetDuration(p3, targetPos)).SetEase(Ease.Linear));
-                seq.Append(transform.DORotate(Vector3.zero, turnDuration));
+                seq.Append(transform.DOMove(p4, GetDuration(p3, p4)).SetEase(Ease.Linear));
+                seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
+                seq.Append(transform.DOMove(targetPos, GetDuration(p4, targetPos)).SetEase(Ease.Linear));
                 break;
             }
         }
@@ -334,14 +351,14 @@ public class BusController : MonoBehaviour
         IsReadyForPassengers = false;
 
         Sequence seq = DOTween.Sequence();
-        seq.Append(transform.DOPunchScale(new Vector3(0.2f, -0.15f, 0f), departDelay, 4, 0.5f));
+        seq.Append(transform.DOPunchScale(new Vector3(-0.12f, 0.18f, 0f), departDelay, 4, 0.5f));
         seq.AppendCallback(() =>
         {
             CameraShakeManager.Instance?.ShakeHeavy();
             VFXManager.Instance?.PlayDust(transform.position, transform.rotation);
             AudioManager.Instance?.PlayEngine();
         });
-        seq.Append(transform.DOMoveX(transform.position.x + 8f, departDuration).SetEase(Ease.InQuad));
+        seq.Append(transform.DOMoveY(transform.position.y + 10f, departDuration).SetEase(Ease.InQuad));
         seq.OnComplete(() =>
         {
             if (_assignedSlot != null)
