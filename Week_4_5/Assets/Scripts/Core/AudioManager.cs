@@ -51,43 +51,7 @@ public class AudioManager : MonoBehaviour
         }
 
         _sfxSource.playOnAwake = false;
-
-#if UNITY_EDITOR
-        if (clickClip == null)
-        {
-            AutoAssignClips();
-        }
-#endif
     }
-
-#if UNITY_EDITOR
-    private void Reset()
-    {
-        AutoAssignClips();
-    }
-
-    private void OnValidate()
-    {
-        if (clickClip == null)
-        {
-            AutoAssignClips();
-        }
-    }
-
-    [ContextMenu("Auto Assign Audio Clips")]
-    public void AutoAssignClips()
-    {
-        string basePath = "Assets/Casual Game Sounds U6/CasualGameSounds/";
-        clickClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(basePath + "DM-CGS-01.wav");
-        footstepClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(basePath + "DM-CGS-32.wav");
-        crashClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(basePath + "DM-CGS-18.wav");
-        honkClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(basePath + "DM-CGS-28.wav");
-        engineClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(basePath + "DM-CGS-04.wav");
-        winClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(basePath + "DM-CGS-45.wav");
-        loseClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(basePath + "DM-CGS-19.wav");
-        UnityEditor.EditorUtility.SetDirty(this);
-    }
-#endif
 
     public void PlayClick()
     {
