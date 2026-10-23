@@ -408,7 +408,8 @@ MonoBehaviour:
   - {fileID: 2133508249786308037}
   - {fileID: 8713072676597503528}
   - {fileID: 1169993413067376392}
-  driveToStopDuration: 0.9
+  moveSpeed: 12
+  turnDuration: 0.15
   departDuration: 1
   departDelay: 0.4
 --- !u!1 &9051335313611964670

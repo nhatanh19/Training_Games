@@ -9,8 +9,11 @@ public class BusStopManager : MonoBehaviour
     [SerializeField] private List<BusStopSlot> slots = new List<BusStopSlot>();
 
     public event Action<BusController> OnBusArrivedAtStop;
+    public event Action OnBusDepartedFromStop;
 
     public bool HasAvailableSlot => GetAvailableSlot() != null;
+    public int OccupiedSlotCount => slots.FindAll(slot => !slot.IsAvailable).Count;
+    public int TotalSlotCount => slots.Count;
 
     private void Awake()
     {
@@ -51,6 +54,23 @@ public class BusStopManager : MonoBehaviour
     public void NotifyBusArrived(BusController bus)
     {
         OnBusArrivedAtStop?.Invoke(bus);
+    }
+
+    public void NotifyBusDeparted()
+    {
+        OnBusDepartedFromStop?.Invoke();
+    }
+
+    public void ClearAllSlots()
+    {
+        if (slots == null) return;
+        foreach (var slot in slots)
+        {
+            if (slot != null)
+            {
+                slot.ClearSlot();
+            }
+        }
     }
 
     private void OnDrawGizmos()

@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f6e69fa7b5f72a438b0b978c5de0985, type: 3}
+  m_Name: Level_4
+  m_EditorClassIdentifier: 
+  rows: 6
+  cols: 6
+  buses:
+  - color: 1
+    direction: 0
+    length: 3
+    rootGridPosition: {x: 0, y: 5}
+  - color: 3
+    direction: 2
+    length: 2
+    rootGridPosition: {x: 4, y: 1}
+  - color: 2
+    direction: 1
+    length: 2
+    rootGridPosition: {x: 3, y: 3}
+  - color: 0
+    direction: 0
+    length: 2
+    rootGridPosition: {x: 0, y: 2}
+  - color: 0
+    direction: 2
+    length: 2
+    rootGridPosition: {x: 1, y: 0}
+  passengerColors: 010000000100000001000000030000000300000003000000020000000200000002000000000000000000000000000000000000000000000000000000

@@ -7,13 +7,20 @@ public class GridManager : MonoBehaviour
     [SerializeField] private int rows = 6;
     [SerializeField] private int cols = 6;
     [SerializeField] private float cellSize = 1.2f;
-    
+
+    [Header("Road Corridor Settings")]
+    [SerializeField] private float roadOffset = 1.0f;
+
     private GridCell[,] _grid;
     private Vector3 _originPosition;
 
     public int Rows => rows;
     public int Cols => cols;
     public float CellSize => cellSize;
+    public float RightLaneX => transform.position.x + (cols * cellSize * 0.5f) + roadOffset;
+    public float LeftLaneX => transform.position.x - (cols * cellSize * 0.5f) - roadOffset;
+    public float BottomLaneY => transform.position.y - (rows * cellSize * 0.5f) - roadOffset;
+    public float TopLaneY => transform.position.y + (rows * cellSize * 0.5f) + roadOffset;
 
     public static GridManager Instance { get; private set; }
 
@@ -93,8 +100,7 @@ public class GridManager : MonoBehaviour
         {
             GridCell cell = GetCell(pos);
             if (cell != null)
-            {
-                cell.ClearCell();
+            {                cell.ClearCell();
             }
         }
     }

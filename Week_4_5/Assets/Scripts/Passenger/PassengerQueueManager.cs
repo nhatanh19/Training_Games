@@ -18,6 +18,9 @@ public class PassengerQueueManager : MonoBehaviour
     private bool _isBoarding = false;
 
     public int RemainingPassengersCount => _queue.Count;
+    public bool IsBoarding => _isBoarding;
+    public PassengerController PeekNextPassenger() => _queue.Count > 0 ? _queue.Peek() : null;
+    public event System.Action OnPassengerBoarded;
 
     private void Awake()
     {
@@ -75,10 +78,13 @@ public class PassengerQueueManager : MonoBehaviour
 
         for (int i = 0; i < colors.Count; i++)
         {
-            PassengerController passenger = Instantiate(prefab, transform);
-            passenger.transform.position = GetQueuePosition(i);
-            passenger.SetColor(colors[i]);
-            _queue.Enqueue(passenger);
+            PassengerController passenger = GamePoolManager.Instance.GetPassenger(transform);
+            if (passenger != null)
+            {
+                passenger.transform.position = GetQueuePosition(i);
+                passenger.SetColor(colors[i]);
+                _queue.Enqueue(passenger);
+            }
         }
     }
 
@@ -87,7 +93,10 @@ public class PassengerQueueManager : MonoBehaviour
         while (_queue.Count > 0)
         {
             PassengerController p = _queue.Dequeue();
-            if (p != null) Destroy(p.gameObject);
+            if (p != null)
+            {
+                GamePoolManager.Instance.ReleasePassenger(p);
+            }
         }
         _queue.Clear();
     }
@@ -132,6 +141,7 @@ public class PassengerQueueManager : MonoBehaviour
         {
             bus.OnPassengerSeated(passenger);
             jumped = true;
+            OnPassengerBoarded?.Invoke();
         });
 
         yield return new WaitUntil(() => jumped);

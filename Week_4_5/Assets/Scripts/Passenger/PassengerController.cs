@@ -55,6 +55,8 @@ public class PassengerController : MonoBehaviour
 
     public void MoveToSeat(Transform seatPoint, System.Action onComplete)
     {
+        AudioManager.Instance?.PlayFootstep();
+
         transform.DOJump(seatPoint.position, 0.8f, 1, 0.35f)
             .SetEase(Ease.OutQuad)
             .OnComplete(() =>
@@ -68,6 +70,8 @@ public class PassengerController : MonoBehaviour
 
     public void StepForward(Vector3 targetWorldPos, System.Action onComplete = null)
     {
+        AudioManager.Instance?.PlayFootstep();
+
         transform.DOMove(targetWorldPos, 0.2f)
             .SetEase(Ease.OutQuad)
             .OnComplete(() => onComplete?.Invoke());

@@ -18,7 +18,8 @@ public class BusController : MonoBehaviour
     [SerializeField] private List<Transform> seatPoints = new List<Transform>();
 
     [Header("Movement Settings")]
-    [SerializeField] private float driveToStopDuration = 0.9f;
+    [SerializeField] private float moveSpeed = 12f;
+    [SerializeField] private float turnDuration = 0.15f;
     [SerializeField] private float departDuration = 1.0f;
     [SerializeField] private float departDelay = 0.4f;
 
@@ -26,6 +27,7 @@ public class BusController : MonoBehaviour
     private BusStopSlot _assignedSlot;
     private int _passengersCount = 0;
     private bool _isBusy = false;
+    private readonly List<PassengerController> _seatedPassengers = new List<PassengerController>();
 
     public BusColor Color => busColor;
     public Direction MoveDirection => direction;
@@ -170,6 +172,8 @@ public class BusController : MonoBehaviour
     {
         if (_isBusy || _assignedSlot != null) return;
 
+        AudioManager.Instance?.PlayClick();
+
         if (!CanExit())
         {
             PlayBlockedFeedback();
@@ -202,8 +206,13 @@ public class BusController : MonoBehaviour
         Vector3 targetPos = _assignedSlot.SlotTransform.position;
 
         Sequence seq = DOTween.Sequence();
-        seq.Append(transform.DOMove(targetPos, driveToStopDuration).SetEase(Ease.InOutQuad));
-        seq.Join(transform.DORotate(Vector3.zero, driveToStopDuration * 0.6f));
+        seq.Append(transform.DOPunchScale(new Vector3(0.12f, -0.08f, 0f), 0.12f, 3, 0.5f));
+        seq.AppendCallback(() =>
+        {
+            VFXManager.Instance?.PlayDust(transform.position, transform.rotation);
+            AudioManager.Instance?.PlayHonk();
+        });
+        seq.Append(BuildDriveSequence(targetPos));
         seq.OnComplete(() =>
         {
             _isBusy = false;
@@ -211,6 +220,91 @@ public class BusController : MonoBehaviour
             GameInputManager.SetLock(false);
             BusStopManager.Instance.NotifyBusArrived(this);
         });
+    }
+
+    private Sequence BuildDriveSequence(Vector3 targetPos)
+    {
+        Sequence seq = DOTween.Sequence();
+        Vector3 currentPos = transform.position;
+
+        if (_gridManager == null)
+        {
+            _gridManager = GridManager.Instance != null ? GridManager.Instance : FindObjectOfType<GridManager>();
+        }
+
+        float rightX = _gridManager != null ? _gridManager.RightLaneX : currentPos.x + 4f;
+        float leftX = _gridManager != null ? _gridManager.LeftLaneX : currentPos.x - 4f;
+        float bottomY = _gridManager != null ? _gridManager.BottomLaneY : currentPos.y - 4f;
+
+        float GetDuration(Vector3 from, Vector3 to)
+        {
+            float dist = Vector3.Distance(from, to);
+            return Mathf.Max(dist / moveSpeed, 0.05f);
+        }
+
+        switch (direction)
+        {
+            case Direction.Right:
+            {
+                Vector3 p1 = new Vector3(rightX, currentPos.y, 0f);
+                Vector3 p2 = new Vector3(rightX, targetPos.y, 0f);
+
+                seq.Append(transform.DOMove(p1, GetDuration(currentPos, p1)).SetEase(Ease.Linear));
+                seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
+                seq.Append(transform.DOMove(p2, GetDuration(p1, p2)).SetEase(Ease.Linear));
+                seq.Append(transform.DORotate(new Vector3(0, 0, 180f), turnDuration));
+                seq.Append(transform.DOMove(targetPos, GetDuration(p2, targetPos)).SetEase(Ease.Linear));
+                seq.Append(transform.DORotate(Vector3.zero, turnDuration));
+                break;
+            }
+
+            case Direction.Left:
+            {
+                Vector3 p1 = new Vector3(leftX, currentPos.y, 0f);
+                Vector3 p2 = new Vector3(leftX, targetPos.y, 0f);
+
+                seq.Append(transform.DOMove(p1, GetDuration(currentPos, p1)).SetEase(Ease.Linear));
+                seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
+                seq.Append(transform.DOMove(p2, GetDuration(p1, p2)).SetEase(Ease.Linear));
+                seq.Append(transform.DORotate(Vector3.zero, turnDuration));
+                seq.Append(transform.DOMove(targetPos, GetDuration(p2, targetPos)).SetEase(Ease.Linear));
+                break;
+            }
+
+            case Direction.Up:
+            {
+                Vector3 p1 = new Vector3(currentPos.x, targetPos.y, 0f);
+
+                seq.Append(transform.DOMove(p1, GetDuration(currentPos, p1)).SetEase(Ease.Linear));
+                float targetAngle = (targetPos.x >= currentPos.x) ? 0f : 180f;
+                seq.Append(transform.DORotate(new Vector3(0, 0, targetAngle), turnDuration));
+                seq.Append(transform.DOMove(targetPos, GetDuration(p1, targetPos)).SetEase(Ease.Linear));
+                seq.Append(transform.DORotate(Vector3.zero, turnDuration));
+                break;
+            }
+
+            case Direction.Down:
+            {
+                Vector3 p1 = new Vector3(currentPos.x, bottomY, 0f);
+                bool goRight = _gridManager != null ? currentPos.x >= _gridManager.transform.position.x : currentPos.x >= 0f;
+                float sideX = goRight ? rightX : leftX;
+
+                Vector3 p2 = new Vector3(sideX, bottomY, 0f);
+                Vector3 p3 = new Vector3(sideX, targetPos.y, 0f);
+
+                seq.Append(transform.DOMove(p1, GetDuration(currentPos, p1)).SetEase(Ease.Linear));
+                seq.Append(transform.DORotate(new Vector3(0, 0, goRight ? 0f : 180f), turnDuration));
+                seq.Append(transform.DOMove(p2, GetDuration(p1, p2)).SetEase(Ease.Linear));
+                seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
+                seq.Append(transform.DOMove(p3, GetDuration(p2, p3)).SetEase(Ease.Linear));
+                seq.Append(transform.DORotate(new Vector3(0, 0, goRight ? 180f : 0f), turnDuration));
+                seq.Append(transform.DOMove(targetPos, GetDuration(p3, targetPos)).SetEase(Ease.Linear));
+                seq.Append(transform.DORotate(Vector3.zero, turnDuration));
+                break;
+            }
+        }
+
+        return seq;
     }
 
     public Transform GetNextSeatTransform()
@@ -223,6 +317,11 @@ public class BusController : MonoBehaviour
 
     public void OnPassengerSeated(PassengerController passenger)
     {
+        if (passenger != null)
+        {
+            _seatedPassengers.Add(passenger);
+        }
+
         if (_passengersCount >= 3)
         {
             DepartFromStop();
@@ -235,7 +334,13 @@ public class BusController : MonoBehaviour
         IsReadyForPassengers = false;
 
         Sequence seq = DOTween.Sequence();
-        seq.AppendInterval(departDelay);
+        seq.Append(transform.DOPunchScale(new Vector3(0.2f, -0.15f, 0f), departDelay, 4, 0.5f));
+        seq.AppendCallback(() =>
+        {
+            CameraShakeManager.Instance?.ShakeHeavy();
+            VFXManager.Instance?.PlayDust(transform.position, transform.rotation);
+            AudioManager.Instance?.PlayEngine();
+        });
         seq.Append(transform.DOMoveX(transform.position.x + 8f, departDuration).SetEase(Ease.InQuad));
         seq.OnComplete(() =>
         {
@@ -245,7 +350,19 @@ public class BusController : MonoBehaviour
                 _assignedSlot = null;
             }
 
-            Destroy(gameObject);
+            foreach (var p in _seatedPassengers)
+            {
+                if (p != null)
+                {
+                    GamePoolManager.Instance.ReleasePassenger(p);
+                }
+            }
+            _seatedPassengers.Clear();
+
+            GamePoolManager.Instance.ReleaseBus(this);
+
+            BusStopManager.Instance?.NotifyBusDeparted();
+            LevelLoader.Instance?.RemoveSpawnedBus(this);
 
             if (PassengerQueueManager.Instance != null)
             {
@@ -257,12 +374,58 @@ public class BusController : MonoBehaviour
     private void PlayBlockedFeedback()
     {
         _isBusy = true;
+        CameraShakeManager.Instance?.ShakeLight();
+        AudioManager.Instance?.PlayCrash();
+
         Vector2Int step = direction.ToVector2Int();
+        Vector3 hitPoint = transform.position + new Vector3(step.x, step.y, 0f) * (length * 0.5f);
+        VFXManager.Instance?.PlayHitSpark(hitPoint);
+
         Vector3 punchVector = new Vector3(step.x, step.y, 0f) * 0.2f;
 
         transform.DOPunchPosition(punchVector, 0.25f, 8, 0.5f).OnComplete(() =>
         {
             _isBusy = false;
         });
+    }
+
+    public void ResetBus()
+    {
+        _isBusy = false;
+        IsReadyForPassengers = false;
+        _passengersCount = 0;
+        if (_assignedSlot != null)
+        {
+            _assignedSlot.ClearSlot();
+            _assignedSlot = null;
+        }
+        transform.DOKill();
+        transform.localScale = Vector3.one;
+        transform.rotation = Quaternion.identity;
+
+        foreach (var p in _seatedPassengers)
+        {
+            if (p != null)
+            {
+                GamePoolManager.Instance.ReleasePassenger(p);
+            }
+        }
+        _seatedPassengers.Clear();
+
+        foreach (var seat in seatPoints)
+        {
+            if (seat != null)
+            {
+                for (int i = seat.childCount - 1; i >= 0; i--)
+                {
+                    Transform child = seat.GetChild(i);
+                    PassengerController p = child.GetComponent<PassengerController>();
+                    if (p != null)
+                    {
+                        GamePoolManager.Instance.ReleasePassenger(p);
+                    }
+                }
+            }
+        }
     }
 }

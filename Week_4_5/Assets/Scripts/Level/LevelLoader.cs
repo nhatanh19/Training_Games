@@ -13,6 +13,15 @@ public class LevelLoader : MonoBehaviour
     [SerializeField] private BusController bus3x1Prefab;
     [SerializeField] private PassengerController passengerPrefab;
 
+    [Header("Level Collection")]
+    [SerializeField] private List<LevelDataSO> levels = new List<LevelDataSO>();
+
+    public BusController Bus2x1Prefab => bus2x1Prefab;
+    public BusController Bus3x1Prefab => bus3x1Prefab;
+    public PassengerController PassengerPrefab => passengerPrefab;
+    public int LevelCount => levels != null ? levels.Count : 0;
+    public int RemainingBusesCount => _spawnedBuses.Count;
+
     private readonly List<BusController> _spawnedBuses = new List<BusController>();
 
     private void Awake()
@@ -25,14 +34,70 @@ public class LevelLoader : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        if (levels.Count == 0 && currentLevelData != null)
+        {
+            levels.Add(currentLevelData);
+        }
+
+#if UNITY_EDITOR
+        if (levels.Count == 0)
+        {
+            AutoAssignLevels();
+        }
+#endif
+    }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (levels == null || levels.Count == 0)
+        {
+            AutoAssignLevels();
+        }
+    }
+
+    [ContextMenu("Auto Assign All Levels")]
+    public void AutoAssignLevels()
+    {
+        levels = new List<LevelDataSO>();
+        for (int i = 1; i <= 5; i++)
+        {
+            LevelDataSO lvl = UnityEditor.AssetDatabase.LoadAssetAtPath<LevelDataSO>($"Assets/Levels/Level_{i}.asset");
+            if (lvl != null)
+            {
+                levels.Add(lvl);
+            }
+        }
+        UnityEditor.EditorUtility.SetDirty(this);
+    }
+#endif
+
+    public void RemoveSpawnedBus(BusController bus)
+    {
+        if (bus != null)
+        {
+            _spawnedBuses.Remove(bus);
+        }
+    }
+
+    public void LoadLevelByIndex(int index)
+    {
+        if (levels != null && levels.Count > 0)
+        {
+            int safeIndex = Mathf.Clamp(index, 0, levels.Count - 1);
+            LoadLevel(levels[safeIndex]);
+        }
+        else if (currentLevelData != null)
+        {
+            LoadLevel(currentLevelData);
+        }
     }
 
     private void Start()
     {
-        if (currentLevelData != null)
-        {
-            LoadLevel(currentLevelData);
-        }
+        var gm = GameManager.Instance;
+        var ui = UIManager.Instance;
     }
 
     public void LoadLevel(LevelDataSO levelData)
@@ -43,6 +108,11 @@ public class LevelLoader : MonoBehaviour
         currentLevelData = levelData;
         ClearCurrentLevel();
 
+        if (bus2x1Prefab != null && bus3x1Prefab != null)
+        {
+            GamePoolManager.Instance.SetPrefabs(bus2x1Prefab, bus3x1Prefab, passengerPrefab);
+        }
+
         if (GridManager.Instance != null)
         {
             GridManager.Instance.InitializeGrid(levelData.rows, levelData.cols);
@@ -50,16 +120,15 @@ public class LevelLoader : MonoBehaviour
 
         foreach (var data in levelData.buses)
         {
-            BusController prefab = data.length == 3 ? bus3x1Prefab : bus2x1Prefab;
-            if (prefab != null)
+            BusController bus = GamePoolManager.Instance.GetBus(data.length, transform);
+            if (bus != null)
             {
-                BusController bus = Instantiate(prefab, transform);
                 bus.Initialize(data.color, data.direction, data.length, data.rootGridPosition);
                 _spawnedBuses.Add(bus);
             }
         }
 
-        if (PassengerQueueManager.Instance != null && passengerPrefab != null)
+        if (PassengerQueueManager.Instance != null)
         {
             PassengerQueueManager.Instance.LoadPassengers(levelData.passengerColors, passengerPrefab);
         }
@@ -73,10 +142,15 @@ public class LevelLoader : MonoBehaviour
         {
             if (bus != null)
             {
-                Destroy(bus.gameObject);
+                GamePoolManager.Instance.ReleaseBus(bus);
             }
         }
         _spawnedBuses.Clear();
+
+        if (BusStopManager.Instance != null)
+        {
+            BusStopManager.Instance.ClearAllSlots();
+        }
 
         if (PassengerQueueManager.Instance != null)
         {
