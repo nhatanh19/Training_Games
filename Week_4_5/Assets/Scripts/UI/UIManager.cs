@@ -35,6 +35,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Button retryLoseButton;
     [SerializeField] private Button restartHudButton;
 
+    private bool _initialized;
+
     private void Awake()
     {
         if (_instance == null)
@@ -57,6 +59,21 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
+        // When a GameBootstrap exists it calls Initialize() itself.
+        if (GameBootstrap.IsDriving) return;
+
+        Initialize();
+    }
+
+    /// <summary>
+    /// Subscribes to GameManager events. Called by GameBootstrap after the UI is built,
+    /// or by Start() when the scene has no bootstrap.
+    /// </summary>
+    public void Initialize()
+    {
+        if (_initialized) return;
+        _initialized = true;
+
         if (GameManager.Instance != null)
         {
             GameManager.Instance.OnGameStateChanged += HandleGameStateChanged;

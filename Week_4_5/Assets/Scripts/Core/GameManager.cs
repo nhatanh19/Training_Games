@@ -41,6 +41,8 @@ public class GameManager : MonoBehaviour
     public event Action<int> OnLevelStarted;
 
     private Coroutine _statusCheckRoutine;
+    private bool _initialized;
+    private bool _started;
 
     private void Awake()
     {
@@ -59,7 +61,21 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        var ui = UIManager.Instance;
+        // When a GameBootstrap exists it calls Initialize()/StartGame() itself.
+        if (GameBootstrap.IsDriving) return;
+
+        Initialize();
+        StartGame();
+    }
+
+    /// <summary>
+    /// Subscribes to gameplay events. Called by GameBootstrap before the level starts,
+    /// or by Start() when the scene has no bootstrap.
+    /// </summary>
+    public void Initialize()
+    {
+        if (_initialized) return;
+        _initialized = true;
 
         if (BusStopManager.Instance != null)
         {
@@ -71,6 +87,15 @@ public class GameManager : MonoBehaviour
         {
             PassengerQueueManager.Instance.OnPassengerBoarded += OnPassengerBoarded;
         }
+    }
+
+    /// <summary>
+    /// Starts the saved level exactly once.
+    /// </summary>
+    public void StartGame()
+    {
+        if (_started) return;
+        _started = true;
 
         StartLevel(CurrentLevelIndex);
     }

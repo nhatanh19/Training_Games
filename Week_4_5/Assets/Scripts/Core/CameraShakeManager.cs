@@ -25,6 +25,7 @@ public class CameraShakeManager : MonoBehaviour
     [SerializeField] private Camera targetCamera;
     private Vector3 _originalPosition;
     private Tween _shakeTween;
+    private bool _initialized;
 
     private void Awake()
     {
@@ -37,6 +38,17 @@ public class CameraShakeManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
+        Initialize();
+    }
+
+    /// <summary>
+    /// Resolves the camera and caches its rest position once. Safe to call repeatedly.
+    /// </summary>
+    public void Initialize()
+    {
+        if (_initialized) return;
+        _initialized = true;
 
         if (targetCamera == null)
         {

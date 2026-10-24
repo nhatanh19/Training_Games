@@ -35,6 +35,8 @@ public class VFXManager : MonoBehaviour
     private ParticleSystem _runtimeHit;
     private ParticleSystem _runtimeConfetti;
 
+    private bool _initialized;
+
     private void Awake()
     {
         if (_instance == null)
@@ -46,6 +48,17 @@ public class VFXManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
+        Initialize();
+    }
+
+    /// <summary>
+    /// Creates the effect pools (or procedural fallbacks) once. Safe to call repeatedly.
+    /// </summary>
+    public void Initialize()
+    {
+        if (_initialized) return;
+        _initialized = true;
 
         InitializeEffects();
     }

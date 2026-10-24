@@ -94,10 +94,17 @@ public class LevelLoader : MonoBehaviour
         }
     }
 
-    private void Start()
+    /// <summary>
+    /// Ensures the level collection is usable. Called by GameBootstrap before the first level.
+    /// </summary>
+    public void Initialize()
     {
-        var gm = GameManager.Instance;
-        var ui = UIManager.Instance;
+        if (levels == null) levels = new List<LevelDataSO>();
+
+        if (levels.Count == 0 && currentLevelData != null)
+        {
+            levels.Add(currentLevelData);
+        }
     }
 
     public void LoadLevel(LevelDataSO levelData)
@@ -108,10 +115,8 @@ public class LevelLoader : MonoBehaviour
         currentLevelData = levelData;
         ClearCurrentLevel();
 
-        if (bus2x1Prefab != null && bus3x1Prefab != null)
-        {
-            GamePoolManager.Instance.SetPrefabs(bus2x1Prefab, bus3x1Prefab, passengerPrefab);
-        }
+        // Pools are created once from the serialized prefabs; do not reset them per level.
+        GamePoolManager.Instance.Initialize();
 
         if (GridManager.Instance != null)
         {

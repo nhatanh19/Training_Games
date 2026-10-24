@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[DefaultExecutionOrder(-500)]
 public class PassengerQueueManager : MonoBehaviour
 {
     public static PassengerQueueManager Instance { get; private set; }
@@ -16,6 +17,7 @@ public class PassengerQueueManager : MonoBehaviour
 
     private readonly Queue<PassengerController> _queue = new Queue<PassengerController>();
     private bool _isBoarding = false;
+    private bool _initialized = false;
 
     public int RemainingPassengersCount => _queue.Count;
     public bool IsBoarding => _isBoarding;
@@ -36,12 +38,28 @@ public class PassengerQueueManager : MonoBehaviour
 
     private void Start()
     {
-        InitializeQueue();
+        // When a GameBootstrap exists it calls Initialize() before the level starts.
+        if (GameBootstrap.IsDriving) return;
+
+        Initialize();
+    }
+
+    /// <summary>
+    /// Subscribes to bus-stop events and seeds the queue from the authored passengers.
+    /// The level loader replaces this queue with the level data afterwards.
+    /// Called by GameBootstrap, or by Start() when the scene has no bootstrap.
+    /// </summary>
+    public void Initialize()
+    {
+        if (_initialized) return;
+        _initialized = true;
 
         if (BusStopManager.Instance != null)
         {
             BusStopManager.Instance.OnBusArrivedAtStop += OnBusArrived;
         }
+
+        InitializeQueue();
     }
 
     private void OnDestroy()

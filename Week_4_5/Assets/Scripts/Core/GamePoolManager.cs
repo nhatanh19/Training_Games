@@ -43,6 +43,14 @@ public class GamePoolManager : MonoBehaviour
             return;
         }
 
+        Initialize();
+    }
+
+    /// <summary>
+    /// Creates the object pools once. Safe to call repeatedly; existing pools are reused.
+    /// </summary>
+    public void Initialize()
+    {
         InitPools();
     }
 
