@@ -65,7 +65,7 @@ public class BusController : MonoBehaviour
     private void OnValidate()
     {
         EnsureDefaultScale();
-        ApplyColor();
+        ApplyColor(allowCreateArrow: false);
     }
 
     private void Start()
@@ -75,7 +75,7 @@ public class BusController : MonoBehaviour
             EnsureDefaultScale();
             transform.localScale = defaultScale;
             _gridManager = GridManager.Instance != null ? GridManager.Instance : FindObjectOfType<GridManager>();
-            ApplyColor();
+            ApplyColor(allowCreateArrow: true);
             AlignToGrid();
             RegisterToGrid();
         }
@@ -90,12 +90,12 @@ public class BusController : MonoBehaviour
         EnsureDefaultScale();
         transform.localScale = defaultScale;
         _gridManager = GridManager.Instance != null ? GridManager.Instance : FindObjectOfType<GridManager>();
-        ApplyColor();
+        ApplyColor(allowCreateArrow: true);
         AlignToGrid();
         RegisterToGrid();
     }
 
-    public void ApplyColor()
+    public void ApplyColor(bool allowCreateArrow = true)
     {
         if (bodyRenderer == null)
         {
@@ -130,19 +130,27 @@ public class BusController : MonoBehaviour
             Transform arrowTr = transform.Find("DirectionArrow");
             if (arrowTr == null)
             {
-                GameObject arrowGo = new GameObject("DirectionArrow");
-                arrowTr = arrowGo.transform;
-                arrowTr.SetParent(transform, false);
-                arrowRenderer = arrowGo.AddComponent<SpriteRenderer>();
-                arrowRenderer.sortingOrder = 15;
+                // Never create GameObjects or add components during OnValidate or in EditMode
+                if (allowCreateArrow && Application.isPlaying)
+                {
+                    GameObject arrowGo = new GameObject("DirectionArrow");
+                    arrowTr = arrowGo.transform;
+                    arrowTr.SetParent(transform, false);
+                    arrowRenderer = arrowGo.AddComponent<SpriteRenderer>();
+                    arrowRenderer.sortingOrder = 15;
+                }
             }
             else
             {
                 arrowRenderer = arrowTr.GetComponent<SpriteRenderer>();
             }
-            arrowTr.localPosition = new Vector3(arrowX, 0f, 0f);
-            arrowTr.localRotation = Quaternion.identity;
-            arrowTr.localScale = new Vector3(0.42f, 0.42f, 1f);
+
+            if (arrowTr != null)
+            {
+                arrowTr.localPosition = new Vector3(arrowX, 0f, 0f);
+                arrowTr.localRotation = Quaternion.identity;
+                arrowTr.localScale = new Vector3(0.42f, 0.42f, 1f);
+            }
         }
         else
         {

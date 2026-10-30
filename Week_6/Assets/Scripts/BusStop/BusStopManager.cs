@@ -34,11 +34,11 @@ public class BusStopManager : MonoBehaviour
 #if UNITY_EDITOR
     private void OnValidate()
     {
-        SetupSlots();
+        SetupSlots(allowCreate: false);
     }
 #endif
 
-    public void SetupSlots()
+    public void SetupSlots(bool allowCreate = true)
     {
         if (slots == null) slots = new List<BusStopSlot>();
         slots.RemoveAll(s => s == null);
@@ -53,12 +53,12 @@ public class BusStopManager : MonoBehaviour
 
         for (int i = 0; i < xPositions.Length; i++)
         {
-            BusStopSlot slot;
+            BusStopSlot slot = null;
             if (i < slots.Count)
             {
                 slot = slots[i];
             }
-            else
+            else if (allowCreate)
             {
                 GameObject slotGo = new GameObject("Slot_" + i);
                 slotGo.transform.SetParent(transform, false);
