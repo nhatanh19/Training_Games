@@ -17,6 +17,7 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip _crashClip;
     [SerializeField] private AudioClip _winClip;
     [SerializeField] private AudioClip _loseClip;
+    [SerializeField] private AudioClip _coinClip;
     [SerializeField] private AudioClip _bgmClip;
 
     private bool _initialized;
@@ -76,6 +77,8 @@ public class AudioManager : MonoBehaviour
         if (_crashClip == null) _crashClip = Resources.Load<AudioClip>("Audio/crash");
         if (_winClip == null) _winClip = Resources.Load<AudioClip>("Audio/win");
         if (_loseClip == null) _loseClip = Resources.Load<AudioClip>("Audio/lose");
+        if (_coinClip == null) _coinClip = Resources.Load<AudioClip>("Audio/sfx_collect_money_final");
+        if (_coinClip == null) _coinClip = Resources.Load<AudioClip>("Audio/click");
     }
 
     private void OnDestroy()
@@ -169,6 +172,12 @@ public class AudioManager : MonoBehaviour
     {
         if (_loseClip == null) EnsureClips();
         PlaySound(_loseClip, 1.0f, 1.0f, 1.0f);
+    }
+
+    public void PlayCoin(float pitch = 1.0f)
+    {
+        if (_coinClip == null) EnsureClips();
+        PlaySound(_coinClip, pitch, pitch, 0.9f);
     }
 
     private void PlaySound(AudioClip clip, float minPitch = 1.0f, float maxPitch = 1.0f, float volume = 1.0f)

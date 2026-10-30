@@ -85,6 +85,19 @@ public class UIManager : MonoBehaviour
             if (b != null) _retryLoseButton = b.GetComponent<Button>();
         }
 
+        if (CoinFlyEffectManager.Instance == null)
+        {
+            CoinFlyEffectManager effectMgr = FindObjectOfType<CoinFlyEffectManager>();
+            if (effectMgr == null)
+            {
+                GameObject vfxCanvas = GameObject.Find("VFXCanvas");
+                if (vfxCanvas != null)
+                {
+                    vfxCanvas.AddComponent<CoinFlyEffectManager>();
+                }
+            }
+        }
+
         BindButtons();
     }
 
@@ -173,6 +186,13 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    public bool IsAnyPopupOpen()
+    {
+        return (_winPopup != null && _winPopup.activeSelf) ||
+               (_losePopup != null && _losePopup.activeSelf) ||
+               (_settingsPopup != null && _settingsPopup.activeSelf);
+    }
+
     public void ShowWinPopup()
     {
         if (_winPopup == null) ResolveReferences();
@@ -199,27 +219,32 @@ public class UIManager : MonoBehaviour
 
     public void CloseSettings()
     {
-        HidePopup(_settingsPopup);
+        HidePopupWithAnimation(_settingsPopup);
     }
 
     public void HideAllPopups()
     {
-        HidePopup(_winPopup);
-        HidePopup(_losePopup);
-        HidePopup(_settingsPopup);
+        HidePopupImmediate(_winPopup);
+        HidePopupImmediate(_losePopup);
+        HidePopupImmediate(_settingsPopup);
+        if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.Playing)
+        {
+            GameInputManager.SetLock(false);
+        }
     }
 
     private void ShowPopupWithAnimation(GameObject popup)
     {
         if (popup == null) return;
         popup.SetActive(true);
+        GameInputManager.SetLock(true);
 
         Transform card = popup.transform.Find("Card");
         if (card != null)
         {
             card.DOKill();
-            card.localScale = Vector3.one * 0.6f;
-            card.DOScale(Vector3.one, 0.35f).SetEase(Ease.OutBack).SetLink(popup);
+            card.localScale = Vector3.one * 0.5f;
+            card.DOScale(Vector3.one, 0.35f).From(0.5f).SetEase(Ease.OutBack).SetLink(popup);
         }
 
         CanvasGroup cg = popup.GetComponent<CanvasGroup>();
@@ -231,25 +256,121 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    private void HidePopup(GameObject popup)
+    private void HidePopupWithAnimation(GameObject popup, System.Action onComplete = null)
+    {
+        if (popup == null || !popup.activeSelf)
+        {
+            onComplete?.Invoke();
+            return;
+        }
+
+        Transform card = popup.transform.Find("Card");
+        CanvasGroup cg = popup.GetComponent<CanvasGroup>();
+
+        Sequence seq = DOTween.Sequence();
+        seq.SetLink(popup);
+
+        if (card != null)
+        {
+            card.DOKill();
+            seq.Join(card.DOScale(Vector3.zero, 0.2f).SetEase(Ease.InBack));
+        }
+
+        if (cg != null)
+        {
+            cg.DOKill();
+            seq.Join(cg.DOFade(0f, 0.2f));
+        }
+
+        seq.OnComplete(() =>
+        {
+            popup.SetActive(false);
+            if (!IsAnyPopupOpen() && GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.Playing)
+            {
+                GameInputManager.SetLock(false);
+            }
+            onComplete?.Invoke();
+        });
+    }
+
+    private void HidePopupImmediate(GameObject popup)
     {
         if (popup != null)
         {
+            popup.transform.DOKill();
+            Transform card = popup.transform.Find("Card");
+            if (card != null) card.DOKill();
             popup.SetActive(false);
         }
+    }
+
+    private void HidePopup(GameObject popup)
+    {
+        HidePopupWithAnimation(popup);
     }
 
     private void OnNextLevelClicked()
     {
         AudioManager.Instance?.PlayClick();
-        HideAllPopups();
-        GameManager.Instance?.NextLevel();
+
+        if (_nextLevelButton != null)
+        {
+            _nextLevelButton.interactable = false;
+        }
+
+        Vector3 startPos = Vector3.zero;
+        if (_nextLevelButton != null)
+        {
+            startPos = _nextLevelButton.transform.position;
+        }
+        else if (_winPopup != null)
+        {
+            Transform card = _winPopup.transform.Find("Card");
+            if (card != null) startPos = card.position;
+        }
+
+        Vector3 targetPos = _hudController != null ? _hudController.CoinTargetTransform.position : Vector3.zero;
+
+        if (CoinFlyEffectManager.Instance != null && startPos != Vector3.zero && targetPos != Vector3.zero)
+        {
+            CoinFlyEffectManager.Instance.PlayFlyCoins(startPos, targetPos, 8, 100, () =>
+            {
+                HidePopupWithAnimation(_winPopup, () =>
+                {
+                    if (_nextLevelButton != null) _nextLevelButton.interactable = true;
+                    GameManager.Instance?.NextLevel();
+                });
+            });
+        }
+        else
+        {
+            HidePopupWithAnimation(_winPopup, () =>
+            {
+                if (_nextLevelButton != null) _nextLevelButton.interactable = true;
+                GameManager.Instance?.NextLevel();
+            });
+        }
     }
 
     private void OnRestartClicked()
     {
         AudioManager.Instance?.PlayClick();
-        HideAllPopups();
-        GameManager.Instance?.RestartLevel();
+
+        GameObject activePopup = null;
+        if (_winPopup != null && _winPopup.activeSelf) activePopup = _winPopup;
+        else if (_losePopup != null && _losePopup.activeSelf) activePopup = _losePopup;
+
+        if (activePopup != null)
+        {
+            HidePopupWithAnimation(activePopup, () =>
+            {
+                GameManager.Instance?.RestartLevel();
+            });
+        }
+        else
+        {
+            HideAllPopups();
+            GameManager.Instance?.RestartLevel();
+        }
     }
 }

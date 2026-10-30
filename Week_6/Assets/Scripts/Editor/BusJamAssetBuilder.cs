@@ -154,7 +154,15 @@ public static class BusJamAssetBuilder
 
         // 5. VFXCanvas (Sorting Order: 30)
         GameObject vfxCanvasGo = GetOrCreateCanvasObject("VFXCanvas", 30);
+        if (vfxCanvasGo.GetComponent<CoinFlyEffectManager>() == null)
+        {
+            vfxCanvasGo.AddComponent<CoinFlyEffectManager>();
+        }
         PrefabUtility.SaveAsPrefabAssetAndConnect(vfxCanvasGo, UIDir + "/VFXCanvas.prefab", InteractionMode.AutomatedAction);
+        if (System.IO.Directory.Exists("Assets/Resources/Prefabs/UI"))
+        {
+            PrefabUtility.SaveAsPrefabAsset(vfxCanvasGo, "Assets/Resources/Prefabs/UI/VFXCanvas.prefab");
+        }
 
         // 6. Connect to GameBootstrap
         GameBootstrap bootstrap = Object.FindObjectOfType<GameBootstrap>();

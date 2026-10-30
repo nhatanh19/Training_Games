@@ -287,12 +287,20 @@ public class BusController : MonoBehaviour
 
     private void OnMouseDown()
     {
+        if (GameInputManager.IsLocked) return;
+        if (GameManager.Instance != null && GameManager.Instance.CurrentState != GameState.Playing) return;
+        if (UIManager.Instance != null && UIManager.Instance.IsAnyPopupOpen()) return;
+        if (UnityEngine.EventSystems.EventSystem.current != null && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()) return;
+
         OnClicked();
     }
 
     public void OnClicked()
     {
         if (_isBusy || _assignedSlot != null) return;
+        if (GameInputManager.IsLocked) return;
+        if (GameManager.Instance != null && GameManager.Instance.CurrentState != GameState.Playing) return;
+        if (UIManager.Instance != null && UIManager.Instance.IsAnyPopupOpen()) return;
 
         AudioManager.Instance?.PlayClick();
 

@@ -136,15 +136,21 @@ public class GameBootstrap : MonoBehaviour
             }
         }
 
-        if (GameObject.Find("VFXCanvas") == null)
+        GameObject vfxGo = GameObject.Find("VFXCanvas");
+        if (vfxGo == null)
         {
             GameObject vfxPrefab = Resources.Load<GameObject>("Prefabs/UI/VFXCanvas");
             if (vfxPrefab != null)
             {
-                GameObject vfx = Instantiate(vfxPrefab);
-                vfx.name = "VFXCanvas";
-                vfx.transform.localScale = Vector3.one;
+                vfxGo = Instantiate(vfxPrefab);
+                vfxGo.name = "VFXCanvas";
+                vfxGo.transform.localScale = Vector3.one;
             }
+        }
+
+        if (vfxGo != null && vfxGo.GetComponent<CoinFlyEffectManager>() == null)
+        {
+            vfxGo.AddComponent<CoinFlyEffectManager>();
         }
     }
 

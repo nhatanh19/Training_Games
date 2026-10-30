@@ -34,6 +34,18 @@ public class GameInputManager : MonoBehaviour
     {
         if (IsLocked) return;
 
+        // Block input when game is not playing (e.g. Loading, GameWin, GameOver)
+        if (GameManager.Instance != null && GameManager.Instance.CurrentState != GameState.Playing)
+        {
+            return;
+        }
+
+        // Block input if any modal popup is open
+        if (UIManager.Instance != null && UIManager.Instance.IsAnyPopupOpen())
+        {
+            return;
+        }
+
         bool hasInput = false;
         Vector2 screenPosition = Vector2.zero;
 
@@ -54,21 +66,35 @@ public class GameInputManager : MonoBehaviour
 
         if (!hasInput) return;
 
-        if (IsPointerOverUI()) return;
+        if (IsPointerOverUI(screenPosition)) return;
 
         ProcessClick(screenPosition);
     }
 
-    private bool IsPointerOverUI()
+    private bool IsPointerOverUI(Vector2 screenPosition)
     {
         if (EventSystem.current == null) return false;
 
         if (Input.touchCount > 0)
         {
-            return EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+            for (int i = 0; i < Input.touchCount; i++)
+            {
+                if (EventSystem.current.IsPointerOverGameObject(Input.GetTouch(i).fingerId))
+                    return true;
+            }
         }
 
-        return EventSystem.current.IsPointerOverGameObject();
+        if (EventSystem.current.IsPointerOverGameObject())
+            return true;
+
+        // Fallback UI raycast
+        PointerEventData eventData = new PointerEventData(EventSystem.current)
+        {
+            position = screenPosition
+        };
+        var results = new System.Collections.Generic.List<RaycastResult>();
+        EventSystem.current.RaycastAll(eventData, results);
+        return results.Count > 0;
     }
 
     private void ProcessClick(Vector2 screenPosition)
