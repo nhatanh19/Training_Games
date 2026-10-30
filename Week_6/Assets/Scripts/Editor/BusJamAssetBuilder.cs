@@ -69,6 +69,30 @@ public static class BusJamAssetBuilder
         AssetDatabase.Refresh();
     }
 
+    [MenuItem("Tools/Bus Jam/Safe Area/Simulate iPhone 14 Pro", false, 10)]
+    public static void SimulateIPhone14Pro()
+    {
+        SafeAreaFitter[] fitters = Object.FindObjectsOfType<SafeAreaFitter>(true);
+        foreach (var f in fitters) f.SimulateIPhone14Pro();
+        Debug.Log("[Bus Jam] Simulated iPhone 14 Pro Dynamic Island Safe Area on all fitters.");
+    }
+
+    [MenuItem("Tools/Bus Jam/Safe Area/Simulate iPhone X Notch", false, 11)]
+    public static void SimulateIPhoneX()
+    {
+        SafeAreaFitter[] fitters = Object.FindObjectsOfType<SafeAreaFitter>(true);
+        foreach (var f in fitters) f.SimulateIPhoneX();
+        Debug.Log("[Bus Jam] Simulated iPhone X/11 Notch Safe Area on all fitters.");
+    }
+
+    [MenuItem("Tools/Bus Jam/Safe Area/Reset Safe Area (Normal)", false, 12)]
+    public static void ResetSafeAreaSimulation()
+    {
+        SafeAreaFitter[] fitters = Object.FindObjectsOfType<SafeAreaFitter>(true);
+        foreach (var f in fitters) f.DisableSimulation();
+        Debug.Log("[Bus Jam] Reset Safe Area simulation.");
+    }
+
     [MenuItem("Tools/Bus Jam/2. Build Task 1 UI Architecture", false, 21)]
     public static void BuildTask1UIArchitecture()
     {
@@ -196,6 +220,9 @@ public static class BusJamAssetBuilder
         {
             hudPanel = hudPanelTrans.gameObject;
         }
+
+        SafeAreaFitter saf = hudPanel.GetComponent<SafeAreaFitter>();
+        if (saf == null) saf = hudPanel.AddComponent<SafeAreaFitter>();
 
         // Settings Button (Top-Left)
         Button settingsBtn = GetOrCreateButton(hudPanel.transform, "SettingsButton", "SETTINGS", font, new Vector2(0f, 0.5f), new Vector2(90f, -30f), new Vector2(150f, 75f), new Color(0.2f, 0.2f, 0.25f, 0.85f), Color.white, 24);

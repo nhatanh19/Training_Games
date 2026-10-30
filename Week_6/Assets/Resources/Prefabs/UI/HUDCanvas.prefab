@@ -537,6 +537,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1024856589924359984}
+  - component: {fileID: 4340803632511743163}
   m_Layer: 0
   m_Name: HUDPanel
   m_TagString: Untagged
@@ -915,7 +916,7 @@ MonoBehaviour:
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 1080, y: 1920}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -1089,3 +1090,26 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &4340803632511743163
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4340803632511743162}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75d3442c5184f39981399130fe3faf6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _applyTop: 1
+  _applyBottom: 1
+  _applyLeft: 1
+  _applyRight: 1
+  _simulateInEditor: 0
+  _editorSimulatedSafeArea:
+    serializedVersion: 2
+    x: 0
+    y: 102
+    width: 1080
+    height: 1716
