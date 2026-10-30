@@ -33,9 +33,11 @@ public static class BusJamAssetBuilder
                        GameObject.Find("HUDCanvas") == null ||
                        GameObject.Find("PopupCanvas") == null;
 
-        if (needsVFX || needsUI)
+        bool needsVisuals = GameObject.Find("SceneBackground") == null;
+
+        if (needsVFX || needsUI || needsVisuals)
         {
-            Debug.Log("[Bus Jam] Auto-building Task 1 UI Architecture & Prefabs...");
+            Debug.Log("[Bus Jam] Auto-building Task 1 UI Architecture, Prefabs & Visuals...");
             BuildAllAndSetupScene();
         }
     }
@@ -43,9 +45,10 @@ public static class BusJamAssetBuilder
     [MenuItem("Tools/Bus Jam/Build All Prefabs and Setup Scene", false, 1)]
     public static void BuildAllAndSetupScene()
     {
-                GenerateVFXPrefabs();
+        GenerateVFXPrefabs();
         BuildTask1UIArchitecture();
         SetupAudioSourceAndSlots();
+        UpgradeVisuals();
 
         EditorSceneManager.SaveScene(SceneManager.GetActiveScene());
         AssetDatabase.SaveAssets();
@@ -164,6 +167,8 @@ public static class BusJamAssetBuilder
 
         GraphicRaycaster raycaster = go.GetComponent<GraphicRaycaster>();
         if (raycaster == null) go.AddComponent<GraphicRaycaster>();
+
+        go.transform.localScale = Vector3.one;
 
         return go;
     }
@@ -741,6 +746,252 @@ public static class BusJamAssetBuilder
             }
             AssetDatabase.CreateFolder(parent, leaf);
         }
+    }
+
+    [MenuItem("Tools/Bus Jam/3. Upgrade Visuals (Art, Slots, Prefabs, Background)", false, 22)]
+    public static void UpgradeVisuals()
+    {
+        ConfigureSpriteImporters("Assets/Art/Sprites/Generated");
+        ConfigureSpriteImporters("Assets/Resources/Vehicles");
+        AssetDatabase.Refresh();
+
+        UpgradePassengerPrefab();
+        UpgradeBusPrefabs();
+        SetupSceneVisuals();
+
+        EditorSceneManager.SaveScene(SceneManager.GetActiveScene());
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        Debug.Log("[Bus Jam] All visual upgrades applied successfully!");
+    }
+
+    private static void ConfigureSpriteImporters(string rootFolder)
+    {
+        if (!Directory.Exists(rootFolder)) return;
+
+        string[] files = Directory.GetFiles(rootFolder, "*.png", SearchOption.AllDirectories);
+        foreach (string file in files)
+        {
+            string assetPath = file.Replace("\\", "/");
+            TextureImporter importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+            if (importer != null)
+            {
+                bool changed = false;
+                if (importer.textureType != TextureImporterType.Sprite)
+                {
+                    importer.textureType = TextureImporterType.Sprite;
+                    changed = true;
+                }
+                if (importer.spritePixelsPerUnit != 256)
+                {
+                    importer.spritePixelsPerUnit = 256;
+                    changed = true;
+                }
+                if (importer.filterMode != FilterMode.Bilinear)
+                {
+                    importer.filterMode = FilterMode.Bilinear;
+                    changed = true;
+                }
+                if (!importer.alphaIsTransparency)
+                {
+                    importer.alphaIsTransparency = true;
+                    changed = true;
+                }
+                if (importer.mipmapEnabled)
+                {
+                    importer.mipmapEnabled = false;
+                    changed = true;
+                }
+                if (changed)
+                {
+                    importer.SaveAndReimport();
+                }
+            }
+        }
+    }
+
+    private static void UpgradePassengerPrefab()
+    {
+        string path = "Assets/Prefabs/Passenger.prefab";
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        if (prefab == null) return;
+
+        GameObject instance = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+        if (instance == null) return;
+
+        Sprite passSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Sprites/Generated/Passengers/passenger_white.png");
+        SpriteRenderer sr = instance.GetComponent<SpriteRenderer>();
+        if (sr == null) sr = instance.AddComponent<SpriteRenderer>();
+
+        if (passSprite != null)
+        {
+            sr.sprite = passSprite;
+            sr.sortingOrder = 30;
+        }
+
+        instance.transform.localScale = new Vector3(0.42f, 0.42f, 1f);
+
+        SerializedObject so = new SerializedObject(instance.GetComponent<PassengerController>());
+        SerializedProperty scaleProp = so.FindProperty("defaultScale");
+        if (scaleProp != null)
+        {
+            scaleProp.vector3Value = new Vector3(0.42f, 0.42f, 1f);
+        }
+        so.ApplyModifiedProperties();
+
+        PrefabUtility.SaveAsPrefabAsset(instance, path);
+        Object.DestroyImmediate(instance);
+        Debug.Log("[Bus Jam] Passenger.prefab upgraded with original 3D cartoon silhouette!");
+    }
+
+    private static void UpgradeBusPrefabs()
+    {
+        UpgradeSingleBusPrefab("Assets/Prefabs/Bus_2x1.prefab", 2);
+        UpgradeSingleBusPrefab("Assets/Prefabs/Bus_3x1.prefab", 3);
+    }
+
+    private static void UpgradeSingleBusPrefab(string path, int length)
+    {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        if (prefab == null) return;
+
+        GameObject instance = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+        if (instance == null) return;
+
+        Transform frontGlass = instance.transform.Find("FrontGlass");
+        if (frontGlass != null)
+        {
+            Object.DestroyImmediate(frontGlass.gameObject);
+        }
+
+        for (int i = 0; i < 3; i++)
+        {
+            Transform seat = instance.transform.Find($"Seat_{i}");
+            if (seat != null)
+            {
+                SpriteRenderer seatSr = seat.GetComponent<SpriteRenderer>();
+                if (seatSr != null)
+                {
+                    Object.DestroyImmediate(seatSr);
+                }
+            }
+        }
+
+        Transform s0 = instance.transform.Find("Seat_0");
+        Transform s1 = instance.transform.Find("Seat_1");
+        Transform s2 = instance.transform.Find("Seat_2");
+        if (length == 3)
+        {
+            if (s0 != null) s0.localPosition = new Vector3(-0.75f, 0f, 0f);
+            if (s1 != null) s1.localPosition = new Vector3(-0.15f, 0f, 0f);
+            if (s2 != null) s2.localPosition = new Vector3(0.45f, 0f, 0f);
+        }
+        else
+        {
+            if (s0 != null) s0.localPosition = new Vector3(-0.50f, 0f, 0f);
+            if (s1 != null) s1.localPosition = new Vector3(-0.15f, 0f, 0f);
+            if (s2 != null) s2.localPosition = new Vector3(0.20f, 0f, 0f);
+        }
+
+        SpriteRenderer rootSr = instance.GetComponent<SpriteRenderer>();
+        if (rootSr == null) rootSr = instance.AddComponent<SpriteRenderer>();
+        rootSr.sortingOrder = 10;
+        string vType = length == 3 ? "bus" : "car";
+        Sprite defaultSprite = AssetDatabase.LoadAssetAtPath<Sprite>($"Assets/Art/Sprites/Generated/Vehicles/{vType}_seat/{vType}_seat_blue_right.png");
+        if (defaultSprite != null)
+        {
+            rootSr.sprite = defaultSprite;
+            rootSr.color = Color.white;
+        }
+
+        float arrowX = length == 3 ? 0.95f : 0.55f;
+        Transform arrowTr = instance.transform.Find("DirectionArrow");
+        if (arrowTr == null)
+        {
+            GameObject arrowGo = new GameObject("DirectionArrow");
+            arrowTr = arrowGo.transform;
+            arrowTr.SetParent(instance.transform, false);
+        }
+        arrowTr.localPosition = new Vector3(arrowX, 0f, 0f);
+        arrowTr.localRotation = Quaternion.identity;
+        arrowTr.localScale = new Vector3(0.42f, 0.42f, 1f);
+
+        SpriteRenderer arrowSr = arrowTr.GetComponent<SpriteRenderer>();
+        if (arrowSr == null) arrowSr = arrowTr.gameObject.AddComponent<SpriteRenderer>();
+        arrowSr.sortingOrder = 15;
+        Sprite arrowSprite = AssetDatabase.LoadAssetAtPath<Sprite>($"Assets/Art/Sprites/Generated/Vehicles/{vType}_arrow/{vType}_arrow_blue_right.png");
+        if (arrowSprite != null)
+        {
+            arrowSr.sprite = arrowSprite;
+            arrowSr.color = Color.white;
+        }
+
+        BoxCollider2D col = instance.GetComponent<BoxCollider2D>();
+        if (col != null)
+        {
+            col.size = new Vector2(length, 1f);
+            col.offset = Vector2.zero;
+        }
+
+        BusController bc = instance.GetComponent<BusController>();
+        if (bc != null)
+        {
+            SerializedObject so = new SerializedObject(bc);
+            SetObjProp(so, "bodyRenderer", rootSr);
+            SetObjProp(so, "arrowRenderer", arrowSr);
+            SerializedProperty scaleProp = so.FindProperty("defaultScale");
+            Vector3 targetScale = new Vector3(0.95f, 0.95f, 1f);
+            if (scaleProp != null)
+            {
+                scaleProp.vector3Value = targetScale;
+            }
+            instance.transform.localScale = targetScale;
+            so.ApplyModifiedProperties();
+        }
+
+        PrefabUtility.SaveAsPrefabAsset(instance, path);
+        Object.DestroyImmediate(instance);
+        Debug.Log($"[Bus Jam] {path} upgraded with original vehicle art, arrow, and seat anchors!");
+    }
+
+    private static void SetupSceneVisuals()
+    {
+        GameObject bgGo = GameObject.Find("SceneBackground");
+        if (bgGo == null)
+        {
+            bgGo = new GameObject("SceneBackground");
+        }
+        bgGo.transform.position = new Vector3(0f, 0f, 0f);
+        bgGo.transform.localScale = new Vector3(0.78f, 0.78f, 1f);
+
+        SpriteRenderer bgSr = bgGo.GetComponent<SpriteRenderer>();
+        if (bgSr == null) bgSr = bgGo.AddComponent<SpriteRenderer>();
+        bgSr.sortingOrder = -100;
+        Sprite bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Sprites/Generated/Background/background.png");
+        if (bgSprite != null)
+        {
+            bgSr.sprite = bgSprite;
+            bgSr.color = Color.white;
+        }
+
+        Sprite slotSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Sprites/Generated/Park/park_slot_unlock.png");
+        for (int i = 0; i <= 4; i++)
+        {
+            GameObject slotGo = GameObject.Find($"Slot_{i}");
+            if (slotGo != null)
+            {
+                SpriteRenderer slotSr = slotGo.GetComponent<SpriteRenderer>();
+                if (slotSr == null) slotSr = slotGo.AddComponent<SpriteRenderer>();
+                slotSr.sortingOrder = -10;
+                if (slotSprite != null)
+                {
+                    slotSr.sprite = slotSprite;
+                    slotSr.color = Color.white;
+                }
+                slotGo.transform.localScale = new Vector3(1.0f, 0.95f, 1.0f);
+            }
+        }
+        Debug.Log("[Bus Jam] SceneBackground and BusStopSlots configured in scene!");
     }
 
     private static void SetObjProp(SerializedObject so, string propName, Object value)

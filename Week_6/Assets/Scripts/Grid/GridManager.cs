@@ -36,11 +36,6 @@ public class GridManager : MonoBehaviour
             return;
         }
 
-        if (transform.position.y < -0.8f)
-        {
-            transform.position = new Vector3(transform.position.x, -0.6f, transform.position.z);
-        }
-
         if (Camera.main != null && Camera.main.orthographic)
         {
             Camera.main.orthographicSize = Mathf.Max(Camera.main.orthographicSize, 7.8f);

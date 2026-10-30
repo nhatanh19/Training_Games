@@ -6,6 +6,7 @@ public class BusController : MonoBehaviour
 {
     [Header("Visual")]
     [SerializeField] private SpriteRenderer bodyRenderer;
+    [SerializeField] private SpriteRenderer arrowRenderer;
     [SerializeField] private Vector3 defaultScale;
 
     [Header("Bus Properties")]
@@ -41,20 +42,23 @@ public class BusController : MonoBehaviour
     private void Awake()
     {
         EnsureDefaultScale();
+        transform.localScale = defaultScale;
+
+        BoxCollider2D col = GetComponent<BoxCollider2D>();
+        if (col != null)
+        {
+            col.size = new Vector2(length, 1f);
+            col.offset = Vector2.zero;
+        }
     }
 
     private void EnsureDefaultScale()
     {
-        if (defaultScale == Vector3.zero || defaultScale == Vector3.one)
+        // Target uniform scale for 256 PPU sprites (2.0x1.0 and 3.0x1.0) on 0.95 grid cellSize
+        Vector3 targetScale = new Vector3(0.95f, 0.95f, 1f);
+        if (defaultScale == Vector3.zero || defaultScale == Vector3.one || defaultScale.x > 1.2f)
         {
-            if (transform.localScale != Vector3.zero && transform.localScale != Vector3.one)
-            {
-                defaultScale = transform.localScale;
-            }
-            else
-            {
-                defaultScale = (length == 3) ? new Vector3(2.65f, 0.8f, 1f) : new Vector3(1.74f, 0.8f, 1f);
-            }
+            defaultScale = targetScale;
         }
     }
 
@@ -104,7 +108,91 @@ public class BusController : MonoBehaviour
 
         if (bodyRenderer != null)
         {
+            bodyRenderer.sortingOrder = 10;
+        }
+
+        Transform fg = transform.Find("FrontGlass");
+        if (fg != null) fg.gameObject.SetActive(false);
+
+        for (int i = 0; i < seatPoints.Count; i++)
+        {
+            var seat = seatPoints[i];
+            if (seat != null)
+            {
+                SpriteRenderer sr = seat.GetComponent<SpriteRenderer>();
+                if (sr != null) sr.enabled = false;
+            }
+        }
+
+        float arrowX = length == 3 ? 0.95f : 0.55f;
+        if (arrowRenderer == null)
+        {
+            Transform arrowTr = transform.Find("DirectionArrow");
+            if (arrowTr == null)
+            {
+                GameObject arrowGo = new GameObject("DirectionArrow");
+                arrowTr = arrowGo.transform;
+                arrowTr.SetParent(transform, false);
+                arrowRenderer = arrowGo.AddComponent<SpriteRenderer>();
+                arrowRenderer.sortingOrder = 15;
+            }
+            else
+            {
+                arrowRenderer = arrowTr.GetComponent<SpriteRenderer>();
+            }
+            arrowTr.localPosition = new Vector3(arrowX, 0f, 0f);
+            arrowTr.localRotation = Quaternion.identity;
+            arrowTr.localScale = new Vector3(0.42f, 0.42f, 1f);
+        }
+        else
+        {
+            arrowRenderer.transform.localPosition = new Vector3(arrowX, 0f, 0f);
+            arrowRenderer.transform.localScale = new Vector3(0.42f, 0.42f, 1f);
+        }
+
+        // Adjust seat points to sit neatly on the roof behind the arrow
+        if (seatPoints != null && seatPoints.Count >= 3)
+        {
+            if (length == 3)
+            {
+                if (seatPoints[0] != null) seatPoints[0].localPosition = new Vector3(-0.75f, 0f, 0f);
+                if (seatPoints[1] != null) seatPoints[1].localPosition = new Vector3(-0.15f, 0f, 0f);
+                if (seatPoints[2] != null) seatPoints[2].localPosition = new Vector3(0.45f, 0f, 0f);
+            }
+            else
+            {
+                if (seatPoints[0] != null) seatPoints[0].localPosition = new Vector3(-0.50f, 0f, 0f);
+                if (seatPoints[1] != null) seatPoints[1].localPosition = new Vector3(-0.15f, 0f, 0f);
+                if (seatPoints[2] != null) seatPoints[2].localPosition = new Vector3(0.20f, 0f, 0f);
+            }
+        }
+
+        string vehicleType = length == 3 ? "bus" : "car";
+        string colorName = busColor switch
+        {
+            BusColor.Red => "red",
+            BusColor.Blue => "blue",
+            BusColor.Green => "green",
+            BusColor.Yellow => "yellow",
+            _ => "blue"
+        };
+
+        Sprite vSprite = Resources.Load<Sprite>($"Vehicles/{vehicleType}_seat/{vehicleType}_seat_{colorName}_right");
+        if (vSprite != null && bodyRenderer != null)
+        {
+            bodyRenderer.sprite = vSprite;
+            bodyRenderer.color = UnityEngine.Color.white;
+        }
+        else if (bodyRenderer != null)
+        {
             bodyRenderer.color = GetVisualColor(busColor);
+        }
+
+        Sprite aSprite = Resources.Load<Sprite>($"Vehicles/{vehicleType}_arrow/{vehicleType}_arrow_{colorName}_right");
+        if (aSprite != null && arrowRenderer != null)
+        {
+            arrowRenderer.sprite = aSprite;
+            arrowRenderer.color = UnityEngine.Color.white;
         }
     }
 

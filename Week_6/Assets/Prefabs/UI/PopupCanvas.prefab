@@ -1820,7 +1820,6 @@ GameObject:
   - component: {fileID: 5111703942213042585}
   - component: {fileID: 7660112195057107869}
   - component: {fileID: 1399677930903073300}
-  - component: {fileID: 1495433682661173420}
   m_Layer: 0
   m_Name: PopupCanvas
   m_TagString: Untagged
@@ -1837,7 +1836,7 @@ RectTransform:
   m_GameObject: {fileID: 5700862999860723246}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8652321306894227140}
@@ -1913,25 +1912,6 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
---- !u!114 &1495433682661173420
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5700862999860723246}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9f0e1d2c3b4a5f6e7d8c9b0a1f2e3d4c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _hudController: {fileID: 0}
-  _winPopup: {fileID: 1588586423203263720}
-  _losePopup: {fileID: 6554045136097988759}
-  _settingsPopup: {fileID: 8465780858413138450}
-  _nextLevelButton: {fileID: 4027273975267710131}
-  _replayWinButton: {fileID: 8261520274568098237}
-  _retryLoseButton: {fileID: 5870508594305959117}
 --- !u!1 &6094102979475852969
 GameObject:
   m_ObjectHideFlags: 0
@@ -3172,7 +3152,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u2715"
+  m_text: "X"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

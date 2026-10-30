@@ -5,7 +5,7 @@ public class PassengerController : MonoBehaviour
 {
     [SerializeField] private BusColor color;
     [SerializeField] private SpriteRenderer visualRenderer;
-    [SerializeField] private Vector3 defaultScale = new Vector3(0.4f, 0.4f, 1f);
+    [SerializeField] private Vector3 defaultScale = new Vector3(0.85f, 0.85f, 1f);
 
     public BusColor Color => color;
 
@@ -17,9 +17,9 @@ public class PassengerController : MonoBehaviour
 
     private void EnsureDefaultScale()
     {
-        if (defaultScale == Vector3.zero)
+        if (defaultScale == Vector3.zero || defaultScale.x < 0.6f)
         {
-            defaultScale = transform.localScale != Vector3.zero ? transform.localScale : new Vector3(0.4f, 0.4f, 1f);
+            defaultScale = new Vector3(0.85f, 0.85f, 1f);
         }
     }
 
@@ -48,6 +48,12 @@ public class PassengerController : MonoBehaviour
 
         if (visualRenderer != null)
         {
+            Sprite passSprite = Resources.Load<Sprite>("Passengers/passenger_white");
+            if (passSprite != null)
+            {
+                visualRenderer.sprite = passSprite;
+            }
+            visualRenderer.sortingOrder = 30;
             visualRenderer.color = GetVisualColor(color);
         }
     }
@@ -72,9 +78,11 @@ public class PassengerController : MonoBehaviour
             .SetEase(Ease.OutQuad)
             .OnComplete(() =>
             {
-                transform.SetParent(seatPoint);
+                transform.SetParent(seatPoint, false);
                 transform.localPosition = Vector3.zero;
                 transform.localRotation = Quaternion.identity;
+                EnsureDefaultScale();
+                transform.localScale = defaultScale;
                 onComplete?.Invoke();
             });
     }

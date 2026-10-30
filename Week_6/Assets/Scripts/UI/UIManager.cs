@@ -31,13 +31,58 @@ public class UIManager : MonoBehaviour
         }
         else if (Instance != this)
         {
-            Destroy(gameObject);
+            Destroy(this);
             return;
         }
 
+        ResolveReferences();
+    }
+
+    public void ResolveReferences()
+    {
         if (_hudController == null)
         {
             _hudController = FindObjectOfType<HUDController>();
+        }
+
+        GameObject popupCanvas = GameObject.Find("PopupCanvas");
+        if (popupCanvas != null)
+        {
+            if (_winPopup == null)
+            {
+                Transform t = popupCanvas.transform.Find("WinPopup");
+                if (t != null) _winPopup = t.gameObject;
+            }
+            if (_losePopup == null)
+            {
+                Transform t = popupCanvas.transform.Find("LosePopup");
+                if (t != null) _losePopup = t.gameObject;
+            }
+            if (_settingsPopup == null)
+            {
+                Transform t = popupCanvas.transform.Find("SettingsPopup");
+                if (t != null) _settingsPopup = t.gameObject;
+            }
+        }
+
+        if (_winPopup != null)
+        {
+            if (_nextLevelButton == null)
+            {
+                Transform b = _winPopup.transform.Find("Card/MainButton");
+                if (b != null) _nextLevelButton = b.GetComponent<Button>();
+            }
+            if (_replayWinButton == null)
+            {
+                Transform b = _winPopup.transform.Find("Card/SubButton");
+                if (b != null) _replayWinButton = b.GetComponent<Button>();
+            }
+        }
+
+        if (_losePopup != null && _retryLoseButton == null)
+        {
+            Transform b = _losePopup.transform.Find("Card/MainButton");
+            if (b != null) _retryLoseButton = b.GetComponent<Button>();
         }
 
         BindButtons();
@@ -53,6 +98,8 @@ public class UIManager : MonoBehaviour
     {
         if (_initialized) return;
         _initialized = true;
+
+        ResolveReferences();
 
         if (GameManager.Instance != null)
         {
@@ -128,6 +175,7 @@ public class UIManager : MonoBehaviour
 
     public void ShowWinPopup()
     {
+        if (_winPopup == null) ResolveReferences();
         HidePopup(_losePopup);
         HidePopup(_settingsPopup);
         ShowPopupWithAnimation(_winPopup);
@@ -135,6 +183,7 @@ public class UIManager : MonoBehaviour
 
     public void ShowLosePopup()
     {
+        if (_losePopup == null) ResolveReferences();
         HidePopup(_winPopup);
         HidePopup(_settingsPopup);
         ShowPopupWithAnimation(_losePopup);
@@ -142,6 +191,9 @@ public class UIManager : MonoBehaviour
 
     public void OpenSettings()
     {
+        if (_settingsPopup == null) ResolveReferences();
+        HidePopup(_winPopup);
+        HidePopup(_losePopup);
         ShowPopupWithAnimation(_settingsPopup);
     }
 

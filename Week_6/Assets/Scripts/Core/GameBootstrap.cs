@@ -79,6 +79,7 @@ public class GameBootstrap : MonoBehaviour
         if (_initialized) return;
         _initialized = true;
 
+        EnsureCanvases();
         ResolveReferences();
 
         if (gameManager == null)
@@ -106,7 +107,62 @@ public class GameBootstrap : MonoBehaviour
         gameManager.Initialize();
         uiManager?.Initialize();
 
+        EnsureSceneBackground();
         levelLoader?.Initialize();
         gameManager.StartGame();
+    }
+
+    private void EnsureCanvases()
+    {
+        if (GameObject.Find("HUDCanvas") == null)
+        {
+            GameObject hudPrefab = Resources.Load<GameObject>("Prefabs/UI/HUDCanvas");
+            if (hudPrefab != null)
+            {
+                GameObject hud = Instantiate(hudPrefab);
+                hud.name = "HUDCanvas";
+                hud.transform.localScale = Vector3.one;
+            }
+        }
+
+        if (GameObject.Find("PopupCanvas") == null)
+        {
+            GameObject popupPrefab = Resources.Load<GameObject>("Prefabs/UI/PopupCanvas");
+            if (popupPrefab != null)
+            {
+                GameObject popup = Instantiate(popupPrefab);
+                popup.name = "PopupCanvas";
+                popup.transform.localScale = Vector3.one;
+            }
+        }
+
+        if (GameObject.Find("VFXCanvas") == null)
+        {
+            GameObject vfxPrefab = Resources.Load<GameObject>("Prefabs/UI/VFXCanvas");
+            if (vfxPrefab != null)
+            {
+                GameObject vfx = Instantiate(vfxPrefab);
+                vfx.name = "VFXCanvas";
+                vfx.transform.localScale = Vector3.one;
+            }
+        }
+    }
+
+    private void EnsureSceneBackground()
+    {
+        GameObject bgGo = GameObject.Find("SceneBackground");
+        if (bgGo == null)
+        {
+            bgGo = new GameObject("SceneBackground");
+            bgGo.transform.position = Vector3.zero;
+            bgGo.transform.localScale = new Vector3(0.78f, 0.78f, 1f);
+            SpriteRenderer sr = bgGo.AddComponent<SpriteRenderer>();
+            sr.sortingOrder = -100;
+            Sprite bgSprite = Resources.Load<Sprite>("Background/background");
+            if (bgSprite != null)
+            {
+                sr.sprite = bgSprite;
+            }
+        }
     }
 }

@@ -10,7 +10,7 @@ public class PassengerQueueManager : MonoBehaviour
     [Header("Queue Layout")]
     [SerializeField] private Transform queueStartPoint;
     [SerializeField] private Vector2 queueDirection = Vector2.right;
-    [SerializeField] private float spacing = 0.65f;
+    [SerializeField] private float spacing = 0.80f;
 
     [Header("Initial Passengers")]
     [SerializeField] private List<PassengerController> initialPassengers = new List<PassengerController>();

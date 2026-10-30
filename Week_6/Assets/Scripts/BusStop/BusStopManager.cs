@@ -6,6 +6,7 @@ public class BusStopManager : MonoBehaviour
 {
     public static BusStopManager Instance { get; private set; }
 
+    [SerializeField] private float bayY = 3.25f;
     [SerializeField] private List<BusStopSlot> slots = new List<BusStopSlot>();
 
     public event Action<BusController> OnBusArrivedAtStop;
@@ -48,7 +49,7 @@ public class BusStopManager : MonoBehaviour
         }
 
         float[] xPositions = new float[] { -2.6f, -1.3f, 0f, 1.3f, 2.6f };
-        float bayY = 3.8f;
+        float bayY = this.bayY;
 
         for (int i = 0; i < xPositions.Length; i++)
         {
