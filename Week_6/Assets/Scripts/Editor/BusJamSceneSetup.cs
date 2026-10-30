@@ -53,6 +53,9 @@ public static class BusJamSceneSetup
         GamePoolManager poolManager = Object.FindObjectOfType<GamePoolManager>();
         GameManager gameManager = Object.FindObjectOfType<GameManager>();
         UIManager uiManager = Object.FindObjectOfType<UIManager>();
+        HUDController hudController = Object.FindObjectOfType<HUDController>();
+        SettingsManager settingsManager = Object.FindObjectOfType<SettingsManager>();
+        AudioManager audioManager = Object.FindObjectOfType<AudioManager>();
         VFXManager vfxManager = Object.FindObjectOfType<VFXManager>();
         CameraShakeManager cameraShakeManager = Object.FindObjectOfType<CameraShakeManager>();
 
@@ -92,7 +95,10 @@ public static class BusJamSceneSetup
         changed |= Assign(bootstrapSo, "levelLoader", levelLoader);
         changed |= Assign(bootstrapSo, "poolManager", poolManager);
         changed |= Assign(bootstrapSo, "gameManager", gameManager);
+        changed |= Assign(bootstrapSo, "settingsManager", settingsManager);
+        changed |= Assign(bootstrapSo, "audioManager", audioManager);
         changed |= Assign(bootstrapSo, "uiManager", uiManager);
+        changed |= Assign(bootstrapSo, "hudController", hudController);
         changed |= Assign(bootstrapSo, "vfxManager", vfxManager);
         changed |= Assign(bootstrapSo, "cameraShakeManager", cameraShakeManager);
         bootstrapSo.ApplyModifiedPropertiesWithoutUndo();

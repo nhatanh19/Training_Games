@@ -1,104 +1,161 @@
 using UnityEngine;
 
+[RequireComponent(typeof(AudioSource))]
 public class AudioManager : MonoBehaviour
 {
-    private static AudioManager _instance;
+    public static AudioManager Instance { get; private set; }
 
-    public static AudioManager Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                _instance = FindObjectOfType<AudioManager>();
-                if (_instance == null)
-                {
-                    GameObject go = new GameObject("AudioManager");
-                    _instance = go.AddComponent<AudioManager>();
-                }
-            }
-            return _instance;
-        }
-    }
+    [Header("Audio Sources")]
+    [SerializeField] private AudioSource _sfxSource;
+    [SerializeField] private AudioSource _bgmSource;
 
     [Header("Audio Clips")]
-    [SerializeField] private AudioClip clickClip;
-    [SerializeField] private AudioClip honkClip;
-    [SerializeField] private AudioClip engineClip;
-    [SerializeField] private AudioClip footstepClip;
-    [SerializeField] private AudioClip crashClip;
-    [SerializeField] private AudioClip winClip;
-    [SerializeField] private AudioClip loseClip;
+    [SerializeField] private AudioClip _clickClip;
+    [SerializeField] private AudioClip _honkClip;
+    [SerializeField] private AudioClip _engineClip;
+    [SerializeField] private AudioClip _footstepClip;
+    [SerializeField] private AudioClip _crashClip;
+    [SerializeField] private AudioClip _winClip;
+    [SerializeField] private AudioClip _loseClip;
+    [SerializeField] private AudioClip _bgmClip;
 
-    private AudioSource _sfxSource;
+    private bool _initialized;
 
     private void Awake()
     {
-        if (_instance == null)
+        if (Instance == null)
         {
-            _instance = this;
+            Instance = this;
         }
-        else if (_instance != this)
+        else if (Instance != this)
         {
             Destroy(gameObject);
             return;
         }
 
-        _sfxSource = GetComponent<AudioSource>();
-        if (_sfxSource == null)
+        SetupSources();
+    }
+
+    private void Start()
+    {
+        Initialize();
+    }
+
+    public void Initialize()
+    {
+        if (_initialized) return;
+        _initialized = true;
+
+        SetupSources();
+
+        if (SettingsManager.Instance != null)
         {
-            _sfxSource = gameObject.AddComponent<AudioSource>();
+            SettingsManager.Instance.OnSoundChanged += HandleSoundSettingChanged;
+            SettingsManager.Instance.OnMusicChanged += HandleMusicSettingChanged;
+
+            HandleSoundSettingChanged(SettingsManager.Instance.IsSoundOn);
+            HandleMusicSettingChanged(SettingsManager.Instance.IsMusicOn);
         }
 
-        _sfxSource.playOnAwake = false;
+        if (_bgmClip != null && _bgmSource != null)
+        {
+            _bgmSource.clip = _bgmClip;
+            _bgmSource.loop = true;
+            _bgmSource.Play();
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (SettingsManager.Instance != null)
+        {
+            SettingsManager.Instance.OnSoundChanged -= HandleSoundSettingChanged;
+            SettingsManager.Instance.OnMusicChanged -= HandleMusicSettingChanged;
+        }
+    }
+
+    private void SetupSources()
+    {
+        if (_sfxSource == null)
+        {
+            AudioSource[] sources = GetComponents<AudioSource>();
+            if (sources.Length > 0) _sfxSource = sources[0];
+            if (sources.Length > 1) _bgmSource = sources[1];
+
+            if (_sfxSource == null) _sfxSource = gameObject.AddComponent<AudioSource>();
+            if (_bgmSource == null) _bgmSource = gameObject.AddComponent<AudioSource>();
+        }
+
+        if (_sfxSource != null) _sfxSource.playOnAwake = false;
+        if (_bgmSource != null)
+        {
+            _bgmSource.playOnAwake = false;
+            _bgmSource.loop = true;
+        }
+    }
+
+    private void HandleSoundSettingChanged(bool isEnabled)
+    {
+        if (_sfxSource != null)
+        {
+            _sfxSource.mute = !isEnabled;
+        }
+    }
+
+    private void HandleMusicSettingChanged(bool isEnabled)
+    {
+        if (_bgmSource != null)
+        {
+            _bgmSource.mute = !isEnabled;
+        }
     }
 
     public void PlayClick()
     {
-        PlaySound(clickClip, 0.9f, 1.1f, 0.8f);
+        PlaySound(_clickClip, 0.9f, 1.1f, 0.8f);
     }
 
     public void PlayHonk()
     {
-        PlaySound(honkClip, 0.95f, 1.05f, 1.0f);
+        PlaySound(_honkClip, 0.95f, 1.05f, 1.0f);
     }
 
     public void PlayEngine()
     {
-        PlaySound(engineClip, 0.9f, 1.1f, 0.9f);
+        PlaySound(_engineClip, 0.9f, 1.1f, 0.9f);
     }
 
     public void PlayFootstep()
     {
-        PlaySound(footstepClip, 0.85f, 1.15f, 0.7f);
+        PlaySound(_footstepClip, 0.85f, 1.15f, 0.7f);
     }
 
     public void PlayCrash()
     {
-        PlaySound(crashClip, 0.9f, 1.1f, 1.0f);
+        PlaySound(_crashClip, 0.9f, 1.1f, 1.0f);
     }
 
     public void PlayWin()
     {
-        PlaySound(winClip, 1.0f, 1.0f, 1.0f);
+        PlaySound(_winClip, 1.0f, 1.0f, 1.0f);
     }
 
     public void PlayLose()
     {
-        PlaySound(loseClip, 1.0f, 1.0f, 1.0f);
+        PlaySound(_loseClip, 1.0f, 1.0f, 1.0f);
     }
 
     private void PlaySound(AudioClip clip, float minPitch = 1.0f, float maxPitch = 1.0f, float volume = 1.0f)
     {
         if (clip == null) return;
+        if (SettingsManager.Instance != null && !SettingsManager.Instance.IsSoundOn) return;
 
-        if (_sfxSource == null)
+        if (_sfxSource == null) SetupSources();
+
+        if (_sfxSource != null)
         {
-            _sfxSource = gameObject.AddComponent<AudioSource>();
-            _sfxSource.playOnAwake = false;
+            _sfxSource.pitch = Random.Range(minPitch, maxPitch);
+            _sfxSource.PlayOneShot(clip, volume);
         }
-
-        _sfxSource.pitch = Random.Range(minPitch, maxPitch);
-        _sfxSource.PlayOneShot(clip, volume);
     }
 }

@@ -12,11 +12,7 @@ public class CameraShakeManager : MonoBehaviour
             if (_instance == null)
             {
                 _instance = FindObjectOfType<CameraShakeManager>();
-                if (_instance == null)
-                {
-                    GameObject go = new GameObject("CameraShakeManager");
-                    _instance = go.AddComponent<CameraShakeManager>();
-                }
+                
             }
             return _instance;
         }

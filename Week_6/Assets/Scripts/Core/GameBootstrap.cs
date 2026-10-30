@@ -17,6 +17,8 @@ public class GameBootstrap : MonoBehaviour
     public static bool IsDriving => Instance != null && Instance.isActiveAndEnabled;
 
     [Header("Scene References (wired by Tools > Bus Jam > Setup Scene)")]
+    [SerializeField] private SettingsManager settingsManager;
+    [SerializeField] private AudioManager audioManager;
     [SerializeField] private GridManager gridManager;
     [SerializeField] private BusStopManager busStopManager;
     [SerializeField] private PassengerQueueManager passengerQueueManager;
@@ -24,6 +26,7 @@ public class GameBootstrap : MonoBehaviour
     [SerializeField] private GamePoolManager poolManager;
     [SerializeField] private GameManager gameManager;
     [SerializeField] private UIManager uiManager;
+    [SerializeField] private HUDController hudController;
     [SerializeField] private VFXManager vfxManager;
     [SerializeField] private CameraShakeManager cameraShakeManager;
 
@@ -54,6 +57,8 @@ public class GameBootstrap : MonoBehaviour
     /// </summary>
     public void ResolveReferences()
     {
+        if (settingsManager == null) settingsManager = FindObjectOfType<SettingsManager>();
+        if (audioManager == null) audioManager = FindObjectOfType<AudioManager>();
         if (gridManager == null) gridManager = FindObjectOfType<GridManager>();
         if (busStopManager == null) busStopManager = FindObjectOfType<BusStopManager>();
         if (passengerQueueManager == null) passengerQueueManager = FindObjectOfType<PassengerQueueManager>();
@@ -61,6 +66,7 @@ public class GameBootstrap : MonoBehaviour
         if (poolManager == null) poolManager = FindObjectOfType<GamePoolManager>();
         if (gameManager == null) gameManager = FindObjectOfType<GameManager>();
         if (uiManager == null) uiManager = FindObjectOfType<UIManager>();
+        if (hudController == null) hudController = FindObjectOfType<HUDController>();
         if (vfxManager == null) vfxManager = FindObjectOfType<VFXManager>();
         if (cameraShakeManager == null) cameraShakeManager = FindObjectOfType<CameraShakeManager>();
     }
@@ -81,6 +87,10 @@ public class GameBootstrap : MonoBehaviour
                            "Add a GameManager or run Tools > Bus Jam > Setup Scene.");
             return;
         }
+
+        // Settings and Audio first
+        settingsManager?.Initialize();
+        audioManager?.Initialize();
 
         // Pools first: level loading requests buses/passengers from them.
         poolManager?.Initialize();

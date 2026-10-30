@@ -12,11 +12,7 @@ public class GamePoolManager : MonoBehaviour
             if (_instance == null)
             {
                 _instance = FindObjectOfType<GamePoolManager>();
-                if (_instance == null)
-                {
-                    GameObject go = new GameObject("GamePoolManager");
-                    _instance = go.AddComponent<GamePoolManager>();
-                }
+                
             }
             return _instance;
         }

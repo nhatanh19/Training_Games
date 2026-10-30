@@ -99,3 +99,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   color: 0
   visualRenderer: {fileID: 8234227235708480044}
+  defaultScale: {x: 0.4, y: 0.4, z: 1}

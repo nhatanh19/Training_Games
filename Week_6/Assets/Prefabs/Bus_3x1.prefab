@@ -484,6 +484,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bodyRenderer: {fileID: 3299440598927093871}
+  defaultScale: {x: 2.65, y: 0.8, z: 1}
   busColor: 0
   direction: 0
   length: 3

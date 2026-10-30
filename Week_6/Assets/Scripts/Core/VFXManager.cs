@@ -13,11 +13,7 @@ public class VFXManager : MonoBehaviour
             if (_instance == null)
             {
                 _instance = FindObjectOfType<VFXManager>();
-                if (_instance == null)
-                {
-                    GameObject go = new GameObject("VFXManager");
-                    _instance = go.AddComponent<VFXManager>();
-                }
+                
             }
             return _instance;
         }
