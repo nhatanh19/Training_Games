@@ -13,7 +13,6 @@ public class VFXManager : MonoBehaviour
             if (_instance == null)
             {
                 _instance = FindObjectOfType<VFXManager>();
-                
             }
             return _instance;
         }
@@ -63,108 +62,157 @@ public class VFXManager : MonoBehaviour
     {
         if (dustPrefab != null && _dustPool == null)
         {
-            _dustPool = new ObjectPool<ParticleSystem>(
-                createFunc: () => Instantiate(dustPrefab, transform),
-                actionOnGet: ps => ps.gameObject.SetActive(true),
-                actionOnRelease: ps => ps.gameObject.SetActive(false),
-                actionOnDestroy: ps => Destroy(ps.gameObject),
-                collectionCheck: false,
-                defaultCapacity: 5,
-                maxSize: 20
-            );
-        }
-        else if (dustPrefab == null && _runtimeDust == null)
-        {
-            _runtimeDust = CreateProceduralDust();
+            try
+            {
+                _dustPool = new ObjectPool<ParticleSystem>(
+                    createFunc: () => Instantiate(dustPrefab, transform),
+                    actionOnGet: ps => ps.gameObject.SetActive(true),
+                    actionOnRelease: ps => ps.gameObject.SetActive(false),
+                    actionOnDestroy: ps => Destroy(ps.gameObject),
+                    collectionCheck: false,
+                    defaultCapacity: 5,
+                    maxSize: 20
+                );
+            }
+            catch
+            {
+                _dustPool = null;
+            }
         }
 
         if (hitSparkPrefab != null && _hitSparkPool == null)
         {
-            _hitSparkPool = new ObjectPool<ParticleSystem>(
-                createFunc: () => Instantiate(hitSparkPrefab, transform),
-                actionOnGet: ps => ps.gameObject.SetActive(true),
-                actionOnRelease: ps => ps.gameObject.SetActive(false),
-                actionOnDestroy: ps => Destroy(ps.gameObject),
-                collectionCheck: false,
-                defaultCapacity: 5,
-                maxSize: 20
-            );
-        }
-        else if (hitSparkPrefab == null && _runtimeHit == null)
-        {
-            _runtimeHit = CreateProceduralHitSpark();
+            try
+            {
+                _hitSparkPool = new ObjectPool<ParticleSystem>(
+                    createFunc: () => Instantiate(hitSparkPrefab, transform),
+                    actionOnGet: ps => ps.gameObject.SetActive(true),
+                    actionOnRelease: ps => ps.gameObject.SetActive(false),
+                    actionOnDestroy: ps => Destroy(ps.gameObject),
+                    collectionCheck: false,
+                    defaultCapacity: 5,
+                    maxSize: 20
+                );
+            }
+            catch
+            {
+                _hitSparkPool = null;
+            }
         }
 
         if (confettiPrefab != null && _confettiPool == null)
         {
-            _confettiPool = new ObjectPool<ParticleSystem>(
-                createFunc: () => Instantiate(confettiPrefab, transform),
-                actionOnGet: ps => ps.gameObject.SetActive(true),
-                actionOnRelease: ps => ps.gameObject.SetActive(false),
-                actionOnDestroy: ps => Destroy(ps.gameObject),
-                collectionCheck: false,
-                defaultCapacity: 2,
-                maxSize: 10
-            );
+            try
+            {
+                _confettiPool = new ObjectPool<ParticleSystem>(
+                    createFunc: () => Instantiate(confettiPrefab, transform),
+                    actionOnGet: ps => ps.gameObject.SetActive(true),
+                    actionOnRelease: ps => ps.gameObject.SetActive(false),
+                    actionOnDestroy: ps => Destroy(ps.gameObject),
+                    collectionCheck: false,
+                    defaultCapacity: 2,
+                    maxSize: 10
+                );
+            }
+            catch
+            {
+                _confettiPool = null;
+            }
         }
-        else if (confettiPrefab == null && _runtimeConfetti == null)
-        {
-            _runtimeConfetti = CreateProceduralConfetti();
-        }
+
+        // Initialize high-performance procedural systems with sortingOrder = 100
+        if (_runtimeDust == null) _runtimeDust = CreateProceduralDust();
+        if (_runtimeHit == null) _runtimeHit = CreateProceduralHitSpark();
+        if (_runtimeConfetti == null) _runtimeConfetti = CreateProceduralConfetti();
     }
 
     public void PlayDust(Vector3 position, Quaternion rotation)
     {
+        Vector3 spawnPos = new Vector3(position.x, position.y, -1f);
+
         if (_dustPool != null)
         {
-            ParticleSystem ps = _dustPool.Get();
-            ps.transform.position = position;
-            ps.transform.rotation = rotation;
-            ps.Play();
-            StartCoroutine(ReleaseRoutine(ps, _dustPool, ps.main.duration + ps.main.startLifetime.constantMax));
-            return;
+            try
+            {
+                ParticleSystem ps = _dustPool.Get();
+                ps.transform.position = spawnPos;
+                ps.transform.rotation = rotation;
+                EnsureSorting(ps, 100);
+                ps.Play();
+                StartCoroutine(ReleaseRoutine(ps, _dustPool, ps.main.duration + ps.main.startLifetime.constantMax));
+                return;
+            }
+            catch
+            {
+                _dustPool = null;
+            }
         }
 
         if (_runtimeDust == null) _runtimeDust = CreateProceduralDust();
-        _runtimeDust.transform.position = position;
+        _runtimeDust.transform.position = spawnPos;
         _runtimeDust.transform.rotation = rotation;
-        _runtimeDust.Emit(8);
+        _runtimeDust.Emit(12);
     }
 
     public void PlayHitSpark(Vector3 position)
     {
+        Vector3 spawnPos = new Vector3(position.x, position.y, -1f);
+
         if (_hitSparkPool != null)
         {
-            ParticleSystem ps = _hitSparkPool.Get();
-            ps.transform.position = position;
-            ps.transform.rotation = Quaternion.identity;
-            ps.Play();
-            StartCoroutine(ReleaseRoutine(ps, _hitSparkPool, ps.main.duration + ps.main.startLifetime.constantMax));
-            return;
+            try
+            {
+                ParticleSystem ps = _hitSparkPool.Get();
+                ps.transform.position = spawnPos;
+                ps.transform.rotation = Quaternion.identity;
+                EnsureSorting(ps, 100);
+                ps.Play();
+                StartCoroutine(ReleaseRoutine(ps, _hitSparkPool, ps.main.duration + ps.main.startLifetime.constantMax));
+                return;
+            }
+            catch
+            {
+                _hitSparkPool = null;
+            }
         }
 
         if (_runtimeHit == null) _runtimeHit = CreateProceduralHitSpark();
-        _runtimeHit.transform.position = position;
-        _runtimeHit.Emit(12);
+        _runtimeHit.transform.position = spawnPos;
+        _runtimeHit.Emit(16);
     }
 
     public void PlayConfetti(Vector3? position = null)
     {
-        Vector3 spawnPos = position ?? new Vector3(0f, 6f, 0f);
+        Vector3 spawnPos = position ?? new Vector3(0f, 5.5f, -1f);
 
         if (_confettiPool != null)
         {
-            ParticleSystem ps = _confettiPool.Get();
-            ps.transform.position = spawnPos;
-            ps.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-            ps.Play();
-            StartCoroutine(ReleaseRoutine(ps, _confettiPool, ps.main.duration + ps.main.startLifetime.constantMax));
-            return;
+            try
+            {
+                ParticleSystem ps = _confettiPool.Get();
+                ps.transform.position = spawnPos;
+                ps.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+                EnsureSorting(ps, 100);
+                ps.Play();
+                StartCoroutine(ReleaseRoutine(ps, _confettiPool, ps.main.duration + ps.main.startLifetime.constantMax));
+                return;
+            }
+            catch
+            {
+                _confettiPool = null;
+            }
         }
 
         if (_runtimeConfetti == null) _runtimeConfetti = CreateProceduralConfetti();
         _runtimeConfetti.transform.position = spawnPos;
-        _runtimeConfetti.Emit(40);
+        _runtimeConfetti.Emit(50);
+    }
+
+    private void EnsureSorting(ParticleSystem ps, int order)
+    {
+        if (ps == null) return;
+        var r = ps.GetComponent<ParticleSystemRenderer>();
+        if (r != null) r.sortingOrder = order;
     }
 
     private IEnumerator ReleaseRoutine(ParticleSystem ps, ObjectPool<ParticleSystem> pool, float delay)
@@ -185,21 +233,39 @@ public class VFXManager : MonoBehaviour
         var main = ps.main;
         main.playOnAwake = false;
         main.loop = false;
-        main.startLifetime = 0.35f;
-        main.startSpeed = 1.5f;
-        main.startSize = 0.25f;
-        main.startColor = new Color(0.85f, 0.85f, 0.85f, 0.6f);
+        main.startLifetime = 0.45f;
+        main.startSpeed = 2.0f;
+        main.startSize = 0.40f;
+        main.startColor = new Color(0.92f, 0.92f, 0.92f, 0.75f);
+        main.simulationSpace = ParticleSystemSimulationSpace.World;
 
         var emission = ps.emission;
         emission.enabled = false;
 
         var shape = ps.shape;
         shape.shapeType = ParticleSystemShapeType.Cone;
-        shape.angle = 25f;
-        shape.radius = 0.1f;
+        shape.angle = 35f;
+        shape.radius = 0.15f;
+
+        var colorOverLifetime = ps.colorOverLifetime;
+        colorOverLifetime.enabled = true;
+        Gradient grad = new Gradient();
+        grad.SetKeys(
+            new GradientColorKey[] { new GradientColorKey(Color.white, 0.0f), new GradientColorKey(Color.white, 1.0f) },
+            new GradientAlphaKey[] { new GradientAlphaKey(0.8f, 0.0f), new GradientAlphaKey(0.0f, 1.0f) }
+        );
+        colorOverLifetime.color = grad;
+
+        var sizeOverLifetime = ps.sizeOverLifetime;
+        sizeOverLifetime.enabled = true;
+        AnimationCurve curve = new AnimationCurve();
+        curve.AddKey(0f, 0.5f);
+        curve.AddKey(1f, 1.2f);
+        sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1.0f, curve);
 
         var renderer = go.GetComponent<ParticleSystemRenderer>();
         renderer.material = new Material(Shader.Find("Sprites/Default"));
+        renderer.sortingOrder = 100;
 
         return ps;
     }
@@ -213,20 +279,31 @@ public class VFXManager : MonoBehaviour
         var main = ps.main;
         main.playOnAwake = false;
         main.loop = false;
-        main.startLifetime = 0.2f;
-        main.startSpeed = 3.5f;
-        main.startSize = 0.15f;
-        main.startColor = new Color(1f, 0.8f, 0.2f, 1f);
+        main.startLifetime = 0.25f;
+        main.startSpeed = 4.5f;
+        main.startSize = 0.20f;
+        main.startColor = new Color(1f, 0.85f, 0.2f, 1f);
+        main.simulationSpace = ParticleSystemSimulationSpace.World;
 
         var emission = ps.emission;
         emission.enabled = false;
 
         var shape = ps.shape;
         shape.shapeType = ParticleSystemShapeType.Sphere;
-        shape.radius = 0.15f;
+        shape.radius = 0.20f;
+
+        var colorOverLifetime = ps.colorOverLifetime;
+        colorOverLifetime.enabled = true;
+        Gradient grad = new Gradient();
+        grad.SetKeys(
+            new GradientColorKey[] { new GradientColorKey(new Color(1f, 0.9f, 0.3f), 0.0f), new GradientColorKey(new Color(1f, 0.3f, 0.1f), 1.0f) },
+            new GradientAlphaKey[] { new GradientAlphaKey(1.0f, 0.0f), new GradientAlphaKey(0.0f, 1.0f) }
+        );
+        colorOverLifetime.color = grad;
 
         var renderer = go.GetComponent<ParticleSystemRenderer>();
         renderer.material = new Material(Shader.Find("Sprites/Default"));
+        renderer.sortingOrder = 100;
 
         return ps;
     }
@@ -240,10 +317,11 @@ public class VFXManager : MonoBehaviour
         var main = ps.main;
         main.playOnAwake = false;
         main.loop = false;
-        main.startLifetime = 2.0f;
-        main.startSpeed = 2.5f;
-        main.startSize = 0.18f;
-        main.gravityModifier = 0.5f;
+        main.startLifetime = 2.5f;
+        main.startSpeed = 3.0f;
+        main.startSize = 0.25f;
+        main.gravityModifier = 0.6f;
+        main.simulationSpace = ParticleSystemSimulationSpace.World;
 
         main.startColor = new ParticleSystem.MinMaxGradient(
             new Color(1f, 0.2f, 0.2f, 1f),
@@ -255,10 +333,20 @@ public class VFXManager : MonoBehaviour
 
         var shape = ps.shape;
         shape.shapeType = ParticleSystemShapeType.Box;
-        shape.scale = new Vector3(6f, 0.5f, 0.1f);
+        shape.scale = new Vector3(8f, 0.5f, 0.1f);
+
+        var colorOverLifetime = ps.colorOverLifetime;
+        colorOverLifetime.enabled = true;
+        Gradient grad = new Gradient();
+        grad.SetKeys(
+            new GradientColorKey[] { new GradientColorKey(Color.white, 0.0f), new GradientColorKey(Color.white, 1.0f) },
+            new GradientAlphaKey[] { new GradientAlphaKey(1.0f, 0.0f), new GradientAlphaKey(0.0f, 1.0f) }
+        );
+        colorOverLifetime.color = grad;
 
         var renderer = go.GetComponent<ParticleSystemRenderer>();
         renderer.material = new Material(Shader.Find("Sprites/Default"));
+        renderer.sortingOrder = 100;
 
         return ps;
     }

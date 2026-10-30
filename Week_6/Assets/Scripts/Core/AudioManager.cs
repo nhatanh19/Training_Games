@@ -34,6 +34,7 @@ public class AudioManager : MonoBehaviour
         }
 
         SetupSources();
+        EnsureClips();
     }
 
     private void Start()
@@ -47,6 +48,7 @@ public class AudioManager : MonoBehaviour
         _initialized = true;
 
         SetupSources();
+        EnsureClips();
 
         if (SettingsManager.Instance != null)
         {
@@ -63,6 +65,17 @@ public class AudioManager : MonoBehaviour
             _bgmSource.loop = true;
             _bgmSource.Play();
         }
+    }
+
+    public void EnsureClips()
+    {
+        if (_clickClip == null) _clickClip = Resources.Load<AudioClip>("Audio/click");
+        if (_honkClip == null) _honkClip = Resources.Load<AudioClip>("Audio/honk");
+        if (_engineClip == null) _engineClip = Resources.Load<AudioClip>("Audio/engine");
+        if (_footstepClip == null) _footstepClip = Resources.Load<AudioClip>("Audio/footstep");
+        if (_crashClip == null) _crashClip = Resources.Load<AudioClip>("Audio/crash");
+        if (_winClip == null) _winClip = Resources.Load<AudioClip>("Audio/win");
+        if (_loseClip == null) _loseClip = Resources.Load<AudioClip>("Audio/lose");
     }
 
     private void OnDestroy()
@@ -86,11 +99,17 @@ public class AudioManager : MonoBehaviour
             if (_bgmSource == null) _bgmSource = gameObject.AddComponent<AudioSource>();
         }
 
-        if (_sfxSource != null) _sfxSource.playOnAwake = false;
+        if (_sfxSource != null)
+        {
+            _sfxSource.playOnAwake = false;
+            _sfxSource.spatialBlend = 0f;
+        }
+
         if (_bgmSource != null)
         {
             _bgmSource.playOnAwake = false;
             _bgmSource.loop = true;
+            _bgmSource.spatialBlend = 0f;
         }
     }
 
@@ -112,36 +131,43 @@ public class AudioManager : MonoBehaviour
 
     public void PlayClick()
     {
+        if (_clickClip == null) EnsureClips();
         PlaySound(_clickClip, 0.9f, 1.1f, 0.8f);
     }
 
     public void PlayHonk()
     {
+        if (_honkClip == null) EnsureClips();
         PlaySound(_honkClip, 0.95f, 1.05f, 1.0f);
     }
 
     public void PlayEngine()
     {
+        if (_engineClip == null) EnsureClips();
         PlaySound(_engineClip, 0.9f, 1.1f, 0.9f);
     }
 
     public void PlayFootstep()
     {
+        if (_footstepClip == null) EnsureClips();
         PlaySound(_footstepClip, 0.85f, 1.15f, 0.7f);
     }
 
     public void PlayCrash()
     {
+        if (_crashClip == null) EnsureClips();
         PlaySound(_crashClip, 0.9f, 1.1f, 1.0f);
     }
 
     public void PlayWin()
     {
+        if (_winClip == null) EnsureClips();
         PlaySound(_winClip, 1.0f, 1.0f, 1.0f);
     }
 
     public void PlayLose()
     {
+        if (_loseClip == null) EnsureClips();
         PlaySound(_loseClip, 1.0f, 1.0f, 1.0f);
     }
 

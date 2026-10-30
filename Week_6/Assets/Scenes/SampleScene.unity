@@ -1536,9 +1536,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: afd94603474f48c48a9170ce781c727d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dustPrefab: {fileID: 6478892730006497775, guid: e9746ff2c9f53cd4f8f5c29c2f87263a, type: 3}
-  hitSparkPrefab: {fileID: 6264219351507988759, guid: cbc734c6fa9dd5c49952f96c9009dcc7, type: 3}
-  confettiPrefab: {fileID: 2230293527422866264, guid: 08bd6456970af1045bfbc511357cac0f, type: 3}
+  dustPrefab: {fileID: 0}
+  hitSparkPrefab: {fileID: 0}
+  confettiPrefab: {fileID: 0}
 --- !u!4 &2020108356
 Transform:
   m_ObjectHideFlags: 0
