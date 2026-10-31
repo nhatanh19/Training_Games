@@ -121,12 +121,14 @@ public class SettingsController : MonoBehaviour
     private void OnSoundToggleChanged(bool isOn)
     {
         AudioManager.Instance?.PlayClick();
+        HapticManager.Instance?.TriggerLight();
         SettingsManager.Instance?.SetSound(isOn);
     }
 
     private void OnMusicToggleChanged(bool isOn)
     {
         AudioManager.Instance?.PlayClick();
+        HapticManager.Instance?.TriggerLight();
         SettingsManager.Instance?.SetMusic(isOn);
     }
 
@@ -134,11 +136,16 @@ public class SettingsController : MonoBehaviour
     {
         AudioManager.Instance?.PlayClick();
         SettingsManager.Instance?.SetHaptic(isOn);
+        if (isOn)
+        {
+            HapticManager.Instance?.TriggerLight();
+        }
     }
 
     private void OnCloseClicked()
     {
         AudioManager.Instance?.PlayClick();
+        HapticManager.Instance?.TriggerLight();
         AnimateClose(() =>
         {
             UIManager.Instance?.CloseSettings();

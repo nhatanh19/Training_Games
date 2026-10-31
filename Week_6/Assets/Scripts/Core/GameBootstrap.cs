@@ -29,6 +29,7 @@ public class GameBootstrap : MonoBehaviour
     [SerializeField] private HUDController hudController;
     [SerializeField] private VFXManager vfxManager;
     [SerializeField] private CameraShakeManager cameraShakeManager;
+    [SerializeField] private HapticManager hapticManager;
 
     private bool _initialized;
 
@@ -69,6 +70,12 @@ public class GameBootstrap : MonoBehaviour
         if (hudController == null) hudController = FindObjectOfType<HUDController>();
         if (vfxManager == null) vfxManager = FindObjectOfType<VFXManager>();
         if (cameraShakeManager == null) cameraShakeManager = FindObjectOfType<CameraShakeManager>();
+        if (hapticManager == null) hapticManager = FindObjectOfType<HapticManager>();
+        if (hapticManager == null)
+        {
+            GameObject hapticGo = new GameObject("HapticManager");
+            hapticManager = hapticGo.AddComponent<HapticManager>();
+        }
     }
 
     /// <summary>
@@ -89,9 +96,10 @@ public class GameBootstrap : MonoBehaviour
             return;
         }
 
-        // Settings and Audio first
+        // Settings, Audio and Haptic first
         settingsManager?.Initialize();
         audioManager?.Initialize();
+        hapticManager?.Initialize();
 
         // Pools first: level loading requests buses/passengers from them.
         poolManager?.Initialize();

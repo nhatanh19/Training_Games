@@ -18,6 +18,7 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip _winClip;
     [SerializeField] private AudioClip _loseClip;
     [SerializeField] private AudioClip _coinClip;
+    [SerializeField] private AudioClip _popClip;
     [SerializeField] private AudioClip _bgmClip;
 
     private bool _initialized;
@@ -79,6 +80,8 @@ public class AudioManager : MonoBehaviour
         if (_loseClip == null) _loseClip = Resources.Load<AudioClip>("Audio/lose");
         if (_coinClip == null) _coinClip = Resources.Load<AudioClip>("Audio/sfx_collect_money_final");
         if (_coinClip == null) _coinClip = Resources.Load<AudioClip>("Audio/click");
+        if (_popClip == null) _popClip = Resources.Load<AudioClip>("Audio/sfx_fx_pop_balloon");
+        if (_popClip == null) _popClip = Resources.Load<AudioClip>("Audio/click");
     }
 
     private void OnDestroy()
@@ -178,6 +181,12 @@ public class AudioManager : MonoBehaviour
     {
         if (_coinClip == null) EnsureClips();
         PlaySound(_coinClip, pitch, pitch, 0.9f);
+    }
+
+    public void PlayPop()
+    {
+        if (_popClip == null) EnsureClips();
+        PlaySound(_popClip, 0.95f, 1.15f, 0.85f);
     }
 
     private void PlaySound(AudioClip clip, float minPitch = 1.0f, float maxPitch = 1.0f, float volume = 1.0f)

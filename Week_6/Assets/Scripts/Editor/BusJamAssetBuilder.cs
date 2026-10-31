@@ -30,6 +30,7 @@ public static class BusJamAssetBuilder
         bool needsUI = !File.Exists(UIDir + "/HUDCanvas.prefab") ||
                        !File.Exists(UIDir + "/PopupCanvas.prefab") ||
                        !File.Exists(UIDir + "/VFXCanvas.prefab") ||
+                       !File.Exists(UIDir + "/CoinItem.prefab") ||
                        GameObject.Find("HUDCanvas") == null ||
                        GameObject.Find("PopupCanvas") == null;
 
@@ -164,6 +165,9 @@ public static class BusJamAssetBuilder
             PrefabUtility.SaveAsPrefabAsset(vfxCanvasGo, "Assets/Resources/Prefabs/UI/VFXCanvas.prefab");
         }
 
+        // 5b. Build CoinItem Prefab
+        BuildCoinPrefab();
+
         // 6. Connect to GameBootstrap
         GameBootstrap bootstrap = Object.FindObjectOfType<GameBootstrap>();
         if (bootstrap != null)
@@ -203,6 +207,56 @@ public static class BusJamAssetBuilder
         go.transform.localScale = Vector3.one;
 
         return go;
+    }
+
+    [MenuItem("Tools/Bus Jam/Build Coin Prefab")]
+    public static GameObject BuildCoinPrefab()
+    {
+        EnsureFolderExists(UIDir);
+        EnsureFolderExists("Assets/Resources/Prefabs/UI");
+
+        GameObject coinObj = new GameObject("CoinItem", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        RectTransform rt = coinObj.GetComponent<RectTransform>();
+        rt.sizeDelta = new Vector2(60f, 60f);
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+
+        Image img = coinObj.GetComponent<Image>();
+        img.raycastTarget = false;
+        img.preserveAspect = true;
+
+        Sprite coinSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Sprites/coin_icon.png");
+        if (coinSprite == null)
+        {
+            coinSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Resources/Sprites/coin_icon.png");
+        }
+
+        if (coinSprite != null)
+        {
+            img.sprite = coinSprite;
+            img.color = Color.white;
+        }
+        else
+        {
+            img.color = new Color(1f, 0.84f, 0.1f, 1f);
+        }
+
+        string prefabPath = UIDir + "/CoinItem.prefab";
+        GameObject savedPrefab = PrefabUtility.SaveAsPrefabAsset(coinObj, prefabPath);
+
+        string resourcesPrefabDir = "Assets/Resources/Prefabs/UI";
+        if (System.IO.Directory.Exists(resourcesPrefabDir))
+        {
+            PrefabUtility.SaveAsPrefabAsset(coinObj, resourcesPrefabDir + "/CoinItem.prefab");
+        }
+
+        Object.DestroyImmediate(coinObj);
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+
+        Debug.Log("[Bus Jam] CoinItem.prefab successfully created by code at: " + prefabPath);
+        return savedPrefab;
     }
 
     private static HUDController BuildHUDContent(GameObject canvasGo, TMP_FontAsset font)

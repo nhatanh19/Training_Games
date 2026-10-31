@@ -312,6 +312,7 @@ public class UIManager : MonoBehaviour
     private void OnNextLevelClicked()
     {
         AudioManager.Instance?.PlayClick();
+        HapticManager.Instance?.TriggerLight();
 
         if (_nextLevelButton != null)
         {
@@ -355,6 +356,7 @@ public class UIManager : MonoBehaviour
     private void OnRestartClicked()
     {
         AudioManager.Instance?.PlayClick();
+        HapticManager.Instance?.TriggerLight();
 
         GameObject activePopup = null;
         if (_winPopup != null && _winPopup.activeSelf) activePopup = _winPopup;

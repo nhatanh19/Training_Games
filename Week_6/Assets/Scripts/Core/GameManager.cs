@@ -32,6 +32,26 @@ public class GameManager : MonoBehaviour
 
     public GameState CurrentState { get; private set; } = GameState.Loading;
     public int CurrentLevelIndex { get; private set; } = 0;
+    public const string COIN_KEY = "TotalCoins";
+
+    public int TotalCoins
+    {
+        get => PlayerPrefs.GetInt(COIN_KEY, 0);
+        set
+        {
+            PlayerPrefs.SetInt(COIN_KEY, value);
+            PlayerPrefs.Save();
+        }
+    }
+
+    public void AddCoins(int amount)
+    {
+        TotalCoins += amount;
+        if (UIManager.Instance?.HUD != null)
+        {
+            UIManager.Instance.HUD.SetCoin(TotalCoins, true, false);
+        }
+    }
 
     public event Action<GameState> OnGameStateChanged;
     public event Action<int> OnLevelStarted;
@@ -182,6 +202,7 @@ public class GameManager : MonoBehaviour
             OnGameStateChanged?.Invoke(CurrentState);
             VFXManager.Instance?.PlayConfetti();
             AudioManager.Instance?.PlayWin();
+            HapticManager.Instance?.TriggerSuccess();
             yield break;
         }
 
@@ -190,6 +211,7 @@ public class GameManager : MonoBehaviour
             CurrentState = GameState.GameOver;
             OnGameStateChanged?.Invoke(CurrentState);
             AudioManager.Instance?.PlayLose();
+            HapticManager.Instance?.TriggerWarning();
         }
     }
 

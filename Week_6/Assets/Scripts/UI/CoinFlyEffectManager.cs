@@ -14,7 +14,7 @@ public class CoinFlyEffectManager : MonoBehaviour
     [SerializeField] private int _initialPoolSize = 20;
 
     [Header("Fly Configuration")]
-    [SerializeField] private float _burstRadius = 90f;
+    [SerializeField] private float _burstRadius = 95f;
     [SerializeField] private float _burstDuration = 0.25f;
     [SerializeField] private float _flyDuration = 0.55f;
     [SerializeField] private float _staggerDelay = 0.05f;
@@ -48,17 +48,55 @@ public class CoinFlyEffectManager : MonoBehaviour
             _poolContainer = transform;
         }
 
+        EnsureCoinPrefab();
+
         for (int i = 0; i < _initialPoolSize; i++)
         {
             RectTransform coin = CreateNewCoin();
-            coin.gameObject.SetActive(false);
-            _availableCoins.Enqueue(coin);
-            _allCoins.Add(coin);
+            if (coin != null)
+            {
+                coin.gameObject.SetActive(false);
+                _availableCoins.Enqueue(coin);
+                _allCoins.Add(coin);
+            }
         }
+    }
+
+    private void EnsureCoinPrefab()
+    {
+        if (_coinPrefab == null)
+        {
+            _coinPrefab = Resources.Load<GameObject>("Prefabs/UI/CoinItem");
+#if UNITY_EDITOR
+            if (_coinPrefab == null)
+            {
+                _coinPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/UI/CoinItem.prefab");
+            }
+#endif
+        }
+    }
+
+    private static Sprite _cachedCoinSprite;
+
+    private static Sprite GetCoinSprite()
+    {
+        if (_cachedCoinSprite != null) return _cachedCoinSprite;
+
+        _cachedCoinSprite = Resources.Load<Sprite>("Sprites/coin_icon");
+        if (_cachedCoinSprite == null)
+        {
+            Texture2D tex = Resources.Load<Texture2D>("Sprites/coin_icon");
+            if (tex != null)
+            {
+                _cachedCoinSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
+            }
+        }
+        return _cachedCoinSprite;
     }
 
     private RectTransform CreateNewCoin()
     {
+        EnsureCoinPrefab();
         GameObject obj;
         if (_coinPrefab != null)
         {
@@ -66,21 +104,31 @@ public class CoinFlyEffectManager : MonoBehaviour
         }
         else
         {
-            obj = new GameObject("CoinIcon_Pooled", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            obj = new GameObject("CoinItem_Pooled", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
             obj.transform.SetParent(_poolContainer, false);
-            Image img = obj.GetComponent<Image>();
-            img.color = new Color(1f, 0.82f, 0.12f, 1f);
-
-            Sprite knob = Resources.GetBuiltinResource<Sprite>("UI/Skin/Knob.psd");
-            if (knob != null)
-            {
-                img.sprite = knob;
-            }
-            img.raycastTarget = false;
         }
 
+        Image img = obj.GetComponent<Image>();
+        if (img == null)
+        {
+            img = obj.AddComponent<Image>();
+        }
+
+        Sprite coinSprite = GetCoinSprite();
+        if (coinSprite != null)
+        {
+            img.sprite = coinSprite;
+        }
+        img.color = Color.white;
+        img.preserveAspect = true;
+        img.raycastTarget = false;
+
         RectTransform rt = obj.GetComponent<RectTransform>();
-        rt.sizeDelta = new Vector2(46f, 46f);
+        if (rt == null)
+        {
+            rt = obj.AddComponent<RectTransform>();
+        }
+        rt.sizeDelta = new Vector2(56f, 56f);
         return rt;
     }
 
@@ -92,7 +140,10 @@ public class CoinFlyEffectManager : MonoBehaviour
         }
 
         RectTransform newCoin = CreateNewCoin();
-        _allCoins.Add(newCoin);
+        if (newCoin != null)
+        {
+            _allCoins.Add(newCoin);
+        }
         return newCoin;
     }
 
@@ -105,6 +156,14 @@ public class CoinFlyEffectManager : MonoBehaviour
         _availableCoins.Enqueue(coin);
     }
 
+    /// <summary>
+    /// Executes the Fly-to-Target Coin Effect matching Week 6 criteria:
+    /// 1. Spawn 5-10 coin icons from UI Object Pool.
+    /// 2. Burst outward randomly around starting point (Ease.OutQuad).
+    /// 3. Curved fly towards HUD Coin Icon (DOMove / DOPath).
+    /// 4. HUD Coin punch, coin counter increment, and leng keng ASMR audio.
+    /// 5. Recycle coin back into pool.
+    /// </summary>
     public void PlayFlyCoins(Vector3 startScreenPos, Vector3 targetScreenPos, int coinCount = 8, int totalReward = 100, Action onComplete = null)
     {
         if (!_isInitialized) InitializePool();
@@ -122,43 +181,47 @@ public class CoinFlyEffectManager : MonoBehaviour
         {
             int index = i;
             RectTransform coin = GetCoin();
+            if (coin == null) continue;
+
             coin.gameObject.SetActive(true);
             coin.position = startScreenPos;
             coin.localScale = Vector3.zero;
 
-            // Random burst offset
-            float angle = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
-            float radius = UnityEngine.Random.Range(_burstRadius * 0.45f, _burstRadius);
+            // Step 2: Nổ bung nhẹ ra xung quanh vị trí xuất phát (góc phân kỳ ngẫu nhiên)
+            float angle = (index * (Mathf.PI * 2f / coinCount)) + UnityEngine.Random.Range(-0.25f, 0.25f);
+            float radius = UnityEngine.Random.Range(_burstRadius * 0.65f, _burstRadius);
             Vector3 burstTarget = startScreenPos + new Vector3(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius, 0f);
 
             Sequence seq = DOTween.Sequence();
             seq.SetLink(coin.gameObject);
 
-            // Phase 1: Burst explosion
+            // Phase 1: Nổ bung (Burst)
             seq.Append(coin.DOScale(Vector3.one, _burstDuration * 0.6f).SetEase(Ease.OutBack));
             seq.Join(coin.DOMove(burstTarget, _burstDuration).SetEase(Ease.OutQuad));
 
-            // Phase 2: Stagger delay before flight
+            // Phase 2: Stagger delay
             float delay = index * _staggerDelay;
             if (delay > 0)
             {
                 seq.AppendInterval(delay);
             }
 
-            // Phase 3: Curved Flight to target
+            // Step 3: Từng đồng tiền bay về phía Icon Tiền trên HUD theo quỹ đạo mượt mà (DOMove / DOPath)
             Vector3 midPoint = (burstTarget + targetScreenPos) * 0.5f;
             Vector3 perpendicular = Vector3.Cross(targetScreenPos - burstTarget, Vector3.forward).normalized;
-            float curveOffset = UnityEngine.Random.Range(-90f, 90f);
+            float curveOffset = UnityEngine.Random.Range(-80f, 80f);
             Vector3 controlPoint = midPoint + perpendicular * curveOffset;
             Vector3[] path = new Vector3[] { burstTarget, controlPoint, targetScreenPos };
 
             seq.Append(coin.DOPath(path, _flyDuration, PathType.CatmullRom).SetEase(Ease.InQuad));
 
-            // Phase 4: Arrival hit
+            // Step 4 & 5: Chạm đích, nảy nhẹ icon, leng keng, nảy số, thu hồi về Pool
             seq.OnComplete(() =>
             {
+                // Step 5: Thu hồi icon tiền về Pool
                 ReturnCoin(coin);
 
+                // Step 4: Khi mỗi đồng tiền chạm đích: Icon trên HUD nảy nhẹ (DOPunchScale), âm thanh tích xu kêu leng keng, bộ đếm số tăng dần theo từng nhịp chạm
                 HUDController hud = UIManager.Instance?.HUD;
                 if (hud != null)
                 {

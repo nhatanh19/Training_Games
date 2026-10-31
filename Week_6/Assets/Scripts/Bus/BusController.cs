@@ -303,6 +303,7 @@ public class BusController : MonoBehaviour
         if (UIManager.Instance != null && UIManager.Instance.IsAnyPopupOpen()) return;
 
         AudioManager.Instance?.PlayClick();
+        HapticManager.Instance?.TriggerLight();
 
         if (!CanExit())
         {
@@ -348,6 +349,7 @@ public class BusController : MonoBehaviour
             _isBusy = false;
             IsReadyForPassengers = true;
             GameInputManager.SetLock(false);
+            HapticManager.Instance?.TriggerSuccess();
             BusStopManager.Instance.NotifyBusArrived(this);
         });
     }
@@ -487,6 +489,7 @@ public class BusController : MonoBehaviour
             CameraShakeManager.Instance?.ShakeHeavy();
             VFXManager.Instance?.PlayDust(transform.position, transform.rotation);
             AudioManager.Instance?.PlayEngine();
+            HapticManager.Instance?.TriggerSuccess();
         });
         seq.Append(transform.DOMoveY(transform.position.y + 10f, departDuration).SetEase(Ease.InQuad));
         seq.OnComplete(() =>
@@ -523,6 +526,7 @@ public class BusController : MonoBehaviour
         _isBusy = true;
         CameraShakeManager.Instance?.ShakeLight();
         AudioManager.Instance?.PlayCrash();
+        HapticManager.Instance?.TriggerWarning();
 
         Vector2Int step = direction.ToVector2Int();
         Vector3 hitPoint = transform.position + new Vector3(step.x, step.y, 0f) * (length * 0.5f);

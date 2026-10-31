@@ -400,6 +400,7 @@ MonoBehaviour:
   hudController: {fileID: 746897951429746201}
   vfxManager: {fileID: 2020108355}
   cameraShakeManager: {fileID: 1313938678}
+  hapticManager: {fileID: 0}
 --- !u!4 &416544621
 Transform:
   m_ObjectHideFlags: 0
@@ -655,6 +656,8 @@ MonoBehaviour:
   _crashClip: {fileID: 0}
   _winClip: {fileID: 0}
   _loseClip: {fileID: 0}
+  _coinClip: {fileID: 0}
+  _popClip: {fileID: 0}
   _bgmClip: {fileID: 0}
 --- !u!4 &1018516466
 Transform:
@@ -1786,9 +1789,17 @@ PrefabInstance:
       propertyPath: m_AdditionalShaderChannelsFlag
       value: 25
       objectReference: {fileID: 0}
+    - target: {fileID: 2898614844571904309, guid: 2fb9e82780b4d2c4f9d62cd018b52da3, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: b1c2d3e4f5a61234567890abcdef2000, type: 3}
     - target: {fileID: 4261714782877613055, guid: 2fb9e82780b4d2c4f9d62cd018b52da3, type: 3}
       propertyPath: m_TextStyleHashCode
       value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 4558345597752207085, guid: 2fb9e82780b4d2c4f9d62cd018b52da3, type: 3}
+      propertyPath: m_Sprite
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 5374425455380448566, guid: 2fb9e82780b4d2c4f9d62cd018b52da3, type: 3}
       propertyPath: m_fontColor32.rgba

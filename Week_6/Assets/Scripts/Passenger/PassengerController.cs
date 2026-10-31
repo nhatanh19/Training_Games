@@ -83,6 +83,10 @@ public class PassengerController : MonoBehaviour
                 transform.localRotation = Quaternion.identity;
                 EnsureDefaultScale();
                 transform.localScale = defaultScale;
+
+                AudioManager.Instance?.PlayPop();
+                HapticManager.Instance?.TriggerLight();
+
                 onComplete?.Invoke();
             });
     }
@@ -90,6 +94,7 @@ public class PassengerController : MonoBehaviour
     public void StepForward(Vector3 targetWorldPos, System.Action onComplete = null)
     {
         AudioManager.Instance?.PlayFootstep();
+        HapticManager.Instance?.TriggerLight();
 
         transform.DOMove(targetWorldPos, 0.2f)
             .SetEase(Ease.OutQuad)

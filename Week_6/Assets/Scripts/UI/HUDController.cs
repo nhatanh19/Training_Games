@@ -14,13 +14,101 @@ public class HUDController : MonoBehaviour
     [SerializeField] private Button _restartButton;
     [SerializeField] private Button _settingsButton;
 
+    public const string COIN_PREF_KEY = "TotalCoins";
+
     private int _currentCoin = 0;
 
-    public Transform CoinTargetTransform => _coinTargetTransform != null ? _coinTargetTransform : transform;
+    public int CurrentCoin => _currentCoin;
+
+    public Transform CoinTargetTransform
+    {
+        get
+        {
+            if (_coinTargetTransform != null)
+            {
+                Transform iconTrans = _coinTargetTransform.Find("CoinIcon");
+                return iconTrans != null ? iconTrans : _coinTargetTransform;
+            }
+            return transform;
+        }
+    }
 
     private void Awake()
     {
         BindButtons();
+        EnsureCoinDisplay();
+        LoadCoinsFromPrefs();
+    }
+
+    private void OnEnable()
+    {
+        LoadCoinsFromPrefs();
+    }
+
+    public void LoadCoinsFromPrefs()
+    {
+        _currentCoin = PlayerPrefs.GetInt(COIN_PREF_KEY, 0);
+        if (_coinText != null)
+        {
+            _coinText.text = _currentCoin.ToString();
+        }
+    }
+
+    private void EnsureCoinDisplay()
+    {
+        if (_coinTargetTransform != null)
+        {
+            // 1. Ensure CoinContainer background retains its sleek dark pill styling
+            if (_coinTargetTransform.name == "CoinContainer")
+            {
+                Image bgImg = _coinTargetTransform.GetComponent<Image>();
+                if (bgImg != null)
+                {
+                    bgImg.sprite = null;
+                    bgImg.color = new Color(0f, 0f, 0f, 0.35f);
+                }
+            }
+
+            // 2. Find the actual CoinIcon child to replace the placeholder
+            Transform iconTrans = _coinTargetTransform.Find("CoinIcon");
+            if (iconTrans == null)
+            {
+                // Fallback search in children
+                Image[] images = _coinTargetTransform.GetComponentsInChildren<Image>(true);
+                foreach (Image img in images)
+                {
+                    if (img.gameObject != _coinTargetTransform.gameObject)
+                    {
+                        iconTrans = img.transform;
+                        break;
+                    }
+                }
+            }
+
+            if (iconTrans != null)
+            {
+                Image coinImg = iconTrans.GetComponent<Image>();
+                if (coinImg != null)
+                {
+                    Sprite coinSprite = Resources.Load<Sprite>("Sprites/coin_icon");
+                    if (coinSprite == null)
+                    {
+                        Texture2D tex = Resources.Load<Texture2D>("Sprites/coin_icon");
+                        if (tex != null)
+                        {
+                            coinSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
+                        }
+                    }
+
+                    if (coinSprite != null)
+                    {
+                        coinImg.sprite = coinSprite;
+                    }
+                    coinImg.color = Color.white;
+                    coinImg.preserveAspect = true;
+                }
+            }
+        }
     }
 
     private void BindButtons()
@@ -46,7 +134,7 @@ public class HUDController : MonoBehaviour
         }
     }
 
-    public void SetCoin(int amount, bool animate = false)
+    public void SetCoin(int amount, bool animate = false, bool saveToPrefs = true)
     {
         _currentCoin = amount;
         if (_coinText != null)
@@ -60,22 +148,30 @@ public class HUDController : MonoBehaviour
                     .SetLink(gameObject);
             }
         }
+
+        if (saveToPrefs)
+        {
+            PlayerPrefs.SetInt(COIN_PREF_KEY, _currentCoin);
+            PlayerPrefs.Save();
+        }
     }
 
     public void AddCoin(int addedAmount, bool animate = true)
     {
-        SetCoin(_currentCoin + addedAmount, animate);
+        SetCoin(_currentCoin + addedAmount, animate, true);
     }
 
     private void OnRestartClicked()
     {
         AudioManager.Instance?.PlayClick();
+        HapticManager.Instance?.TriggerLight();
         GameManager.Instance?.RestartLevel();
     }
 
     private void OnSettingsClicked()
     {
         AudioManager.Instance?.PlayClick();
+        HapticManager.Instance?.TriggerLight();
         UIManager.Instance?.OpenSettings();
     }
 }
