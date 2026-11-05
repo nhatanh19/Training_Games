@@ -1,0 +1,32 @@
+using TMPro;
+using UnityEngine;
+
+/// <summary>Updates the lose popup texts according to the saved game language.</summary>
+public class LosePopupLocalizer : MonoBehaviour
+{
+    [SerializeField] private TextMeshProUGUI _titleText;
+    [SerializeField] private TextMeshProUGUI _buttonText;
+
+    private void OnEnable()
+    {
+        SettingsController.LanguageChanged += OnLanguageChanged;
+        Refresh();
+    }
+
+    private void OnDisable()
+    {
+        SettingsController.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged(string language)
+    {
+        Refresh();
+    }
+
+    private void Refresh()
+    {
+        bool vi = SettingsController.IsVietnameseSaved;
+        if (_titleText != null) _titleText.text = vi ? "CẤP ĐỘ THẤT BẠI" : "LEVEL FAILED";
+        if (_buttonText != null) _buttonText.text = vi ? "THỬ LẠI" : "TRY AGAIN";
+    }
+}

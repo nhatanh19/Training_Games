@@ -1,4 +1,4 @@
-﻿using TMPro;
+using TMPro;
 using UnityEngine;
 
 public class BusStopSlot : MonoBehaviour
@@ -6,6 +6,7 @@ public class BusStopSlot : MonoBehaviour
     [SerializeField] private SpriteRenderer slotRenderer;
 
     private TextMeshPro _lockLabel;
+    private BoxCollider2D _clickCollider;
 
     public Transform SlotTransform => transform;
     public BusController CurrentBus { get; private set; }
@@ -27,12 +28,38 @@ public class BusStopSlot : MonoBehaviour
             }
             slotRenderer.color = Color.white;
         }
+        EnsureClickCollider();
         RefreshLockLabel();
+    }
+
+    public void OnLockedSlotClicked()
+    {
+        if (!IsLocked) return;
+        AudioManager.Instance?.PlayClick();
+        HapticManager.Instance?.TriggerLight();
+        UIManager.Instance?.OpenContinuePopup();
+    }
+
+    private void EnsureClickCollider()
+    {
+        if (_clickCollider == null)
+        {
+            _clickCollider = GetComponent<BoxCollider2D>();
+            if (_clickCollider == null)
+            {
+                _clickCollider = gameObject.AddComponent<BoxCollider2D>();
+            }
+        }
+        // Match sprite world bounds (320x640 at 256 PPU -> 1.25 x 2.50)
+        _clickCollider.size = new Vector2(1.25f, 2.50f);
+        _clickCollider.offset = Vector2.zero;
+        _clickCollider.enabled = IsLocked;
     }
 
     private void OnEnable()
     {
         SettingsController.LanguageChanged += OnLanguageChanged;
+        EnsureClickCollider();
         RefreshLockLabel();
     }
 
@@ -59,25 +86,26 @@ public class BusStopSlot : MonoBehaviour
             Transform existing = transform.Find("LockLabel");
             GameObject go = existing != null ? existing.gameObject : new GameObject("LockLabel", typeof(TextMeshPro));
             go.transform.SetParent(transform, false);
-            go.transform.localPosition = new Vector3(0f, -0.12f, 0f);
             _lockLabel = go.GetComponent<TextMeshPro>();
-
-            TMP_FontAsset font = Resources.Load<TMP_FontAsset>("Fonts & Materials/SettingsDynamic SDF");
-            if (font != null) _lockLabel.font = font;
-            _lockLabel.fontSize = 2.2f;
-            _lockLabel.fontStyle = FontStyles.Bold;
-            _lockLabel.alignment = TextAlignmentOptions.Center;
-            _lockLabel.color = Color.white;
-            _lockLabel.rectTransform.sizeDelta = new Vector2(1.2f, 0.5f);
-            _lockLabel.enableWordWrapping = false;
-            _lockLabel.GetComponent<MeshRenderer>().sortingOrder = -9;
         }
+
+        TMP_FontAsset font = Resources.Load<TMP_FontAsset>("Fonts & Materials/SettingsDynamic SDF");
+        if (font != null) _lockLabel.font = font;
+        _lockLabel.transform.localPosition = new Vector3(0f, -0.22f, 0f);
+        _lockLabel.fontSize = 1.65f;
+        _lockLabel.lineSpacing = -12f;
+        _lockLabel.fontStyle = FontStyles.Bold;
+        _lockLabel.alignment = TextAlignmentOptions.Center;
+        _lockLabel.color = Color.white;
+        _lockLabel.rectTransform.sizeDelta = new Vector2(0.95f, 0.55f);
+        _lockLabel.enableWordWrapping = false;
+        _lockLabel.GetComponent<MeshRenderer>().sortingOrder = -9;
 
         // Cancel the slot's non-uniform scale so the text is not squashed
         Vector3 ls = transform.lossyScale;
         _lockLabel.transform.localScale = new Vector3(
             ls.x > 0.01f ? 1f / ls.x : 1f, ls.y > 0.01f ? 1f / ls.y : 1f, 1f);
-        _lockLabel.text = SettingsController.IsVietnameseSaved ? "MỞ KHÓA" : "UNLOCK";
+        _lockLabel.text = SettingsController.IsVietnameseSaved ? "MỞ\nKHÓA" : "UNLOCK";
         _lockLabel.gameObject.SetActive(true);
     }
 

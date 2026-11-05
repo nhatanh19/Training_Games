@@ -143,6 +143,12 @@ public class HUDController : MonoBehaviour
             _restartButton.onClick.AddListener(OnRestartClicked);
         }
 
+        if (_addCoinButton != null)
+        {
+            _addCoinButton.onClick.RemoveAllListeners();
+            _addCoinButton.onClick.AddListener(OnAddCoinClicked);
+        }
+
         if (_settingsButton != null)
         {
             _settingsButton.onClick.RemoveAllListeners();
@@ -188,6 +194,13 @@ public class HUDController : MonoBehaviour
         AudioManager.Instance?.PlayClick();
         HapticManager.Instance?.TriggerLight();
         GameManager.Instance?.RestartLevel();
+    }
+
+    private void OnAddCoinClicked()
+    {
+        AudioManager.Instance?.PlayClick();
+        HapticManager.Instance?.TriggerLight();
+        UIManager.Instance?.OpenContinuePopup();
     }
 
     private void OnSettingsClicked()

@@ -1,4 +1,4 @@
-using DG.Tweening;
+﻿using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,6 +13,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject _winPopup;
     [SerializeField] private GameObject _losePopup;
     [SerializeField] private GameObject _settingsPopup;
+    [SerializeField] private GameObject _continuePopup;
 
     [Header("Win / Lose Buttons")]
     [SerializeField] private Button _nextLevelButton;
@@ -62,6 +63,11 @@ public class UIManager : MonoBehaviour
             {
                 Transform t = popupCanvas.transform.Find("SettingsPopup");
                 if (t != null) _settingsPopup = t.gameObject;
+            }
+            if (_continuePopup == null)
+            {
+                Transform t = popupCanvas.transform.Find("ContinuePopup");
+                if (t != null) _continuePopup = t.gameObject;
             }
         }
 
@@ -190,7 +196,8 @@ public class UIManager : MonoBehaviour
     {
         return (_winPopup != null && _winPopup.activeSelf) ||
                (_losePopup != null && _losePopup.activeSelf) ||
-               (_settingsPopup != null && _settingsPopup.activeSelf);
+               (_settingsPopup != null && _settingsPopup.activeSelf) ||
+               (_continuePopup != null && _continuePopup.activeSelf);
     }
 
     public void ShowWinPopup()
@@ -217,6 +224,27 @@ public class UIManager : MonoBehaviour
         ShowPopupWithAnimation(_settingsPopup);
     }
 
+    public void OpenContinuePopup()
+    {
+        if (_continuePopup == null) ResolveReferences();
+        if (_continuePopup == null) return;
+        HidePopup(_winPopup);
+        HidePopup(_losePopup);
+        HidePopup(_settingsPopup);
+        ShowPopupWithAnimation(_continuePopup);
+    }
+
+    public void CloseContinuePopup()
+    {
+        HidePopupWithAnimation(_continuePopup, () =>
+        {
+            if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.Playing && !IsAnyPopupOpen())
+            {
+                GameInputManager.SetLock(false);
+            }
+        });
+    }
+
     public void CloseSettings()
     {
         HidePopupWithAnimation(_settingsPopup);
@@ -227,6 +255,7 @@ public class UIManager : MonoBehaviour
         HidePopupImmediate(_winPopup);
         HidePopupImmediate(_losePopup);
         HidePopupImmediate(_settingsPopup);
+        HidePopupImmediate(_continuePopup);
         if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.Playing)
         {
             GameInputManager.SetLock(false);

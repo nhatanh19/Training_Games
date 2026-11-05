@@ -114,6 +114,13 @@ public class GameInputManager : MonoBehaviour
             if (bus != null)
             {
                 bus.OnClicked();
+                return;
+            }
+
+            BusStopSlot slot = hit.collider.GetComponentInParent<BusStopSlot>();
+            if (slot != null && slot.IsLocked)
+            {
+                slot.OnLockedSlotClicked();
             }
         }
     }

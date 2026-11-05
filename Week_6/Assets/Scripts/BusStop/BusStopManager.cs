@@ -20,9 +20,29 @@ public class BusStopManager : MonoBehaviour
     public int TotalSlotCount => slots.Count;
     public int UnlockedSlotCount => slots.FindAll(slot => slot != null && !slot.IsLocked).Count;
 
+    /// <summary>Unlocks the locked slot closest to the centre. Returns false when none is locked.</summary>
+    public int ExtraUnlockCount { get; private set; }
+
+    public bool UnlockOneSlot()
+    {
+        BusStopSlot best = null;
+        float bestDist = float.MaxValue;
+        foreach (BusStopSlot slot in slots)
+        {
+            if (slot == null || !slot.IsLocked) continue;
+            float d = Mathf.Abs(slot.transform.position.x);
+            if (d < bestDist) { bestDist = d; best = slot; }
+        }
+        if (best == null) return false;
+        best.SetLocked(false);
+        ExtraUnlockCount++;
+        return true;
+    }
+
     public void ConfigureSlots(int unlockedCount)
     {
         SetupSlots(allowCreate: false);
+        ExtraUnlockCount = 0;
         if (slots == null || slots.Count == 0) return;
 
         unlockedCount = Mathf.Clamp(unlockedCount, 1, slots.Count);
