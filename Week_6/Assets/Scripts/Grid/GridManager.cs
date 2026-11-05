@@ -9,7 +9,7 @@ public class GridManager : MonoBehaviour
     [SerializeField] private float cellSize = 0.95f;
 
     [Header("Road Corridor Settings")]
-    [SerializeField] private float roadOffset = 0.65f;
+    [SerializeField] private float roadOffset = 0.25f;
 
     private GridCell[,] _grid;
     private Vector3 _originPosition;
@@ -36,12 +36,23 @@ public class GridManager : MonoBehaviour
             return;
         }
 
+        AdjustCameraViewport();
+        InitializeGrid();
+    }
+
+    private void Start()
+    {
+        AdjustCameraViewport();
+    }
+
+    public void AdjustCameraViewport()
+    {
         if (Camera.main != null && Camera.main.orthographic)
         {
-            Camera.main.orthographicSize = Mathf.Max(Camera.main.orthographicSize, 7.8f);
+            float targetHalfWidth = 4.35f;
+            float requiredOrthoSize = targetHalfWidth / Camera.main.aspect;
+            Camera.main.orthographicSize = Mathf.Max(7.8f, requiredOrthoSize);
         }
-
-        InitializeGrid();
     }
 
     public void InitializeGrid(int newRows, int newCols)

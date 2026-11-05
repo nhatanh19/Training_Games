@@ -31,6 +31,7 @@ public class GameManager : MonoBehaviour
     }
 
     public GameState CurrentState { get; private set; } = GameState.Loading;
+    public LevelDataSO CurrentLevelData => LevelLoader.Instance != null ? LevelLoader.Instance.CurrentLevelData : null;
     public int CurrentLevelIndex { get; private set; } = 0;
     public const string COIN_KEY = "TotalCoins";
 
@@ -225,17 +226,46 @@ public class GameManager : MonoBehaviour
 
     private bool CheckDeadlock()
     {
-        if (BusStopManager.Instance == null || BusStopManager.Instance.HasAvailableSlot) return false;
         if (PassengerQueueManager.Instance == null || PassengerQueueManager.Instance.RemainingPassengersCount == 0) return false;
         if (PassengerQueueManager.Instance.IsBoarding) return false;
 
         PassengerController head = PassengerQueueManager.Instance.PeekNextPassenger();
         if (head == null) return false;
 
-        List<BusController> activeBuses = BusStopManager.Instance.GetActiveBuses();
-        if (activeBuses.Count < BusStopManager.Instance.TotalSlotCount) return false;
+        if (BusStopManager.Instance == null) return false;
 
-        bool hasMatchingBus = activeBuses.Exists(b => b.Color == head.Color && b.HasEmptySeat);
-        return !hasMatchingBus;
+        List<BusController> activeBuses = BusStopManager.Instance.GetActiveBuses();
+
+        // 1. Slot Deadlock: All unlocked parking slots are full, and no parked bus matches head passenger
+        if (!BusStopManager.Instance.HasAvailableSlot && activeBuses.Count >= BusStopManager.Instance.UnlockedSlotCount)
+        {
+            bool hasMatchingBus = activeBuses.Exists(b => b.Color == head.Color && b.HasEmptySeat);
+            if (!hasMatchingBus)
+            {
+                return true;
+            }
+        }
+
+        // 2. Gridlock: None of the active buses can take head passenger, and NO remaining bus on the grid can exit
+        bool anySlotCanAccept = activeBuses.Exists(b => b.Color == head.Color && b.HasEmptySeat);
+        if (!anySlotCanAccept && LevelLoader.Instance != null && LevelLoader.Instance.RemainingBusesCount > 0)
+        {
+            bool anyGridBusCanMove = false;
+            foreach (var bus in LevelLoader.Instance.SpawnedBuses)
+            {
+                if (bus != null && bus.gameObject.activeInHierarchy && !activeBuses.Contains(bus) && bus.CanExit())
+                {
+                    anyGridBusCanMove = true;
+                    break;
+                }
+            }
+
+            if (!anyGridBusCanMove)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -14,6 +14,10 @@ public class BusSpawnData
 [CreateAssetMenu(fileName = "NewLevelData", menuName = "BusJam/Level Data")]
 public class LevelDataSO : ScriptableObject
 {
+    [Header("Level Settings")]
+    [Range(1, 5)] public int unlockedSlots = 3;
+    [Range(5, 10)] public int coinReward = 10;
+
     [Header("Board Size")]
     public int rows = 6;
     public int cols = 6;

@@ -332,9 +332,15 @@ public class UIManager : MonoBehaviour
 
         Vector3 targetPos = _hudController != null ? _hudController.CoinTargetTransform.position : Vector3.zero;
 
+        int rewardAmount = GameManager.Instance != null && GameManager.Instance.CurrentLevelData != null
+            ? GameManager.Instance.CurrentLevelData.coinReward
+            : 8;
+        rewardAmount = Mathf.Clamp(rewardAmount, 5, 10);
+        int coinCount = rewardAmount;
+
         if (CoinFlyEffectManager.Instance != null && startPos != Vector3.zero && targetPos != Vector3.zero)
         {
-            CoinFlyEffectManager.Instance.PlayFlyCoins(startPos, targetPos, 8, 100, () =>
+            CoinFlyEffectManager.Instance.PlayFlyCoins(startPos, targetPos, coinCount, rewardAmount, () =>
             {
                 HidePopupWithAnimation(_winPopup, () =>
                 {

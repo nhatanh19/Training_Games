@@ -19,8 +19,10 @@ public class LevelLoader : MonoBehaviour
     public BusController Bus2x1Prefab => bus2x1Prefab;
     public BusController Bus3x1Prefab => bus3x1Prefab;
     public PassengerController PassengerPrefab => passengerPrefab;
+    public LevelDataSO CurrentLevelData => currentLevelData;
     public int LevelCount => levels != null ? levels.Count : 0;
     public int RemainingBusesCount => _spawnedBuses.Count;
+    public IReadOnlyList<BusController> SpawnedBuses => _spawnedBuses;
 
     private readonly List<BusController> _spawnedBuses = new List<BusController>();
 
@@ -118,6 +120,11 @@ public class LevelLoader : MonoBehaviour
         // Pools are created once from the serialized prefabs; do not reset them per level.
         GamePoolManager.Instance.Initialize();
 
+        if (BusStopManager.Instance != null)
+        {
+            BusStopManager.Instance.ConfigureSlots(levelData.unlockedSlots);
+        }
+
         if (GridManager.Instance != null)
         {
             GridManager.Instance.InitializeGrid(levelData.rows, levelData.cols);
@@ -143,6 +150,11 @@ public class LevelLoader : MonoBehaviour
 
     public void ClearCurrentLevel()
     {
+        if (BusStopManager.Instance != null)
+        {
+            BusStopManager.Instance.ClearAllSlots();
+        }
+
         foreach (var bus in _spawnedBuses)
         {
             if (bus != null)
@@ -152,9 +164,14 @@ public class LevelLoader : MonoBehaviour
         }
         _spawnedBuses.Clear();
 
-        if (BusStopManager.Instance != null)
+        // Release any lingering active buses to prevent duplication
+        BusController[] allActiveBuses = FindObjectsOfType<BusController>();
+        foreach (var bus in allActiveBuses)
         {
-            BusStopManager.Instance.ClearAllSlots();
+            if (bus != null && bus.gameObject.activeInHierarchy)
+            {
+                GamePoolManager.Instance.ReleaseBus(bus);
+            }
         }
 
         if (PassengerQueueManager.Instance != null)

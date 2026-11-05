@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 
@@ -36,12 +36,26 @@ public class BusController : MonoBehaviour
     public int Length => length;
     public Vector2Int RootGridPosition => rootGridPosition;
     public List<Transform> SeatPoints => seatPoints;
-    public bool HasEmptySeat => _passengersCount < 3;
+    public int Capacity => length == 3 ? 3 : 2;
+    public bool HasEmptySeat => _passengersCount < Capacity;
     public bool IsReadyForPassengers { get; private set; } = false;
 
     private void Awake()
     {
-        EnsureDefaultScale();
+        UpdateScaleToGrid();
+    }
+
+    public void UpdateScaleToGrid()
+    {
+        if (_gridManager == null)
+        {
+            _gridManager = GridManager.Instance != null ? GridManager.Instance : FindObjectOfType<GridManager>();
+        }
+
+        float cs = _gridManager != null ? _gridManager.CellSize : 0.95f;
+        // Dynamically scale vehicle to grid cellSize with 10% parking gap so adjacent vehicles never overlap
+        float scaleFactor = cs * 0.90f;
+        defaultScale = new Vector3(scaleFactor, scaleFactor, 1f);
         transform.localScale = defaultScale;
 
         BoxCollider2D col = GetComponent<BoxCollider2D>();
@@ -54,12 +68,7 @@ public class BusController : MonoBehaviour
 
     private void EnsureDefaultScale()
     {
-        // Target uniform scale for 256 PPU sprites (2.0x1.0 and 3.0x1.0) on 0.95 grid cellSize
-        Vector3 targetScale = new Vector3(0.95f, 0.95f, 1f);
-        if (defaultScale == Vector3.zero || defaultScale == Vector3.one || defaultScale.x > 1.2f)
-        {
-            defaultScale = targetScale;
-        }
+        UpdateScaleToGrid();
     }
 
     private void OnValidate()
@@ -72,9 +81,8 @@ public class BusController : MonoBehaviour
     {
         if (_gridManager == null)
         {
-            EnsureDefaultScale();
-            transform.localScale = defaultScale;
             _gridManager = GridManager.Instance != null ? GridManager.Instance : FindObjectOfType<GridManager>();
+            UpdateScaleToGrid();
             ApplyColor(allowCreateArrow: true);
             AlignToGrid();
             RegisterToGrid();
@@ -87,9 +95,8 @@ public class BusController : MonoBehaviour
         direction = dir;
         length = len;
         rootGridPosition = rootPos;
-        EnsureDefaultScale();
-        transform.localScale = defaultScale;
         _gridManager = GridManager.Instance != null ? GridManager.Instance : FindObjectOfType<GridManager>();
+        UpdateScaleToGrid();
         ApplyColor(allowCreateArrow: true);
         AlignToGrid();
         RegisterToGrid();
@@ -159,19 +166,26 @@ public class BusController : MonoBehaviour
         }
 
         // Adjust seat points to sit neatly on the roof behind the arrow
-        if (seatPoints != null && seatPoints.Count >= 3)
+        if (seatPoints != null && seatPoints.Count > 0)
         {
             if (length == 3)
             {
-                if (seatPoints[0] != null) seatPoints[0].localPosition = new Vector3(-0.75f, 0f, 0f);
-                if (seatPoints[1] != null) seatPoints[1].localPosition = new Vector3(-0.15f, 0f, 0f);
-                if (seatPoints[2] != null) seatPoints[2].localPosition = new Vector3(0.45f, 0f, 0f);
+                if (seatPoints.Count > 0 && seatPoints[0] != null) seatPoints[0].localPosition = new Vector3(-0.75f, 0f, 0f);
+                if (seatPoints.Count > 1 && seatPoints[1] != null) seatPoints[1].localPosition = new Vector3(-0.15f, 0f, 0f);
+                if (seatPoints.Count > 2 && seatPoints[2] != null)
+                {
+                    seatPoints[2].gameObject.SetActive(true);
+                    seatPoints[2].localPosition = new Vector3(0.45f, 0f, 0f);
+                }
             }
             else
             {
-                if (seatPoints[0] != null) seatPoints[0].localPosition = new Vector3(-0.50f, 0f, 0f);
-                if (seatPoints[1] != null) seatPoints[1].localPosition = new Vector3(-0.15f, 0f, 0f);
-                if (seatPoints[2] != null) seatPoints[2].localPosition = new Vector3(0.20f, 0f, 0f);
+                if (seatPoints.Count > 0 && seatPoints[0] != null) seatPoints[0].localPosition = new Vector3(-0.35f, 0f, 0f);
+                if (seatPoints.Count > 1 && seatPoints[1] != null) seatPoints[1].localPosition = new Vector3(0.20f, 0f, 0f);
+                if (seatPoints.Count > 2 && seatPoints[2] != null)
+                {
+                    seatPoints[2].gameObject.SetActive(false);
+                }
             }
         }
 
@@ -236,7 +250,13 @@ public class BusController : MonoBehaviour
 
     public void AlignToGrid()
     {
+        if (_gridManager == null)
+        {
+            _gridManager = GridManager.Instance != null ? GridManager.Instance : FindObjectOfType<GridManager>();
+        }
         if (_gridManager == null) return;
+
+        UpdateScaleToGrid();
 
         Vector2Int tailPos = rootGridPosition;
         Vector2Int headPos = GetHeadCell();
@@ -321,6 +341,8 @@ public class BusController : MonoBehaviour
         DriveToBusStop();
     }
 
+    private const float ParkedScaleFactor = 0.85f;
+
     private void DriveToBusStop()
     {
         _isBusy = true;
@@ -364,10 +386,10 @@ public class BusController : MonoBehaviour
             _gridManager = GridManager.Instance != null ? GridManager.Instance : FindObjectOfType<GridManager>();
         }
 
-        float rightX = _gridManager != null ? _gridManager.RightLaneX : currentPos.x + 4f;
-        float leftX = _gridManager != null ? _gridManager.LeftLaneX : currentPos.x - 4f;
-        float bottomY = _gridManager != null ? _gridManager.BottomLaneY : currentPos.y - 4f;
-        float approachY = targetPos.y - 1.1f;
+        float rightX = _gridManager != null ? _gridManager.RightLaneX : 3.10f;
+        float leftX = _gridManager != null ? _gridManager.LeftLaneX : -3.10f;
+        float bottomY = _gridManager != null ? _gridManager.BottomLaneY : -4.30f;
+        float approachY = targetPos.y - 1.4f;
 
         float GetDuration(Vector3 from, Vector3 to)
         {
@@ -379,33 +401,41 @@ public class BusController : MonoBehaviour
         {
             case Direction.Right:
             {
-                Vector3 p1 = new Vector3(rightX, currentPos.y, 0f);
-                Vector3 p2 = new Vector3(rightX, approachY, 0f);
-                Vector3 p3 = new Vector3(targetPos.x, approachY, 0f);
+                // Align turn point so the bus head reaches the right lane without exceeding it
+                float turnX = rightX - (length == 3 ? 0.65f : 0.35f);
+                Vector3 p1 = new Vector3(turnX, currentPos.y, 0f);
+                Vector3 p2 = new Vector3(rightX, currentPos.y + 0.35f, 0f);
+                Vector3 p3 = new Vector3(rightX, approachY, 0f);
+                Vector3 p4 = new Vector3(targetPos.x, approachY, 0f);
 
                 seq.Append(transform.DOMove(p1, GetDuration(currentPos, p1)).SetEase(Ease.Linear));
                 seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
                 seq.Append(transform.DOMove(p2, GetDuration(p1, p2)).SetEase(Ease.Linear));
-                seq.Append(transform.DORotate(new Vector3(0, 0, 180f), turnDuration));
                 seq.Append(transform.DOMove(p3, GetDuration(p2, p3)).SetEase(Ease.Linear));
+                seq.Append(transform.DORotate(new Vector3(0, 0, 180f), turnDuration));
+                seq.Append(transform.DOMove(p4, GetDuration(p3, p4)).SetEase(Ease.Linear));
                 seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
-                seq.Append(transform.DOMove(targetPos, GetDuration(p3, targetPos)).SetEase(Ease.Linear));
+                seq.Append(transform.DOMove(targetPos, GetDuration(p4, targetPos)).SetEase(Ease.Linear));
                 break;
             }
 
             case Direction.Left:
             {
-                Vector3 p1 = new Vector3(leftX, currentPos.y, 0f);
-                Vector3 p2 = new Vector3(leftX, approachY, 0f);
-                Vector3 p3 = new Vector3(targetPos.x, approachY, 0f);
+                // Align turn point so the bus head reaches the left lane without exceeding it
+                float turnX = leftX + (length == 3 ? 0.65f : 0.35f);
+                Vector3 p1 = new Vector3(turnX, currentPos.y, 0f);
+                Vector3 p2 = new Vector3(leftX, currentPos.y + 0.35f, 0f);
+                Vector3 p3 = new Vector3(leftX, approachY, 0f);
+                Vector3 p4 = new Vector3(targetPos.x, approachY, 0f);
 
                 seq.Append(transform.DOMove(p1, GetDuration(currentPos, p1)).SetEase(Ease.Linear));
                 seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
                 seq.Append(transform.DOMove(p2, GetDuration(p1, p2)).SetEase(Ease.Linear));
-                seq.Append(transform.DORotate(Vector3.zero, turnDuration));
                 seq.Append(transform.DOMove(p3, GetDuration(p2, p3)).SetEase(Ease.Linear));
+                seq.Append(transform.DORotate(Vector3.zero, turnDuration));
+                seq.Append(transform.DOMove(p4, GetDuration(p3, p4)).SetEase(Ease.Linear));
                 seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
-                seq.Append(transform.DOMove(targetPos, GetDuration(p3, targetPos)).SetEase(Ease.Linear));
+                seq.Append(transform.DOMove(targetPos, GetDuration(p4, targetPos)).SetEase(Ease.Linear));
                 break;
             }
 
@@ -432,7 +462,8 @@ public class BusController : MonoBehaviour
 
             case Direction.Down:
             {
-                Vector3 p1 = new Vector3(currentPos.x, bottomY, 0f);
+                float turnY = bottomY + (length == 3 ? 0.65f : 0.35f);
+                Vector3 p1 = new Vector3(currentPos.x, turnY, 0f);
                 bool goRight = _gridManager != null ? currentPos.x >= _gridManager.transform.position.x : currentPos.x >= 0f;
                 float sideX = goRight ? rightX : leftX;
 
@@ -453,12 +484,13 @@ public class BusController : MonoBehaviour
             }
         }
 
+        seq.SetLink(gameObject);
         return seq;
     }
 
     public Transform GetNextSeatTransform()
     {
-        if (!HasEmptySeat || _passengersCount >= seatPoints.Count) return null;
+        if (!HasEmptySeat || _passengersCount >= Capacity || _passengersCount >= seatPoints.Count) return null;
         Transform seat = seatPoints[_passengersCount];
         _passengersCount++;
         return seat;
@@ -471,7 +503,7 @@ public class BusController : MonoBehaviour
             _seatedPassengers.Add(passenger);
         }
 
-        if (_passengersCount >= 3)
+        if (_passengersCount >= Capacity)
         {
             DepartFromStop();
         }

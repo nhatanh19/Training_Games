@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,6 +7,9 @@ public class BusStopManager : MonoBehaviour
     public static BusStopManager Instance { get; private set; }
 
     [SerializeField] private float bayY = 3.25f;
+    // Moves the whole bay up so slots sit fully inside the parking strip (below it is the driving road).
+    [SerializeField] private float bayYOffset = 0.30f;
+    [SerializeField] private Vector2 slotScale = new Vector2(0.85f, 0.74f);
     [SerializeField] private List<BusStopSlot> slots = new List<BusStopSlot>();
 
     public event Action<BusController> OnBusArrivedAtStop;
@@ -15,6 +18,43 @@ public class BusStopManager : MonoBehaviour
     public bool HasAvailableSlot => GetAvailableSlot() != null;
     public int OccupiedSlotCount => slots.FindAll(slot => !slot.IsAvailable).Count;
     public int TotalSlotCount => slots.Count;
+    public int UnlockedSlotCount => slots.FindAll(slot => slot != null && !slot.IsLocked).Count;
+
+    public void ConfigureSlots(int unlockedCount)
+    {
+        SetupSlots(allowCreate: false);
+        if (slots == null || slots.Count == 0) return;
+
+        unlockedCount = Mathf.Clamp(unlockedCount, 1, slots.Count);
+
+        for (int i = 0; i < slots.Count; i++)
+        {
+            if (slots[i] == null) continue;
+
+            bool isUnlocked = false;
+            switch (unlockedCount)
+            {
+                case 1:
+                    isUnlocked = (i == 2);
+                    break;
+                case 2:
+                    isUnlocked = (i == 1 || i == 2);
+                    break;
+                case 3:
+                    isUnlocked = (i >= 1 && i <= 3);
+                    break;
+                case 4:
+                    isUnlocked = (i <= 3);
+                    break;
+                case 5:
+                default:
+                    isUnlocked = true;
+                    break;
+            }
+
+            slots[i].SetLocked(!isUnlocked);
+        }
+    }
 
     private void Awake()
     {
@@ -49,7 +89,7 @@ public class BusStopManager : MonoBehaviour
         }
 
         float[] xPositions = new float[] { -2.6f, -1.3f, 0f, 1.3f, 2.6f };
-        float bayY = this.bayY;
+        float bayY = this.bayY + bayYOffset;
 
         for (int i = 0; i < xPositions.Length; i++)
         {
@@ -68,6 +108,7 @@ public class BusStopManager : MonoBehaviour
             if (slot != null)
             {
                 slot.transform.position = new Vector3(xPositions[i], bayY, 0f);
+                slot.transform.localScale = new Vector3(slotScale.x, slotScale.y, 1f);
             }
         }
     }

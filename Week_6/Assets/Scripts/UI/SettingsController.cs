@@ -1,30 +1,64 @@
+﻿using System;
 using DG.Tweening;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class SettingsController : MonoBehaviour
 {
-    [Header("Toggles")]
-    [SerializeField] private Toggle _soundToggle;
-    [SerializeField] private Toggle _musicToggle;
-    [SerializeField] private Toggle _hapticToggle;
+    [System.Serializable]
+    public class PillToggleView
+    {
+        public Toggle toggle;
+        public RectTransform thumbRect;
+        public Image thumbImage;
+        public TextMeshProUGUI thumbText;
+        public Sprite onSprite;
+        public Sprite offSprite;
+        public float onX = -42f;
+        public float offX = 42f;
+    }
 
-    [Header("Buttons")]
+    [Header("Toggles & Views")]
+    [SerializeField] private Toggle _soundToggle;
+    [SerializeField] private PillToggleView _soundToggleView;
+    [SerializeField] private Toggle _musicToggle;
+    [SerializeField] private PillToggleView _musicToggleView;
+    [SerializeField] private Toggle _hapticToggle;
+    [SerializeField] private PillToggleView _hapticToggleView;
+
+    [Header("Buttons & Text Elements")]
     [SerializeField] private Button _closeButton;
+    [SerializeField] private Button _languageButton;
+    [SerializeField] private TextMeshProUGUI _languageText;
+    [SerializeField] private Button _replayButton;
+    [SerializeField] private TextMeshProUGUI _replayText;
+    [SerializeField] private TextMeshProUGUI _headerTitleText;
 
     [Header("Animation Components")]
     [SerializeField] private CanvasGroup _canvasGroup;
     [SerializeField] private RectTransform _cardRect;
 
+    public const string LANGUAGE_KEY = "GameLanguage";
+    private string _currentLanguage = "vi";
     private bool _isSubscribed;
+
+    public bool IsVietnamese => _currentLanguage == "vi";
+    public string CurrentLanguage => _currentLanguage;
+    public event Action<string> OnLanguageChanged;
+    public static event Action<string> LanguageChanged;
+
+    public static bool IsVietnameseSaved => PlayerPrefs.GetString(LANGUAGE_KEY, "vi") == "vi";
 
     private void Awake()
     {
+        LoadLanguage();
         BindUI();
     }
 
     private void OnEnable()
     {
+        LoadLanguage();
         SyncSettingsUI();
         SubscribeEvents();
         AnimateOpen();
@@ -33,6 +67,12 @@ public class SettingsController : MonoBehaviour
     private void OnDisable()
     {
         UnsubscribeEvents();
+    }
+
+    private void LoadLanguage()
+    {
+        _currentLanguage = PlayerPrefs.GetString(LANGUAGE_KEY, "vi");
+        UpdateAllLocalizedTexts();
     }
 
     private void BindUI()
@@ -59,6 +99,18 @@ public class SettingsController : MonoBehaviour
         {
             _closeButton.onClick.RemoveAllListeners();
             _closeButton.onClick.AddListener(OnCloseClicked);
+        }
+
+        if (_languageButton != null)
+        {
+            _languageButton.onClick.RemoveAllListeners();
+            _languageButton.onClick.AddListener(OnLanguageButtonClicked);
+        }
+
+        if (_replayButton != null)
+        {
+            _replayButton.onClick.RemoveAllListeners();
+            _replayButton.onClick.AddListener(OnReplayClicked);
         }
     }
 
@@ -90,32 +142,43 @@ public class SettingsController : MonoBehaviour
     {
         if (SettingsManager.Instance == null) return;
 
+        bool soundOn = SettingsManager.Instance.IsSoundOn;
         if (_soundToggle != null)
-            _soundToggle.SetIsOnWithoutNotify(SettingsManager.Instance.IsSoundOn);
+            _soundToggle.SetIsOnWithoutNotify(soundOn);
+        UpdateToggleVisual(_soundToggleView, soundOn, false);
 
+        bool musicOn = SettingsManager.Instance.IsMusicOn;
         if (_musicToggle != null)
-            _musicToggle.SetIsOnWithoutNotify(SettingsManager.Instance.IsMusicOn);
+            _musicToggle.SetIsOnWithoutNotify(musicOn);
+        UpdateToggleVisual(_musicToggleView, musicOn, false);
 
+        bool hapticOn = SettingsManager.Instance.IsHapticOn;
         if (_hapticToggle != null)
-            _hapticToggle.SetIsOnWithoutNotify(SettingsManager.Instance.IsHapticOn);
+            _hapticToggle.SetIsOnWithoutNotify(hapticOn);
+        UpdateToggleVisual(_hapticToggleView, hapticOn, false);
+
+        UpdateAllLocalizedTexts();
     }
 
     private void HandleSoundChanged(bool isEnabled)
     {
         if (_soundToggle != null && _soundToggle.isOn != isEnabled)
             _soundToggle.SetIsOnWithoutNotify(isEnabled);
+        UpdateToggleVisual(_soundToggleView, isEnabled, true);
     }
 
     private void HandleMusicChanged(bool isEnabled)
     {
         if (_musicToggle != null && _musicToggle.isOn != isEnabled)
             _musicToggle.SetIsOnWithoutNotify(isEnabled);
+        UpdateToggleVisual(_musicToggleView, isEnabled, true);
     }
 
     private void HandleHapticChanged(bool isEnabled)
     {
         if (_hapticToggle != null && _hapticToggle.isOn != isEnabled)
             _hapticToggle.SetIsOnWithoutNotify(isEnabled);
+        UpdateToggleVisual(_hapticToggleView, isEnabled, true);
     }
 
     private void OnSoundToggleChanged(bool isOn)
@@ -123,6 +186,7 @@ public class SettingsController : MonoBehaviour
         AudioManager.Instance?.PlayClick();
         HapticManager.Instance?.TriggerLight();
         SettingsManager.Instance?.SetSound(isOn);
+        UpdateToggleVisual(_soundToggleView, isOn, true);
     }
 
     private void OnMusicToggleChanged(bool isOn)
@@ -130,6 +194,7 @@ public class SettingsController : MonoBehaviour
         AudioManager.Instance?.PlayClick();
         HapticManager.Instance?.TriggerLight();
         SettingsManager.Instance?.SetMusic(isOn);
+        UpdateToggleVisual(_musicToggleView, isOn, true);
     }
 
     private void OnHapticToggleChanged(bool isOn)
@@ -140,6 +205,100 @@ public class SettingsController : MonoBehaviour
         {
             HapticManager.Instance?.TriggerLight();
         }
+        UpdateToggleVisual(_hapticToggleView, isOn, true);
+    }
+
+    private void UpdateToggleVisual(PillToggleView view, bool isOn, bool animate)
+    {
+        if (view == null) return;
+
+        if (view.thumbRect != null)
+        {
+            view.thumbRect.DOKill();
+            float targetX = isOn ? view.onX : view.offX;
+            if (animate)
+            {
+                view.thumbRect.DOAnchorPosX(targetX, 0.2f).SetEase(Ease.OutQuad).SetLink(gameObject);
+            }
+            else
+            {
+                Vector2 pos = view.thumbRect.anchoredPosition;
+                pos.x = targetX;
+                view.thumbRect.anchoredPosition = pos;
+            }
+        }
+
+        if (view.thumbImage != null)
+        {
+            if (isOn && view.onSprite != null) view.thumbImage.sprite = view.onSprite;
+            else if (!isOn && view.offSprite != null) view.thumbImage.sprite = view.offSprite;
+        }
+
+        if (view.thumbText != null)
+        {
+            view.thumbText.text = isOn ? (IsVietnamese ? "BẬT" : "ON") : (IsVietnamese ? "TẮT" : "OFF");
+        }
+    }
+
+    private void OnLanguageButtonClicked()
+    {
+        AudioManager.Instance?.PlayClick();
+        HapticManager.Instance?.TriggerLight();
+
+        // Switch language
+        _currentLanguage = (_currentLanguage == "vi") ? "en" : "vi";
+        PlayerPrefs.SetString(LANGUAGE_KEY, _currentLanguage);
+        PlayerPrefs.Save();
+
+        UpdateAllLocalizedTexts();
+        OnLanguageChanged?.Invoke(_currentLanguage);
+        LanguageChanged?.Invoke(_currentLanguage);
+    }
+
+    public void UpdateAllLocalizedTexts()
+    {
+        if (_headerTitleText != null)
+        {
+            _headerTitleText.text = IsVietnamese ? "CÀI ĐẶT" : "SETTINGS";
+        }
+
+        if (_languageText != null)
+        {
+            _languageText.text = IsVietnamese ? "Tiếng Việt" : "English";
+        }
+
+        if (_replayText != null)
+        {
+            _replayText.text = IsVietnamese ? "CHƠI LẠI" : "REPLAY";
+        }
+
+        // Update active toggle texts
+        if (_soundToggleView != null && _soundToggleView.thumbText != null)
+        {
+            bool isOn = _soundToggle != null ? _soundToggle.isOn : true;
+            _soundToggleView.thumbText.text = isOn ? (IsVietnamese ? "BẬT" : "ON") : (IsVietnamese ? "TẮT" : "OFF");
+        }
+        if (_musicToggleView != null && _musicToggleView.thumbText != null)
+        {
+            bool isOn = _musicToggle != null ? _musicToggle.isOn : true;
+            _musicToggleView.thumbText.text = isOn ? (IsVietnamese ? "BẬT" : "ON") : (IsVietnamese ? "TẮT" : "OFF");
+        }
+        if (_hapticToggleView != null && _hapticToggleView.thumbText != null)
+        {
+            bool isOn = _hapticToggle != null ? _hapticToggle.isOn : true;
+            _hapticToggleView.thumbText.text = isOn ? (IsVietnamese ? "BẬT" : "ON") : (IsVietnamese ? "TẮT" : "OFF");
+        }
+    }
+
+    private void OnReplayClicked()
+    {
+        AudioManager.Instance?.PlayClick();
+        HapticManager.Instance?.TriggerLight();
+        AnimateClose(() =>
+        {
+            UIManager.Instance?.CloseSettings();
+            GameManager.Instance?.RestartLevel();
+        });
     }
 
     private void OnCloseClicked()
@@ -169,7 +328,7 @@ public class SettingsController : MonoBehaviour
         }
     }
 
-    public void AnimateClose(System.Action onComplete)
+    public void AnimateClose(Action onComplete)
     {
         Sequence seq = DOTween.Sequence();
         if (_cardRect != null)

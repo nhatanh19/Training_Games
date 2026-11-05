@@ -449,7 +449,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.95, y: 0.95, z: 1}
+  m_LocalScale: {x: 0.85499996, y: 0.85499996, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4904472405259790041}
@@ -570,7 +570,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bodyRenderer: {fileID: 3299440598927093871}
   arrowRenderer: {fileID: 3200000000000000003}
-  defaultScale: {x: 0.95, y: 0.95, z: 1}
+  defaultScale: {x: 0.85499996, y: 0.85499996, z: 1}
   busColor: 0
   direction: 0
   length: 3

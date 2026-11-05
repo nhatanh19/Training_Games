@@ -1,4 +1,4 @@
-using DG.Tweening;
+﻿using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,10 +13,12 @@ public class HUDController : MonoBehaviour
     [Header("Buttons")]
     [SerializeField] private Button _restartButton;
     [SerializeField] private Button _settingsButton;
+    [SerializeField] private Button _addCoinButton; // Placeholder: purchase flow will be hooked up later
 
     public const string COIN_PREF_KEY = "TotalCoins";
 
     private int _currentCoin = 0;
+    private int _currentLevel = 1;
 
     public int CurrentCoin => _currentCoin;
 
@@ -43,6 +45,28 @@ public class HUDController : MonoBehaviour
     private void OnEnable()
     {
         LoadCoinsFromPrefs();
+        SettingsController.LanguageChanged += OnLanguageChanged;
+        RefreshLevelText();
+    }
+
+    private void OnDisable()
+    {
+        SettingsController.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged(string language)
+    {
+        RefreshLevelText();
+    }
+
+    private void RefreshLevelText()
+    {
+        if (_levelText != null)
+        {
+            _levelText.text = SettingsController.IsVietnameseSaved
+                ? $"Cấp độ {_currentLevel}"
+                : $"Level {_currentLevel}";
+        }
     }
 
     public void LoadCoinsFromPrefs()
@@ -62,7 +86,7 @@ public class HUDController : MonoBehaviour
             if (_coinTargetTransform.name == "CoinContainer")
             {
                 Image bgImg = _coinTargetTransform.GetComponent<Image>();
-                if (bgImg != null)
+                if (bgImg != null && bgImg.sprite == null)
                 {
                     bgImg.sprite = null;
                     bgImg.color = new Color(0f, 0f, 0f, 0.35f);
@@ -128,10 +152,8 @@ public class HUDController : MonoBehaviour
 
     public void SetLevel(int levelNumber)
     {
-        if (_levelText != null)
-        {
-            _levelText.text = $"LEVEL {levelNumber}";
-        }
+        _currentLevel = levelNumber;
+        RefreshLevelText();
     }
 
     public void SetCoin(int amount, bool animate = false, bool saveToPrefs = true)

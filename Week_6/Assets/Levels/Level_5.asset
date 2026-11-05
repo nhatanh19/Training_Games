@@ -12,31 +12,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f6e69fa7b5f72a438b0b978c5de0985, type: 3}
   m_Name: Level_5
   m_EditorClassIdentifier: 
+  unlockedSlots: 4
+  coinReward: 10
   rows: 6
   cols: 6
   buses:
   - color: 3
-    direction: 2
-    length: 2
-    rootGridPosition: {x: 4, y: 3}
-  - color: 2
     direction: 0
-    length: 2
-    rootGridPosition: {x: 1, y: 5}
-  - color: 1
+    length: 3
+    rootGridPosition: {x: 0, y: 5}
+  - color: 2
     direction: 1
     length: 2
-    rootGridPosition: {x: 5, y: 1}
+    rootGridPosition: {x: 3, y: 4}
   - color: 1
     direction: 2
-    length: 2
-    rootGridPosition: {x: 2, y: 1}
+    length: 3
+    rootGridPosition: {x: 5, y: 3}
   - color: 0
     direction: 0
     length: 2
-    rootGridPosition: {x: 0, y: 3}
-  - color: 0
+    rootGridPosition: {x: 1, y: 2}
+  - color: 2
     direction: 2
     length: 2
+    rootGridPosition: {x: 4, y: 1}
+  - color: 0
+    direction: 0
+    length: 2
     rootGridPosition: {x: 0, y: 0}
-  passengerColors: 030000000300000003000000020000000200000002000000010000000100000001000000010000000100000001000000000000000000000000000000000000000000000000000000
+  - color: 3
+    direction: 1
+    length: 2
+    rootGridPosition: {x: 5, y: 0}
+  passengerColors: 01000000010000000100000002000000020000000000000000000000030000000300000003000000000000000000000002000000020000000300000003000000
