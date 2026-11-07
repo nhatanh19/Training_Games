@@ -1,9 +1,12 @@
 using UnityEngine;
 
 [RequireComponent(typeof(RectTransform))]
-[ExecuteAlways]
 public class SafeAreaFitter : MonoBehaviour
 {
+    [Header("Design Anchors")]
+    [SerializeField] private Vector2 _designAnchorMin = new Vector2(0f, 1f);
+    [SerializeField] private Vector2 _designAnchorMax = new Vector2(1f, 1f);
+
     [Header("Safe Area Edges")]
     [SerializeField] private bool _applyTop = true;
     [SerializeField] private bool _applyBottom = true;
@@ -19,10 +22,8 @@ public class SafeAreaFitter : MonoBehaviour
     private Vector2Int _lastScreenSize = Vector2Int.zero;
     private ScreenOrientation _lastOrientation = ScreenOrientation.AutoRotation;
 
-    private Vector2 _initialAnchorMin = Vector2.zero;
-    private Vector2 _initialAnchorMax = Vector2.one;
-    private bool _isInitialized;
-
+    public Vector2 DesignAnchorMin { get => _designAnchorMin; set { _designAnchorMin = value; Refresh(true); } }
+    public Vector2 DesignAnchorMax { get => _designAnchorMax; set { _designAnchorMax = value; Refresh(true); } }
     public bool ApplyTop { get => _applyTop; set { _applyTop = value; Refresh(true); } }
     public bool ApplyBottom { get => _applyBottom; set { _applyBottom = value; Refresh(true); } }
     public bool ApplyLeft { get => _applyLeft; set { _applyLeft = value; Refresh(true); } }
@@ -32,12 +33,12 @@ public class SafeAreaFitter : MonoBehaviour
 
     private void Awake()
     {
-        EnsureInitialized();
+        EnsureRect();
     }
 
     private void OnEnable()
     {
-        EnsureInitialized();
+        EnsureRect();
         Refresh(true);
     }
 
@@ -46,29 +47,19 @@ public class SafeAreaFitter : MonoBehaviour
         Refresh(false);
     }
 
-    private void OnRectTransformDimensionsChange()
-    {
-        Refresh(true);
-    }
-
-    private void EnsureInitialized()
+    private void EnsureRect()
     {
         if (_rectTransform == null)
         {
             _rectTransform = GetComponent<RectTransform>();
         }
-
-        if (!_isInitialized && _rectTransform != null)
-        {
-            _initialAnchorMin = _rectTransform.anchorMin;
-            _initialAnchorMax = _rectTransform.anchorMax;
-            _isInitialized = true;
-        }
     }
 
     public void Refresh(bool force = false)
     {
-        EnsureInitialized();
+        if (!Application.isPlaying) return;
+
+        EnsureRect();
         if (_rectTransform == null) return;
 
         Rect currentSafeArea = GetCurrentSafeArea();
@@ -95,8 +86,19 @@ public class SafeAreaFitter : MonoBehaviour
         return Screen.safeArea;
     }
 
+    public void RestoreDesignAnchors()
+    {
+        EnsureRect();
+        if (_rectTransform == null) return;
+
+        _rectTransform.anchorMin = _designAnchorMin;
+        _rectTransform.anchorMax = _designAnchorMax;
+    }
+
     public void ApplySafeArea(Rect safeArea, Vector2Int screenSize)
     {
+        EnsureRect();
+        if (_rectTransform == null) return;
         if (screenSize.x <= 0 || screenSize.y <= 0) return;
 
         Vector2 min = safeArea.position;
@@ -107,11 +109,11 @@ public class SafeAreaFitter : MonoBehaviour
         float minYRatio = min.y / screenSize.y;
         float maxYRatio = max.y / screenSize.y;
 
-        Vector2 newAnchorMin = _rectTransform.anchorMin;
-        Vector2 newAnchorMax = _rectTransform.anchorMax;
+        Vector2 newAnchorMin = _designAnchorMin;
+        Vector2 newAnchorMax = _designAnchorMax;
 
-        bool isFullStretchY = Mathf.Approximately(_initialAnchorMin.y, 0f) && Mathf.Approximately(_initialAnchorMax.y, 1f);
-        bool isTopAnchored = Mathf.Approximately(_initialAnchorMax.y, 1f) && !isFullStretchY;
+        bool isFullStretchY = Mathf.Approximately(_designAnchorMin.y, 0f) && Mathf.Approximately(_designAnchorMax.y, 1f);
+        bool isTopAnchored = Mathf.Approximately(_designAnchorMax.y, 1f) && !isFullStretchY;
 
         if (_applyLeft)
         {
@@ -119,7 +121,7 @@ public class SafeAreaFitter : MonoBehaviour
         }
         else
         {
-            newAnchorMin.x = _initialAnchorMin.x;
+            newAnchorMin.x = _designAnchorMin.x;
         }
 
         if (_applyRight)
@@ -128,13 +130,13 @@ public class SafeAreaFitter : MonoBehaviour
         }
         else
         {
-            newAnchorMax.x = _initialAnchorMax.x;
+            newAnchorMax.x = _designAnchorMax.x;
         }
 
         if (isFullStretchY)
         {
-            newAnchorMin.y = _applyBottom ? minYRatio : _initialAnchorMin.y;
-            newAnchorMax.y = _applyTop ? maxYRatio : _initialAnchorMax.y;
+            newAnchorMin.y = _applyBottom ? minYRatio : _designAnchorMin.y;
+            newAnchorMax.y = _applyTop ? maxYRatio : _designAnchorMax.y;
         }
         else if (isTopAnchored)
         {
@@ -143,12 +145,12 @@ public class SafeAreaFitter : MonoBehaviour
             {
                 float topDelta = 1f - maxYRatio;
                 newAnchorMax.y = 1f - topDelta;
-                newAnchorMin.y = _initialAnchorMin.y - topDelta;
+                newAnchorMin.y = _designAnchorMin.y - topDelta;
             }
             else
             {
-                newAnchorMax.y = _initialAnchorMax.y;
-                newAnchorMin.y = _initialAnchorMin.y;
+                newAnchorMax.y = _designAnchorMax.y;
+                newAnchorMin.y = _designAnchorMin.y;
             }
         }
         else
@@ -162,47 +164,47 @@ public class SafeAreaFitter : MonoBehaviour
     }
 
 #if UNITY_EDITOR
-    private void OnValidate()
+    private void PreviewSimulation(Rect simulatedSafeArea)
     {
-        EnsureInitialized();
-        Refresh(true);
+        _simulateInEditor = true;
+        _editorSimulatedSafeArea = simulatedSafeArea;
+
+        EnsureRect();
+        if (_rectTransform == null) return;
+
+        RestoreDesignAnchors();
+        ApplySafeArea(simulatedSafeArea, new Vector2Int(Screen.width, Screen.height));
     }
 
     [ContextMenu("Simulate iPhone 14 Pro")]
     public void SimulateIPhone14Pro()
     {
-        _simulateInEditor = true;
         int w = Screen.width > 0 ? Screen.width : 1080;
         int h = Screen.height > 0 ? Screen.height : 1920;
-        _editorSimulatedSafeArea = new Rect(0f, 102f, w, h - 250f);
-        Refresh(true);
+        PreviewSimulation(new Rect(0f, 102f, w, h - 250f));
     }
 
     [ContextMenu("Simulate iPhone X/11 Notch")]
     public void SimulateIPhoneX()
     {
-        _simulateInEditor = true;
         int w = Screen.width > 0 ? Screen.width : 1080;
         int h = Screen.height > 0 ? Screen.height : 1920;
-        _editorSimulatedSafeArea = new Rect(0f, 102f, w, h - 234f);
-        Refresh(true);
+        PreviewSimulation(new Rect(0f, 102f, w, h - 234f));
     }
 
     [ContextMenu("Simulate Standard 16:9")]
     public void SimulateStandard()
     {
-        _simulateInEditor = true;
         int w = Screen.width > 0 ? Screen.width : 1080;
         int h = Screen.height > 0 ? Screen.height : 1920;
-        _editorSimulatedSafeArea = new Rect(0f, 0f, w, h);
-        Refresh(true);
+        PreviewSimulation(new Rect(0f, 0f, w, h));
     }
 
     [ContextMenu("Disable Simulation")]
     public void DisableSimulation()
     {
         _simulateInEditor = false;
-        Refresh(true);
+        RestoreDesignAnchors();
     }
 #endif
 }
