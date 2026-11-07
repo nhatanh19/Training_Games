@@ -48,7 +48,11 @@ public class CoinFlyEffectManager : MonoBehaviour
             _poolContainer = transform;
         }
 
-        EnsureCoinPrefab();
+        if (_coinPrefab == null)
+        {
+            Debug.LogError("[CoinFlyEffectManager] _coinPrefab chưa được gán — gán Assets/Prefabs/UI/CoinItem.prefab vào component CoinFlyEffectManager trên VFXCanvas rồi Apply changes lên prefab.");
+            return;
+        }
 
         for (int i = 0; i < _initialPoolSize; i++)
         {
@@ -59,20 +63,6 @@ public class CoinFlyEffectManager : MonoBehaviour
                 _availableCoins.Enqueue(coin);
                 _allCoins.Add(coin);
             }
-        }
-    }
-
-    private void EnsureCoinPrefab()
-    {
-        if (_coinPrefab == null)
-        {
-            _coinPrefab = Resources.Load<GameObject>("Prefabs/UI/CoinItem");
-#if UNITY_EDITOR
-            if (_coinPrefab == null)
-            {
-                _coinPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/UI/CoinItem.prefab");
-            }
-#endif
         }
     }
 
@@ -96,17 +86,9 @@ public class CoinFlyEffectManager : MonoBehaviour
 
     private RectTransform CreateNewCoin()
     {
-        EnsureCoinPrefab();
-        GameObject obj;
-        if (_coinPrefab != null)
-        {
-            obj = Instantiate(_coinPrefab, _poolContainer);
-        }
-        else
-        {
-            obj = new GameObject("CoinItem_Pooled", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-            obj.transform.SetParent(_poolContainer, false);
-        }
+        if (_coinPrefab == null) return null;
+
+        GameObject obj = Instantiate(_coinPrefab, _poolContainer);
 
         Image img = obj.GetComponent<Image>();
         if (img == null)

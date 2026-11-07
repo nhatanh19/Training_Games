@@ -86,7 +86,7 @@ public class GameBootstrap : MonoBehaviour
         if (_initialized) return;
         _initialized = true;
 
-        EnsureCanvases();
+        ValidateCanvases();
         ResolveReferences();
 
         if (gameManager == null)
@@ -120,45 +120,27 @@ public class GameBootstrap : MonoBehaviour
         gameManager.StartGame();
     }
 
-    private void EnsureCanvases()
+    /// <summary>
+    /// Verifies the three UI canvases and the coin effect manager exist in the scene.
+    /// They are authored in the Editor; nothing here spawns them.
+    /// </summary>
+    private void ValidateCanvases()
     {
-        if (GameObject.Find("HUDCanvas") == null)
-        {
-            GameObject hudPrefab = Resources.Load<GameObject>("Prefabs/UI/HUDCanvas");
-            if (hudPrefab != null)
-            {
-                GameObject hud = Instantiate(hudPrefab);
-                hud.name = "HUDCanvas";
-                hud.transform.localScale = Vector3.one;
-            }
-        }
+        ReportMissingCanvas("HUDCanvas");
+        ReportMissingCanvas("PopupCanvas");
+        ReportMissingCanvas("VFXCanvas");
 
-        if (GameObject.Find("PopupCanvas") == null)
+        if (CoinFlyEffectManager.Instance == null)
         {
-            GameObject popupPrefab = Resources.Load<GameObject>("Prefabs/UI/PopupCanvas");
-            if (popupPrefab != null)
-            {
-                GameObject popup = Instantiate(popupPrefab);
-                popup.name = "PopupCanvas";
-                popup.transform.localScale = Vector3.one;
-            }
+            Debug.LogError("[GameBootstrap] CoinFlyEffectManager không tồn tại trong scene — chạy Tools > Bus Jam > Install Coin Fly Effect On VFXCanvas để gắn component vào VFXCanvas.prefab.");
         }
+    }
 
-        GameObject vfxGo = GameObject.Find("VFXCanvas");
-        if (vfxGo == null)
+    private static void ReportMissingCanvas(string canvasName)
+    {
+        if (GameObject.Find(canvasName) == null)
         {
-            GameObject vfxPrefab = Resources.Load<GameObject>("Prefabs/UI/VFXCanvas");
-            if (vfxPrefab != null)
-            {
-                vfxGo = Instantiate(vfxPrefab);
-                vfxGo.name = "VFXCanvas";
-                vfxGo.transform.localScale = Vector3.one;
-            }
-        }
-
-        if (vfxGo != null && vfxGo.GetComponent<CoinFlyEffectManager>() == null)
-        {
-            vfxGo.AddComponent<CoinFlyEffectManager>();
+            Debug.LogError($"[GameBootstrap] '{canvasName}' không có trong scene — kéo Assets/Prefabs/UI/{canvasName}.prefab vào hierarchy.");
         }
     }
 
