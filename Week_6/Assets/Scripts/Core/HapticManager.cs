@@ -5,7 +5,9 @@ public class HapticManager : MonoBehaviour
     public static HapticManager Instance { get; private set; }
 
     [Header("Debug Settings")]
+#pragma warning disable 0414
     [SerializeField] private bool _enableEditorLogs = false;
+#pragma warning restore 0414
 
     private bool _isInitialized;
 
@@ -83,8 +85,6 @@ public class HapticManager : MonoBehaviour
         VibrateAndroid(25, 60);
 #elif UNITY_IOS
         Handheld.Vibrate();
-#else
-        Handheld.Vibrate();
 #endif
     }
 
@@ -97,8 +97,6 @@ public class HapticManager : MonoBehaviour
 #elif UNITY_ANDROID
         VibrateAndroid(50, 160);
 #elif UNITY_IOS
-        Handheld.Vibrate();
-#else
         Handheld.Vibrate();
 #endif
     }
@@ -113,8 +111,6 @@ public class HapticManager : MonoBehaviour
         VibrateAndroid(90, 220);
 #elif UNITY_IOS
         Handheld.Vibrate();
-#else
-        Handheld.Vibrate();
 #endif
     }
 
@@ -127,8 +123,6 @@ public class HapticManager : MonoBehaviour
 #elif UNITY_ANDROID
         VibrateAndroid(120, 255);
 #elif UNITY_IOS
-        Handheld.Vibrate();
-#else
         Handheld.Vibrate();
 #endif
     }

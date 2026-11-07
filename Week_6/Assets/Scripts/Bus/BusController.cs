@@ -40,6 +40,20 @@ public class BusController : MonoBehaviour
     public bool HasEmptySeat => _passengersCount < Capacity;
     public bool IsReadyForPassengers { get; private set; } = false;
 
+    private GridManager Grid
+    {
+        get
+        {
+            if (_gridManager == null)
+            {
+                _gridManager = GridManager.Instance != null
+                    ? GridManager.Instance
+                    : FindObjectOfType<GridManager>();
+            }
+            return _gridManager;
+        }
+    }
+
     private void Awake()
     {
         UpdateScaleToGrid();
@@ -47,13 +61,9 @@ public class BusController : MonoBehaviour
 
     public void UpdateScaleToGrid()
     {
-        if (_gridManager == null)
-        {
-            _gridManager = GridManager.Instance != null ? GridManager.Instance : FindObjectOfType<GridManager>();
-        }
+        GridManager grid = Grid;
+        float cs = grid != null ? grid.CellSize : 0.95f;
 
-        float cs = _gridManager != null ? _gridManager.CellSize : 0.95f;
-        // Dynamically scale vehicle to grid cellSize with 10% parking gap so adjacent vehicles never overlap
         float scaleFactor = cs * 0.90f;
         defaultScale = new Vector3(scaleFactor, scaleFactor, 1f);
         transform.localScale = defaultScale;
@@ -79,14 +89,11 @@ public class BusController : MonoBehaviour
 
     private void Start()
     {
-        if (_gridManager == null)
-        {
-            _gridManager = GridManager.Instance != null ? GridManager.Instance : FindObjectOfType<GridManager>();
-            UpdateScaleToGrid();
-            ApplyColor(allowCreateArrow: true);
-            AlignToGrid();
-            RegisterToGrid();
-        }
+
+        UpdateScaleToGrid();
+        ApplyColor(allowCreateArrow: true);
+        AlignToGrid();
+        RegisterToGrid();
     }
 
     public void Initialize(BusColor color, Direction dir, int len, Vector2Int rootPos)
@@ -95,7 +102,6 @@ public class BusController : MonoBehaviour
         direction = dir;
         length = len;
         rootGridPosition = rootPos;
-        _gridManager = GridManager.Instance != null ? GridManager.Instance : FindObjectOfType<GridManager>();
         UpdateScaleToGrid();
         ApplyColor(allowCreateArrow: true);
         AlignToGrid();
@@ -137,7 +143,7 @@ public class BusController : MonoBehaviour
             Transform arrowTr = transform.Find("DirectionArrow");
             if (arrowTr == null)
             {
-                // Never create GameObjects or add components during OnValidate or in EditMode
+
                 if (allowCreateArrow && Application.isPlaying)
                 {
                     GameObject arrowGo = new GameObject("DirectionArrow");
@@ -165,7 +171,6 @@ public class BusController : MonoBehaviour
             arrowRenderer.transform.localScale = new Vector3(0.42f, 0.42f, 1f);
         }
 
-        // Adjust seat points to sit neatly on the roof behind the arrow
         if (seatPoints != null && seatPoints.Count > 0)
         {
             if (length == 3)
@@ -250,19 +255,16 @@ public class BusController : MonoBehaviour
 
     public void AlignToGrid()
     {
-        if (_gridManager == null)
-        {
-            _gridManager = GridManager.Instance != null ? GridManager.Instance : FindObjectOfType<GridManager>();
-        }
-        if (_gridManager == null) return;
+        GridManager grid = Grid;
+        if (grid == null) return;
 
         UpdateScaleToGrid();
 
         Vector2Int tailPos = rootGridPosition;
         Vector2Int headPos = GetHeadCell();
 
-        Vector3 tailWorld = _gridManager.GridToWorldPosition(tailPos);
-        Vector3 headWorld = _gridManager.GridToWorldPosition(headPos);
+        Vector3 tailWorld = grid.GridToWorldPosition(tailPos);
+        Vector3 headWorld = grid.GridToWorldPosition(headPos);
 
         transform.position = (tailWorld + headWorld) * 0.5f;
 
@@ -280,22 +282,24 @@ public class BusController : MonoBehaviour
 
     public void RegisterToGrid()
     {
-        if (_gridManager != null)
+        GridManager grid = Grid;
+        if (grid != null)
         {
-            _gridManager.RegisterBus(this, GetOccupiedCells());
+            grid.RegisterBus(this, GetOccupiedCells());
         }
     }
 
     public bool CanExit()
     {
-        if (_gridManager == null) return false;
+        GridManager grid = Grid;
+        if (grid == null) return false;
 
         Vector2Int step = direction.ToVector2Int();
         Vector2Int checkPos = GetHeadCell() + step;
 
-        while (_gridManager.IsInsideGrid(checkPos))
+        while (grid.IsInsideGrid(checkPos))
         {
-            if (_gridManager.IsCellOccupied(checkPos))
+            if (grid.IsCellOccupied(checkPos))
             {
                 return false;
             }
@@ -351,9 +355,10 @@ public class BusController : MonoBehaviour
         _assignedSlot = BusStopManager.Instance.GetAvailableSlot();
         _assignedSlot.AssignBus(this);
 
-        if (_gridManager != null)
+        GridManager grid = Grid;
+        if (grid != null)
         {
-            _gridManager.UnregisterBus(GetOccupiedCells());
+            grid.UnregisterBus(GetOccupiedCells());
         }
 
         Vector3 targetPos = _assignedSlot.SlotTransform.position;
@@ -381,14 +386,10 @@ public class BusController : MonoBehaviour
         Sequence seq = DOTween.Sequence();
         Vector3 currentPos = transform.position;
 
-        if (_gridManager == null)
-        {
-            _gridManager = GridManager.Instance != null ? GridManager.Instance : FindObjectOfType<GridManager>();
-        }
-
-        float rightX = _gridManager != null ? _gridManager.RightLaneX : 3.10f;
-        float leftX = _gridManager != null ? _gridManager.LeftLaneX : -3.10f;
-        float bottomY = _gridManager != null ? _gridManager.BottomLaneY : -4.30f;
+        GridManager grid = Grid;
+        float rightX = grid != null ? grid.RightLaneX : 3.10f;
+        float leftX = grid != null ? grid.LeftLaneX : -3.10f;
+        float bottomY = grid != null ? grid.BottomLaneY : -4.30f;
         float approachY = targetPos.y - 1.4f;
 
         float GetDuration(Vector3 from, Vector3 to)
@@ -401,7 +402,7 @@ public class BusController : MonoBehaviour
         {
             case Direction.Right:
             {
-                // Align turn point so the bus head reaches the right lane without exceeding it
+
                 float turnX = rightX - (length == 3 ? 0.65f : 0.35f);
                 Vector3 p1 = new Vector3(turnX, currentPos.y, 0f);
                 Vector3 p2 = new Vector3(rightX, currentPos.y + 0.35f, 0f);
@@ -421,7 +422,7 @@ public class BusController : MonoBehaviour
 
             case Direction.Left:
             {
-                // Align turn point so the bus head reaches the left lane without exceeding it
+
                 float turnX = leftX + (length == 3 ? 0.65f : 0.35f);
                 Vector3 p1 = new Vector3(turnX, currentPos.y, 0f);
                 Vector3 p2 = new Vector3(leftX, currentPos.y + 0.35f, 0f);
@@ -464,7 +465,7 @@ public class BusController : MonoBehaviour
             {
                 float turnY = bottomY + (length == 3 ? 0.65f : 0.35f);
                 Vector3 p1 = new Vector3(currentPos.x, turnY, 0f);
-                bool goRight = _gridManager != null ? currentPos.x >= _gridManager.transform.position.x : currentPos.x >= 0f;
+                bool goRight = grid != null ? currentPos.x >= grid.transform.position.x : currentPos.x >= 0f;
                 float sideX = goRight ? rightX : leftX;
 
                 Vector3 p2 = new Vector3(sideX, bottomY, 0f);
