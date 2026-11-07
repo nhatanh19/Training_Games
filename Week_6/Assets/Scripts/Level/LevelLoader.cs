@@ -37,41 +37,46 @@ public class LevelLoader : MonoBehaviour
             Destroy(gameObject);
         }
 
-        if (levels.Count == 0 && currentLevelData != null)
+        if (levels.Count == 0 && currentLevelData == null)
         {
-            levels.Add(currentLevelData);
-        }
-
-#if UNITY_EDITOR
-        if (levels.Count == 0)
-        {
-            AutoAssignLevels();
-        }
-#endif
-    }
-
-#if UNITY_EDITOR
-    private void OnValidate()
-    {
-        if (levels == null || levels.Count == 0)
-        {
-            AutoAssignLevels();
+            Debug.LogError("[LevelLoader] 'levels' rỗng và currentLevelData chưa gán — kéo Assets/Levels/Level_*.asset vào list 'Levels' trên Inspector.");
         }
     }
 
-    [ContextMenu("Auto Assign All Levels")]
-    public void AutoAssignLevels()
+#if UNITY_EDITOR
+    /// <summary>
+    /// Append-only helper: adds LevelDataSO assets from Assets/Levels that are not already in the list.
+    /// It never removes or reorders entries, so a level ordered by hand in the Inspector stays put.
+    /// </summary>
+    [ContextMenu("Append Missing Levels From Assets/Levels")]
+    public void AppendMissingLevels()
     {
-        levels = new List<LevelDataSO>();
-        for (int i = 1; i <= 5; i++)
+        if (levels == null)
         {
-            LevelDataSO lvl = UnityEditor.AssetDatabase.LoadAssetAtPath<LevelDataSO>($"Assets/Levels/Level_{i}.asset");
-            if (lvl != null)
+            levels = new List<LevelDataSO>();
+        }
+
+        string[] guids = UnityEditor.AssetDatabase.FindAssets("t:LevelDataSO", new[] { "Assets/Levels" });
+        var paths = new List<string>(guids.Length);
+        for (int i = 0; i < guids.Length; i++)
+        {
+            paths.Add(UnityEditor.AssetDatabase.GUIDToAssetPath(guids[i]));
+        }
+        paths.Sort(System.StringComparer.Ordinal);
+
+        int added = 0;
+        for (int i = 0; i < paths.Count; i++)
+        {
+            LevelDataSO level = UnityEditor.AssetDatabase.LoadAssetAtPath<LevelDataSO>(paths[i]);
+            if (level != null && !levels.Contains(level))
             {
-                levels.Add(lvl);
+                levels.Add(level);
+                added++;
             }
         }
+
         UnityEditor.EditorUtility.SetDirty(this);
+        Debug.Log($"[LevelLoader] Đã bổ sung {added} level vào list 'levels' (tổng: {levels.Count}).");
     }
 #endif
 
@@ -97,15 +102,21 @@ public class LevelLoader : MonoBehaviour
     }
 
     /// <summary>
-    /// Ensures the level collection is usable. Called by GameBootstrap before the first level.
+    /// Reports an empty level collection. Called by GameBootstrap before the first level.
+    /// The list itself is authored in the Inspector and is never filled in from code.
     /// </summary>
     public void Initialize()
     {
-        if (levels == null) levels = new List<LevelDataSO>();
-
-        if (levels.Count == 0 && currentLevelData != null)
+        if (levels == null)
         {
-            levels.Add(currentLevelData);
+            levels = new List<LevelDataSO>();
+        }
+
+        if (levels.Count == 0)
+        {
+            Debug.LogError(currentLevelData != null
+                ? "[LevelLoader] 'levels' rỗng — game chỉ chơi được 1 level (currentLevelData). Kéo Assets/Levels/Level_*.asset vào list 'Levels' trên Inspector."
+                : "[LevelLoader] 'levels' rỗng và currentLevelData chưa gán — kéo Assets/Levels/Level_*.asset vào list 'Levels' trên Inspector.");
         }
     }
 
