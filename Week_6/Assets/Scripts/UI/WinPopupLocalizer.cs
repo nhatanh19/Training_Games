@@ -1,7 +1,6 @@
 using TMPro;
 using UnityEngine;
 
-/// <summary>Updates the win popup texts and coin reward according to the saved game language and current level.</summary>
 public class WinPopupLocalizer : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI _titleText;

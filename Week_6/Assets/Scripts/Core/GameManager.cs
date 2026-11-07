@@ -24,7 +24,7 @@ public class GameManager : MonoBehaviour
             if (_instance == null)
             {
                 _instance = FindObjectOfType<GameManager>();
-                
+
             }
             return _instance;
         }
@@ -78,17 +78,13 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        // When a GameBootstrap exists it calls Initialize()/StartGame() itself.
+
         if (GameBootstrap.IsDriving) return;
 
         Initialize();
         StartGame();
     }
 
-    /// <summary>
-    /// Subscribes to gameplay events. Called by GameBootstrap before the level starts,
-    /// or by Start() when the scene has no bootstrap.
-    /// </summary>
     public void Initialize()
     {
         if (_initialized) return;
@@ -106,9 +102,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Starts the saved level exactly once.
-    /// </summary>
     public void StartGame()
     {
         if (_started) return;
@@ -236,7 +229,6 @@ public class GameManager : MonoBehaviour
 
         List<BusController> activeBuses = BusStopManager.Instance.GetActiveBuses();
 
-        // 1. Slot Deadlock: All unlocked parking slots are full, and no parked bus matches head passenger
         if (!BusStopManager.Instance.HasAvailableSlot && activeBuses.Count >= BusStopManager.Instance.UnlockedSlotCount)
         {
             bool hasMatchingBus = activeBuses.Exists(b => b.Color == head.Color && b.HasEmptySeat);
@@ -246,7 +238,6 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // 2. Gridlock: None of the active buses can take head passenger, and NO remaining bus on the grid can exit
         bool anySlotCanAccept = activeBuses.Exists(b => b.Color == head.Color && b.HasEmptySeat);
         if (!anySlotCanAccept && LevelLoader.Instance != null && LevelLoader.Instance.RemainingBusesCount > 0)
         {

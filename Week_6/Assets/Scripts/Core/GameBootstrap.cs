@@ -1,19 +1,10 @@
 using UnityEngine;
 
-/// <summary>
-/// Single entry point for the Bus Jam scene.
-/// Runs before every other MonoBehaviour (execution order -1000) so managers are
-/// initialized in a known order instead of relying on Unity's Start() order.
-/// </summary>
 [DefaultExecutionOrder(-1000)]
 public class GameBootstrap : MonoBehaviour
 {
     public static GameBootstrap Instance { get; private set; }
 
-    /// <summary>
-    /// True while this bootstrap owns initialization. Managers use it to skip their
-    /// own Start() fallback so nothing gets initialized twice.
-    /// </summary>
     public static bool IsDriving => Instance != null && Instance.isActiveAndEnabled;
 
     [Header("Scene References (wired by Tools > Bus Jam > Setup Scene)")]
@@ -53,9 +44,6 @@ public class GameBootstrap : MonoBehaviour
         RunInitialization();
     }
 
-    /// <summary>
-    /// Fills any missing serialized reference from the scene. Safe to call multiple times.
-    /// </summary>
     public void ResolveReferences()
     {
         if (settingsManager == null) settingsManager = FindObjectOfType<SettingsManager>();
@@ -78,9 +66,6 @@ public class GameBootstrap : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Initializes every manager in a deterministic order and then starts the level.
-    /// </summary>
     public void RunInitialization()
     {
         if (_initialized) return;
@@ -96,22 +81,17 @@ public class GameBootstrap : MonoBehaviour
             return;
         }
 
-        // Settings, Audio and Haptic first
         settingsManager?.Initialize();
         audioManager?.Initialize();
         hapticManager?.Initialize();
 
-        // Pools first: level loading requests buses/passengers from them.
         poolManager?.Initialize();
 
-        // Queue subscribes to bus-stop events and seeds the authored passengers
-        // before the level overwrites the queue with the level data.
         passengerQueueManager?.Initialize();
 
         vfxManager?.Initialize();
         cameraShakeManager?.Initialize();
 
-        // GameManager subscribes to gameplay events before the level starts.
         gameManager.Initialize();
         uiManager?.Initialize();
 
@@ -120,10 +100,6 @@ public class GameBootstrap : MonoBehaviour
         gameManager.StartGame();
     }
 
-    /// <summary>
-    /// Verifies the three UI canvases and the coin effect manager exist in the scene.
-    /// They are authored in the Editor; nothing here spawns them.
-    /// </summary>
     private void ValidateCanvases()
     {
         ReportMissingCanvas("HUDCanvas");

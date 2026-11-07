@@ -3,10 +3,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// "Continue / Revive" popup opened from the HUD "+" button.
-/// Reward: unlock one more parking slot. Can be paid with coins or via a (placeholder) ad.
-/// </summary>
 public class ContinuePopupController : MonoBehaviour
 {
     [Header("Buttons")]
@@ -112,7 +108,7 @@ public class ContinuePopupController : MonoBehaviour
         {
             ShowNotice();
             HapticManager.Instance?.TriggerLight();
-            // Not enough coins: shake the button as feedback
+
             _coinButton.transform.DOKill(true);
             _coinButton.transform.DOShakePosition(0.3f, new Vector3(12f, 0f, 0f), 20, 90f)
                 .SetLink(_coinButton.gameObject);
@@ -129,7 +125,7 @@ public class ContinuePopupController : MonoBehaviour
     private void OnAdClicked()
     {
         AudioManager.Instance?.PlayClick();
-        // TODO: hook up a rewarded-ad SDK here. For now the reward is granted immediately.
+
         if (BusStopManager.Instance != null && BusStopManager.Instance.UnlockOneSlot())
         {
             HapticManager.Instance?.TriggerSuccess();

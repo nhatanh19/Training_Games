@@ -4,7 +4,6 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>Rebuilds WinPopup inside PopupCanvas.prefab to match the target 3D card design.</summary>
 public static class WinPopupBuilder
 {
     private const string PrefabPath = "Assets/Prefabs/UI/PopupCanvas.prefab";
@@ -67,13 +66,11 @@ public static class WinPopupBuilder
 
         Color darkGreen = new Color(0.10f, 0.45f, 0.22f, 1f);
 
-        // 1. Cream Card (720 x 872 matches 760:920 aspect ratio)
         GameObject card = New("Card", popup.transform, typeof(Image));
         Place(card, Vector2.zero, new Vector2(720f, 872f));
         Image ci = card.GetComponent<Image>();
         ci.sprite = cardSp; ci.preserveAspect = true;
 
-        // 2. Header Banner
         GameObject header = New("HeaderBanner", card.transform, typeof(Image));
         Place(header, new Vector2(0f, 405f), new Vector2(600f, 131f));
         Image hi = header.GetComponent<Image>();
@@ -82,18 +79,15 @@ public static class WinPopupBuilder
         Place(title.gameObject, new Vector2(0f, 4f), new Vector2(540f, 84f));
         title.enableAutoSizing = true; title.fontSizeMin = 24; title.fontSizeMax = 46;
 
-        // 3. Happy Face Icon
         GameObject face = New("FaceIcon", card.transform, typeof(Image));
         Place(face, new Vector2(0f, 145f), new Vector2(280f, 245f));
         Image fi = face.GetComponent<Image>();
         fi.sprite = faceSp; fi.preserveAspect = true; fi.raycastTarget = false;
 
-        // 4. Subtitle text
         TextMeshProUGUI subtitle = Text("SubtitleText", card.transform, "TẤT CẢ HÀNH KHÁCH ĐÃ LÊN XE!", font, 28, darkGreen);
         Place(subtitle.gameObject, new Vector2(0f, -15f), new Vector2(600f, 55f));
         subtitle.enableAutoSizing = true; subtitle.fontSizeMin = 18; subtitle.fontSizeMax = 28;
 
-        // 5. Coin Reward Pill
         GameObject rewardPill = New("RewardPill", card.transform, typeof(Image));
         Place(rewardPill, new Vector2(0f, -95f), new Vector2(240f, 76f));
         Image rpi = rewardPill.GetComponent<Image>();
@@ -107,7 +101,6 @@ public static class WinPopupBuilder
         TextMeshProUGUI rewardText = Text("RewardText", rewardPill.transform, "+8", font, 40, new Color(1f, 0.88f, 0.25f, 1f));
         Place(rewardText.gameObject, new Vector2(28f, 0f), new Vector2(110f, 60f));
 
-        // 6. Main Button ("TIẾP THEO" / "NEXT LEVEL") - Green 3D Button on the Right
         GameObject main = New("MainButton", card.transform, typeof(Image), typeof(Button));
         Place(main, new Vector2(160f, -245f), new Vector2(290f, 116f));
         Image mi = main.GetComponent<Image>();
@@ -118,7 +111,6 @@ public static class WinPopupBuilder
         nextText.enableWordWrapping = false;
         nextText.enableAutoSizing = true; nextText.fontSizeMin = 20; nextText.fontSizeMax = 36;
 
-        // 7. Sub Button ("CHƠI LẠI" / "REPLAY") - Yellow 3D Button on the Left
         GameObject sub = New("SubButton", card.transform, typeof(Image), typeof(Button));
         Place(sub, new Vector2(-160f, -245f), new Vector2(290f, 116f));
         Image si = sub.GetComponent<Image>();
@@ -129,7 +121,6 @@ public static class WinPopupBuilder
         replayText.enableWordWrapping = false;
         replayText.enableAutoSizing = true; replayText.fontSizeMin = 20; replayText.fontSizeMax = 36;
 
-        // 8. Wire WinPopupLocalizer
         WinPopupLocalizer loc = popup.GetComponent<WinPopupLocalizer>();
         if (loc == null) loc = popup.AddComponent<WinPopupLocalizer>();
         SerializedObject so = new SerializedObject(loc);
@@ -140,7 +131,6 @@ public static class WinPopupBuilder
         so.FindProperty("_replayButtonText").objectReferenceValue = replayText;
         so.ApplyModifiedProperties();
 
-        // 9. Wire UIManager
         UIManager uim = root.GetComponent<UIManager>();
         if (uim == null) uim = root.GetComponentInChildren<UIManager>(true);
         if (uim != null)

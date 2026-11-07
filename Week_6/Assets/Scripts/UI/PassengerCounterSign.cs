@@ -2,11 +2,6 @@ using DG.Tweening;
 using TMPro;
 using UnityEngine;
 
-/// <summary>
-/// Overlays the remaining-passenger counter on the blue bus-stop sign that is baked into the
-/// scene background. The sign position is derived from the background sprite bounds so it
-/// follows any screen aspect ratio.
-/// </summary>
 public class PassengerCounterSign : MonoBehaviour
 {
     [Header("UI")]

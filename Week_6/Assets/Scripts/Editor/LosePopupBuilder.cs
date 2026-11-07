@@ -4,7 +4,6 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>Rebuilds LosePopup inside PopupCanvas.prefab to match the target design.</summary>
 public static class LosePopupBuilder
 {
     private const string PrefabPath = "Assets/Prefabs/UI/PopupCanvas.prefab";

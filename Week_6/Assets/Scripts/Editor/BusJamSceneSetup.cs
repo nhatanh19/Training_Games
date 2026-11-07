@@ -4,10 +4,6 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// Wires the GameBootstrap component in the currently open scene.
-/// Runs automatically after a script reload and can be re-run from Tools > Bus Jam > Setup Scene.
-/// </summary>
 [InitializeOnLoad]
 public static class BusJamSceneSetup
 {

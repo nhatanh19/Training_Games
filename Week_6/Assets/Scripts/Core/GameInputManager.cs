@@ -34,13 +34,11 @@ public class GameInputManager : MonoBehaviour
     {
         if (IsLocked) return;
 
-        // Block input when game is not playing (e.g. Loading, GameWin, GameOver)
         if (GameManager.Instance != null && GameManager.Instance.CurrentState != GameState.Playing)
         {
             return;
         }
 
-        // Block input if any modal popup is open
         if (UIManager.Instance != null && UIManager.Instance.IsAnyPopupOpen())
         {
             return;
@@ -87,7 +85,6 @@ public class GameInputManager : MonoBehaviour
         if (EventSystem.current.IsPointerOverGameObject())
             return true;
 
-        // Fallback UI raycast
         PointerEventData eventData = new PointerEventData(EventSystem.current)
         {
             position = screenPosition

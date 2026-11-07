@@ -18,7 +18,7 @@ public class GridCell
     {
         CurrentBus = bus;
     }
-    
+
     public void ClearCell()
     {
         CurrentBus = null;

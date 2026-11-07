@@ -245,7 +245,6 @@ public class SettingsController : MonoBehaviour
         AudioManager.Instance?.PlayClick();
         HapticManager.Instance?.TriggerLight();
 
-        // Switch language
         _currentLanguage = (_currentLanguage == "vi") ? "en" : "vi";
         PlayerPrefs.SetString(LANGUAGE_KEY, _currentLanguage);
         PlayerPrefs.Save();
@@ -272,7 +271,6 @@ public class SettingsController : MonoBehaviour
             _replayText.text = IsVietnamese ? "CHƠI LẠI" : "REPLAY";
         }
 
-        // Update active toggle texts
         if (_soundToggleView != null && _soundToggleView.thumbText != null)
         {
             bool isOn = _soundToggle != null ? _soundToggle.isOn : true;

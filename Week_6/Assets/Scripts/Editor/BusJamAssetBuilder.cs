@@ -118,7 +118,6 @@ public static class BusJamAssetBuilder
             }
         }
 
-        // 1. EventSystem
         if (Object.FindObjectOfType<EventSystem>() == null)
         {
             GameObject esGo = new GameObject("EventSystem");
@@ -127,7 +126,6 @@ public static class BusJamAssetBuilder
             Undo.RegisterCreatedObjectUndo(esGo, "Create EventSystem");
         }
 
-        // 2. SettingsManager in Scene
         SettingsManager settingsMgr = Object.FindObjectOfType<SettingsManager>();
         if (settingsMgr == null)
         {
@@ -136,32 +134,26 @@ public static class BusJamAssetBuilder
             Undo.RegisterCreatedObjectUndo(smGo, "Create SettingsManager");
         }
 
-        // Clean up legacy monolithic UICanvas if present
         Canvas legacyCanvas = Object.FindObjectOfType<Canvas>();
         if (legacyCanvas != null && legacyCanvas.name == "UICanvas")
         {
             Object.DestroyImmediate(legacyCanvas.gameObject);
         }
 
-        // 3. HUDCanvas (Sorting Order: 10)
         GameObject hudCanvasGo = GetOrCreateCanvasObject("HUDCanvas", 10);
         HUDController hudController = BuildHUDContent(hudCanvasGo, defaultFont);
         PrefabUtility.SaveAsPrefabAssetAndConnect(hudCanvasGo, UIDir + "/HUDCanvas.prefab", InteractionMode.AutomatedAction);
 
-        // 4. PopupCanvas (Sorting Order: 20)
         GameObject popupCanvasGo = GetOrCreateCanvasObject("PopupCanvas", 20);
         UIManager uiManager = BuildPopupContent(popupCanvasGo, hudController, defaultFont);
         PrefabUtility.SaveAsPrefabAssetAndConnect(popupCanvasGo, UIDir + "/PopupCanvas.prefab", InteractionMode.AutomatedAction);
 
-        // 5. VFXCanvas (Sorting Order: 30)
         GameObject vfxCanvasGo = GetOrCreateCanvasObject("VFXCanvas", 30);
         PrefabUtility.SaveAsPrefabAssetAndConnect(vfxCanvasGo, UIDir + "/VFXCanvas.prefab", InteractionMode.AutomatedAction);
 
-        // 5b. CoinItem prefab first, then CoinFlyEffectManager authored onto the VFXCanvas prefab.
         BuildCoinPrefab();
         BusJamSceneWiring.InstallCoinFlyEffect();
 
-        // 6. Connect to GameBootstrap
         GameBootstrap bootstrap = Object.FindObjectOfType<GameBootstrap>();
         if (bootstrap != null)
         {
@@ -252,7 +244,6 @@ public static class BusJamAssetBuilder
         HUDController hud = canvasGo.GetComponent<HUDController>();
         if (hud == null) hud = canvasGo.AddComponent<HUDController>();
 
-        // Top Safe Area Panel
         Transform hudPanelTrans = canvasGo.transform.Find("HUDPanel");
         GameObject hudPanel;
         if (hudPanelTrans == null)
@@ -274,15 +265,12 @@ public static class BusJamAssetBuilder
         SafeAreaFitter saf = hudPanel.GetComponent<SafeAreaFitter>();
         if (saf == null) saf = hudPanel.AddComponent<SafeAreaFitter>();
 
-        // Settings Button (Top-Left)
         Button settingsBtn = GetOrCreateButton(hudPanel.transform, "SettingsButton", "SETTINGS", font, new Vector2(0f, 0.5f), new Vector2(90f, -30f), new Vector2(150f, 75f), new Color(0.2f, 0.2f, 0.25f, 0.85f), Color.white, 24);
 
-        // Level Text (Top-Center)
         TextMeshProUGUI levelText = GetOrCreateTMPText(hudPanel.transform, "LevelText", "LEVEL 1", font,
             new Vector2(0.5f, 0.5f), new Vector2(0f, 25f), new Vector2(500f, 80f),
             new Color(0.15f, 0.15f, 0.2f, 1f), 48, FontStyles.Bold);
 
-        // Coin Counter Container (Top-Center below Level)
         Transform coinContainerTrans = hudPanel.transform.Find("CoinContainer");
         GameObject coinContainer;
         if (coinContainerTrans == null)
@@ -308,7 +296,6 @@ public static class BusJamAssetBuilder
             new Vector2(0.5f, 0.5f), new Vector2(20f, 0f), new Vector2(140f, 55f),
             new Color(1f, 0.85f, 0.2f, 1f), 34, FontStyles.Bold);
 
-        // Coin Icon indicator
         Transform coinIconTrans = coinContainer.transform.Find("CoinIcon");
         if (coinIconTrans == null)
         {
@@ -325,10 +312,8 @@ public static class BusJamAssetBuilder
             iconImg.color = new Color(1f, 0.8f, 0.1f, 1f);
         }
 
-        // Restart Button (Top-Right)
         Button restartBtn = GetOrCreateButton(hudPanel.transform, "RestartButton", "RESTART", font, new Vector2(1f, 0.5f), new Vector2(-90f, -30f), new Vector2(150f, 75f), new Color(0.9f, 0.45f, 0.2f, 0.95f), Color.white, 24);
 
-        // Wire HUDController
         SerializedObject hudSo = new SerializedObject(hud);
         SetObjProp(hudSo, "_levelText", levelText);
         SetObjProp(hudSo, "_coinText", coinText);
@@ -346,7 +331,6 @@ public static class BusJamAssetBuilder
         UIManager uiMgr = canvasGo.GetComponent<UIManager>();
         if (uiMgr == null) uiMgr = canvasGo.AddComponent<UIManager>();
 
-        // 1. Win Popup
         Button nextBtn, replayWinBtn;
         GameObject winPopup = CreatePopupWithTMP(canvasGo.transform, "WinPopup", font,
             "LEVEL COMPLETED!", "All passengers are on their way!",
@@ -354,7 +338,6 @@ public static class BusJamAssetBuilder
             "REPLAY", out replayWinBtn,
             new Color(0.2f, 0.75f, 0.35f, 0.98f));
 
-        // 2. Lose Popup
         Button retryLoseBtn, unusedBtn;
         GameObject losePopup = CreatePopupWithTMP(canvasGo.transform, "LosePopup", font,
             "OUT OF MOVES!", "Bus stop is full! Try a different strategy.",
@@ -362,10 +345,8 @@ public static class BusJamAssetBuilder
             null, out unusedBtn,
             new Color(0.85f, 0.25f, 0.25f, 0.98f));
 
-        // 3. Settings Popup
         GameObject settingsPopup = CreateSettingsPopupWithTMP(canvasGo.transform, font);
 
-        // Wire UIManager
         SerializedObject uiSo = new SerializedObject(uiMgr);
         SetObjProp(uiSo, "_hudController", hudController);
         SetObjProp(uiSo, "_winPopup", winPopup);
@@ -404,7 +385,6 @@ public static class BusJamAssetBuilder
 
         CanvasGroup cg = popupGo.GetComponent<CanvasGroup>();
 
-        // Settings Card
         Transform cardTrans = popupGo.transform.Find("Card");
         GameObject cardGo;
         if (cardTrans == null)
@@ -425,22 +405,18 @@ public static class BusJamAssetBuilder
             cardGo = cardTrans.gameObject;
         }
 
-        // Title
         GetOrCreateTMPText(cardGo.transform, "Title", "SETTINGS", font,
             new Vector2(0.5f, 0.5f), new Vector2(0f, 260f), new Vector2(600f, 90f),
             Color.white, 46, FontStyles.Bold);
 
-        // Toggles Container
         Toggle soundToggle = CreateToggleItem(cardGo.transform, "SoundToggle", "Sound (SFX)", font, 110f);
         Toggle musicToggle = CreateToggleItem(cardGo.transform, "MusicToggle", "Music (BGM)", font, 0f);
         Toggle hapticToggle = CreateToggleItem(cardGo.transform, "HapticToggle", "Haptic (Rung)", font, -110f);
 
-        // Close Button ("X")
         Button closeBtn = GetOrCreateButton(cardGo.transform, "CloseButton", "X", font,
             new Vector2(0.5f, 0.5f), new Vector2(0f, -240f), new Vector2(280f, 90f),
             new Color(0.9f, 0.35f, 0.35f, 1f), Color.white, 38);
 
-        // Wire SettingsController
         SettingsController sc = popupGo.GetComponent<SettingsController>();
         if (sc == null) sc = popupGo.AddComponent<SettingsController>();
 
@@ -480,12 +456,10 @@ public static class BusJamAssetBuilder
 
         Toggle toggle = toggleGo.GetComponent<Toggle>();
 
-        // Label
         GetOrCreateTMPText(toggleGo.transform, "Label", label, font,
             new Vector2(0f, 0.5f), new Vector2(220f, 0f), new Vector2(400f, 70f),
             Color.white, 36, FontStyles.Normal);
 
-        // Background
         Transform bgTrans = toggleGo.transform.Find("Background");
         GameObject bgGo;
         if (bgTrans == null)
@@ -507,7 +481,6 @@ public static class BusJamAssetBuilder
             bgGo = bgTrans.gameObject;
         }
 
-        // Checkmark
         Transform chkTrans = bgGo.transform.Find("Checkmark");
         GameObject chkGo;
         if (chkTrans == null)

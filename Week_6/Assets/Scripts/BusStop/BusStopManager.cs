@@ -7,7 +7,7 @@ public class BusStopManager : MonoBehaviour
     public static BusStopManager Instance { get; private set; }
 
     [SerializeField] private float bayY = 3.25f;
-    // Moves the whole bay up so slots sit fully inside the parking strip (below it is the driving road).
+
     [SerializeField] private float bayYOffset = 0.30f;
     [SerializeField] private Vector2 slotScale = new Vector2(0.85f, 0.74f);
     [SerializeField] private List<BusStopSlot> slots = new List<BusStopSlot>();
@@ -20,7 +20,6 @@ public class BusStopManager : MonoBehaviour
     public int TotalSlotCount => slots.Count;
     public int UnlockedSlotCount => slots.FindAll(slot => slot != null && !slot.IsLocked).Count;
 
-    /// <summary>Unlocks the locked slot closest to the centre. Returns false when none is locked.</summary>
     public int ExtraUnlockCount { get; private set; }
 
     public bool UnlockOneSlot()

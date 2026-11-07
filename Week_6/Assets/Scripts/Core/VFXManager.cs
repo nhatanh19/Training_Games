@@ -47,9 +47,6 @@ public class VFXManager : MonoBehaviour
         Initialize();
     }
 
-    /// <summary>
-    /// Creates the effect pools (or procedural fallbacks) once. Safe to call repeatedly.
-    /// </summary>
     public void Initialize()
     {
         if (_initialized) return;
@@ -120,7 +117,6 @@ public class VFXManager : MonoBehaviour
             }
         }
 
-        // Initialize high-performance procedural systems with sortingOrder = 100
         if (_runtimeDust == null) _runtimeDust = CreateProceduralDust();
         if (_runtimeHit == null) _runtimeHit = CreateProceduralHitSpark();
         if (_runtimeConfetti == null) _runtimeConfetti = CreateProceduralConfetti();

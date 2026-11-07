@@ -5,19 +5,11 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-/// <summary>
-/// One-time, hand-run wiring for the UI references that used to be resolved by node name at
-/// play time. Nothing here is automatic: the menus write the references into the scene/prefab so
-/// the Inspector becomes the source of truth and a missing link is visible in the Inspector
-/// instead of being silently repaired by a runtime lookup.
-/// </summary>
 public static class BusJamSceneWiring
 {
     private const string VFXPrefabPath = "Assets/Prefabs/UI/VFXCanvas.prefab";
     private const string CoinPrefabPath = "Assets/Prefabs/UI/CoinItem.prefab";
     private const string CoinPoolName = "CoinPool";
-
-    // ---------------------------------------------------------------- UI wiring
 
     [MenuItem("Tools/Bus Jam/Wire Scene UI References", false, 23)]
     public static void WireFromMenu()
@@ -38,10 +30,6 @@ public static class BusJamSceneWiring
         }
     }
 
-    /// <summary>
-    /// Assigns the eight serialized references on the scene's UIManager. Called by the menu above
-    /// and by the UI builders, which can regenerate prefab nodes and therefore invalidate them.
-    /// </summary>
     public static bool WireSceneReferences(bool verbose = false)
     {
         Scene scene = SceneManager.GetActiveScene();
@@ -99,8 +87,6 @@ public static class BusJamSceneWiring
         return changed;
     }
 
-    // ---------------------------------------------------------------- one-time install
-
     [MenuItem("Tools/Bus Jam/Install Coin Fly Effect On VFXCanvas", false, 25)]
     public static void InstallCoinFlyEffectFromMenu()
     {
@@ -113,10 +99,6 @@ public static class BusJamSceneWiring
         InstallCoinFlyEffect(true);
     }
 
-    /// <summary>
-    /// Authors CoinFlyEffectManager plus its CoinPool child directly on VFXCanvas.prefab.
-    /// Scene instances pick the new nodes up automatically because nothing in the scene overrides them.
-    /// </summary>
     public static bool InstallCoinFlyEffect(bool verbose = false)
     {
         GameObject coinPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CoinPrefabPath);
@@ -171,8 +153,6 @@ public static class BusJamSceneWiring
             PrefabUtility.UnloadPrefabContents(root);
         }
     }
-
-    // ---------------------------------------------------------------- validation
 
     [MenuItem("Tools/Bus Jam/Validate Scene Wiring", false, 24)]
     public static void ValidateFromMenu()
@@ -287,8 +267,6 @@ public static class BusJamSceneWiring
         return !System.IO.File.ReadAllText(scene.path).Contains("propertyPath: _hudController");
     }
 
-    // ---------------------------------------------------------------- helpers
-
     private static int Report(string label, bool passed)
     {
         if (passed)
@@ -307,7 +285,6 @@ public static class BusJamSceneWiring
         return go != null ? go.transform : null;
     }
 
-    /// <summary>Finds inactive children too: the popup roots are authored disabled.</summary>
     private static GameObject Child(Transform root, string childName)
     {
         if (root == null) return null;

@@ -44,10 +44,7 @@ public class LevelLoader : MonoBehaviour
     }
 
 #if UNITY_EDITOR
-    /// <summary>
-    /// Append-only helper: adds LevelDataSO assets from Assets/Levels that are not already in the list.
-    /// It never removes or reorders entries, so a level ordered by hand in the Inspector stays put.
-    /// </summary>
+
     [ContextMenu("Append Missing Levels From Assets/Levels")]
     public void AppendMissingLevels()
     {
@@ -101,10 +98,6 @@ public class LevelLoader : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Reports an empty level collection. Called by GameBootstrap before the first level.
-    /// The list itself is authored in the Inspector and is never filled in from code.
-    /// </summary>
     public void Initialize()
     {
         if (levels == null)
@@ -128,7 +121,6 @@ public class LevelLoader : MonoBehaviour
         currentLevelData = levelData;
         ClearCurrentLevel();
 
-        // Pools are created once from the serialized prefabs; do not reset them per level.
         GamePoolManager.Instance.Initialize();
 
         if (BusStopManager.Instance != null)
@@ -175,7 +167,6 @@ public class LevelLoader : MonoBehaviour
         }
         _spawnedBuses.Clear();
 
-        // Release any lingering active buses to prevent duplication
         BusController[] allActiveBuses = FindObjectsOfType<BusController>();
         foreach (var bus in allActiveBuses)
         {

@@ -11,7 +11,6 @@ public static class Task3Verification
         Debug.Log("=== [Task 3 Verification Started] ===");
         bool allPassed = true;
 
-        // 1. Verify Naming Conventions in UI scripts (_camelCase)
         System.Type[] uiTypes = new System.Type[]
         {
             typeof(CoinFlyEffectManager),
@@ -25,7 +24,7 @@ public static class Task3Verification
             FieldInfo[] fields = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
             foreach (var field in fields)
             {
-                // Compiler-generated backing fields end in >k__BackingField
+
                 if (field.Name.Contains("k__BackingField")) continue;
 
                 if (!field.Name.StartsWith("_") || (field.Name.Length > 1 && !char.IsLower(field.Name[1])))
@@ -37,7 +36,6 @@ public static class Task3Verification
         }
         Debug.Log("[Task 3] Checked naming convention: All private fields follow _camelCase.");
 
-        // 2. Verify CoinFlyEffectManager Object Pooling
         GameObject dummyHost = new GameObject("Test_CoinFlyHost");
         try
         {
@@ -62,7 +60,6 @@ public static class Task3Verification
             Object.DestroyImmediate(dummyHost);
         }
 
-        // 3. Verify Audio Clip Loading in Resources
         AudioClip coinClip = Resources.Load<AudioClip>("Audio/sfx_collect_money_final");
         if (coinClip == null)
         {
@@ -79,7 +76,6 @@ public static class Task3Verification
             allPassed = false;
         }
 
-        // 4. Verify VFXCanvas setup & CoinFlyEffectManager integration
         GameObject vfxGo = GameObject.Find("VFXCanvas");
         if (vfxGo == null)
         {

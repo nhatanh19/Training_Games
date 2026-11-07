@@ -4,7 +4,6 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>Builds ContinuePopup (opened by the HUD "+" button) inside PopupCanvas.prefab.</summary>
 public static class ContinuePopupBuilder
 {
     private const string PrefabPath = "Assets/Prefabs/UI/PopupCanvas.prefab";
@@ -100,7 +99,6 @@ public static class ContinuePopupBuilder
         Place(desc.gameObject, new Vector2(0f, -120f), new Vector2(640f, 60f));
         desc.enableAutoSizing = true; desc.fontSizeMin = 18; desc.fontSizeMax = 30;
 
-        // Coin button (left)
         GameObject coinBtn = New("CoinButton", card.transform, typeof(Image), typeof(Button));
         Place(coinBtn, new Vector2(-165f, -225f), new Vector2(290f, 116f));
         Image cbi = coinBtn.GetComponent<Image>();
@@ -113,7 +111,6 @@ public static class ContinuePopupBuilder
         TextMeshProUGUI cost = Text("CostText", coinBtn.transform, "20", font, 46, FontStyles.Bold, Color.white);
         Place(cost.gameObject, new Vector2(35f, 5f), new Vector2(140f, 70f));
 
-        // Ad button (right)
         GameObject adBtn = New("AdButton", card.transform, typeof(Image), typeof(Button));
         Place(adBtn, new Vector2(170f, -225f), new Vector2(330f, 101f));
         Image abi = adBtn.GetComponent<Image>();

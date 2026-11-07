@@ -65,7 +65,7 @@ public static class SettingsPopupBuilder
             if (existingPopup != null)
             {
                 popupGo = existingPopup.gameObject;
-                // Destroy old children inside SettingsPopup
+
                 for (int i = popupGo.transform.childCount - 1; i >= 0; i--)
                 {
                     Object.DestroyImmediate(popupGo.transform.GetChild(i).gameObject);
@@ -77,7 +77,7 @@ public static class SettingsPopupBuilder
                 popupGo.transform.SetParent(root.transform, false);
             }
 
-            popupGo.SetActive(false); // Default inactive until opened
+            popupGo.SetActive(false);
 
             RectTransform pRect = popupGo.GetComponent<RectTransform>();
             pRect.anchorMin = Vector2.zero;
@@ -91,7 +91,6 @@ public static class SettingsPopupBuilder
 
             CanvasGroup cg = popupGo.GetComponent<CanvasGroup>();
 
-            // Load Sprites
             Sprite cardBgSprite = AssetDatabase.LoadAssetAtPath<Sprite>(SpriteDir + "ui_settings_card_bg.png");
             Sprite headerSprite = AssetDatabase.LoadAssetAtPath<Sprite>(SpriteDir + "ui_settings_header_banner.png");
             Sprite closeBtnSprite = AssetDatabase.LoadAssetAtPath<Sprite>(SpriteDir + "ui_btn_close_red.png");
@@ -105,7 +104,6 @@ public static class SettingsPopupBuilder
             Sprite cyanBtnSprite = AssetDatabase.LoadAssetAtPath<Sprite>(SpriteDir + "ui_btn_cyan_pill.png");
             Sprite replayBtnSprite = AssetDatabase.LoadAssetAtPath<Sprite>(SpriteDir + "ui_btn_yellow_replay.png");
 
-            // 1. Settings Card
             GameObject cardGo = new GameObject("Card", typeof(RectTransform), typeof(Image));
             cardGo.transform.SetParent(popupGo.transform, false);
             RectTransform cRect = cardGo.GetComponent<RectTransform>();
@@ -121,7 +119,6 @@ public static class SettingsPopupBuilder
             cImg.color = Color.white;
             cImg.preserveAspect = true;
 
-            // 2. Header Banner ("CÀI ĐẶT")
             GameObject headerGo = new GameObject("HeaderBanner", typeof(RectTransform), typeof(Image));
             headerGo.transform.SetParent(cardGo.transform, false);
             RectTransform hRect = headerGo.GetComponent<RectTransform>();
@@ -139,14 +136,13 @@ public static class SettingsPopupBuilder
             TextMeshProUGUI titleTMP = CreateTMPText(headerGo.transform, "TitleText", "CÀI ĐẶT", font,
                 Vector2.zero, new Vector2(480f, 80f), Color.white, 46, FontStyles.Bold);
 
-            // 3. Close Button ("X") at Top-Right
             GameObject closeGo = new GameObject("CloseButton", typeof(RectTransform), typeof(Image), typeof(Button));
             closeGo.transform.SetParent(cardGo.transform, false);
             RectTransform clRect = closeGo.GetComponent<RectTransform>();
             clRect.anchorMin = new Vector2(1f, 1f);
             clRect.anchorMax = new Vector2(1f, 1f);
             clRect.pivot = new Vector2(0.5f, 0.5f);
-            clRect.anchoredPosition = new Vector2(15f, 10f); // overlaps top-right corner
+            clRect.anchoredPosition = new Vector2(15f, 10f);
             clRect.sizeDelta = new Vector2(115f, 115f);
 
             Image clImg = closeGo.GetComponent<Image>();
@@ -155,27 +151,21 @@ public static class SettingsPopupBuilder
             clImg.preserveAspect = true;
             Button closeBtn = closeGo.GetComponent<Button>();
 
-            // 4. Content Rows Container
-            // Row positions Y relative to Card center (Y = 0)
             float rowMusicY = 175f;
             float rowSoundY = 55f;
             float rowHapticY = -65f;
             float rowLangY = -185f;
             float rowReplayY = -325f;
 
-            // Row 1: Music
             CreateRowIcon(cardGo.transform, "MusicIcon", musicIconSprite, new Vector2(-195f, rowMusicY), new Vector2(85f, 85f));
             var (musicToggle, musicView) = CreatePillToggle(cardGo.transform, "MusicToggle", trackSprite, thumbGreenSprite, thumbGreySprite, font, new Vector2(120f, rowMusicY));
 
-            // Row 2: Sound
             CreateRowIcon(cardGo.transform, "SoundIcon", soundIconSprite, new Vector2(-195f, rowSoundY), new Vector2(85f, 85f));
             var (soundToggle, soundView) = CreatePillToggle(cardGo.transform, "SoundToggle", trackSprite, thumbGreenSprite, thumbGreySprite, font, new Vector2(120f, rowSoundY));
 
-            // Row 3: Haptic
             CreateRowIcon(cardGo.transform, "HapticIcon", vibIconSprite, new Vector2(-195f, rowHapticY), new Vector2(85f, 85f));
             var (hapticToggle, hapticView) = CreatePillToggle(cardGo.transform, "HapticToggle", trackSprite, thumbGreenSprite, thumbGreySprite, font, new Vector2(120f, rowHapticY));
 
-            // Row 4: Language (Tiếng Việt)
             CreateRowIcon(cardGo.transform, "LanguageIcon", langIconSprite, new Vector2(-195f, rowLangY), new Vector2(85f, 85f));
             GameObject langBtnGo = new GameObject("LanguageButton", typeof(RectTransform), typeof(Image), typeof(Button));
             langBtnGo.transform.SetParent(cardGo.transform, false);
@@ -195,7 +185,6 @@ public static class SettingsPopupBuilder
             TextMeshProUGUI langTMP = CreateTMPText(langBtnGo.transform, "Text", "Tiếng Việt", font,
                 Vector2.zero, new Vector2(230f, 60f), Color.white, 30, FontStyles.Bold);
 
-            // Row 5: Replay Button ("CHƠI LẠI")
             GameObject replayGo = new GameObject("ReplayButton", typeof(RectTransform), typeof(Image), typeof(Button));
             replayGo.transform.SetParent(cardGo.transform, false);
             RectTransform rpRect = replayGo.GetComponent<RectTransform>();
@@ -214,7 +203,6 @@ public static class SettingsPopupBuilder
             TextMeshProUGUI replayTMP = CreateTMPText(replayGo.transform, "Text", "CHƠI LẠI", font,
                 new Vector2(0f, 3f), new Vector2(320f, 70f), Color.white, 38, FontStyles.Bold);
 
-            // Wire SettingsController
             SettingsController sc = popupGo.GetComponent<SettingsController>();
             if (sc == null) sc = popupGo.AddComponent<SettingsController>();
 
@@ -238,7 +226,6 @@ public static class SettingsPopupBuilder
             scSo.ApplyModifiedProperties();
             EditorUtility.SetDirty(sc);
 
-            // Wire UIManager
             UIManager uim = root.GetComponent<UIManager>();
             if (uim == null) uim = root.GetComponentInChildren<UIManager>(true);
             if (uim != null)
@@ -290,7 +277,6 @@ public static class SettingsPopupBuilder
         Toggle toggle = toggleGo.GetComponent<Toggle>();
         toggle.targetGraphic = trImg;
 
-        // Thumb child
         GameObject thumbGo = new GameObject("Thumb", typeof(RectTransform), typeof(Image));
         thumbGo.transform.SetParent(toggleGo.transform, false);
         RectTransform thRect = thumbGo.GetComponent<RectTransform>();

@@ -12,7 +12,7 @@ public class CameraShakeManager : MonoBehaviour
             if (_instance == null)
             {
                 _instance = FindObjectOfType<CameraShakeManager>();
-                
+
             }
             return _instance;
         }
@@ -38,9 +38,6 @@ public class CameraShakeManager : MonoBehaviour
         Initialize();
     }
 
-    /// <summary>
-    /// Resolves the camera and caches its rest position once. Safe to call repeatedly.
-    /// </summary>
     public void Initialize()
     {
         if (_initialized) return;

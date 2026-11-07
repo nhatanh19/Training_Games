@@ -50,7 +50,7 @@ public class BusStopSlot : MonoBehaviour
                 _clickCollider = gameObject.AddComponent<BoxCollider2D>();
             }
         }
-        // Match sprite world bounds (320x640 at 256 PPU -> 1.25 x 2.50)
+
         _clickCollider.size = new Vector2(1.25f, 2.50f);
         _clickCollider.offset = Vector2.zero;
         _clickCollider.enabled = IsLocked;
@@ -101,7 +101,6 @@ public class BusStopSlot : MonoBehaviour
         _lockLabel.enableWordWrapping = false;
         _lockLabel.GetComponent<MeshRenderer>().sortingOrder = -9;
 
-        // Cancel the slot's non-uniform scale so the text is not squashed
         Vector3 ls = transform.lossyScale;
         _lockLabel.transform.localScale = new Vector3(
             ls.x > 0.01f ? 1f / ls.x : 1f, ls.y > 0.01f ? 1f / ls.y : 1f, 1f);

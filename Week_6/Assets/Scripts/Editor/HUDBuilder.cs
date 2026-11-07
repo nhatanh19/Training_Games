@@ -4,10 +4,6 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Rebuilds the HUD (coin pill, level title, pause button, remaining-passenger counter)
-/// inside HUDCanvas.prefab to match the target design. The Settings popup is not touched.
-/// </summary>
 public static class HUDBuilder
 {
     private const string HudPrefabPath = "Assets/Prefabs/UI/HUDCanvas.prefab";
@@ -45,7 +41,6 @@ public static class HUDBuilder
         HUDController hud = root.GetComponent<HUDController>();
         if (hud == null) hud = root.AddComponent<HUDController>();
 
-        // Remove previous HUD content except the safe-area panel itself.
         Transform panelTrans = root.transform.Find("HUDPanel");
         GameObject panel;
         if (panelTrans == null)
@@ -76,7 +71,6 @@ public static class HUDBuilder
         Sprite pauseSprite = Load("hud_btn_pause.png");
         Sprite coinSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Resources/Sprites/coin_icon.png");
 
-        // ---- Coin pill (top-left) ----
         GameObject coin = NewUI("CoinContainer", panel.transform, typeof(Image));
         SetRect(coin, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(30f, -24f), new Vector2(380f, 100f));
         Image coinBg = coin.GetComponent<Image>();
@@ -102,13 +96,11 @@ public static class HUDBuilder
         Button plusBtn = plus.GetComponent<Button>();
         plusBtn.targetGraphic = plusImg;
 
-        // ---- Level title (top-centre) ----
         TextMeshProUGUI level = NewText("LevelText", panel.transform, "Cấp độ 1", font, 52, FontStyles.Bold,
             new Color(0.10f, 0.14f, 0.30f, 1f));
         SetRect(level.gameObject, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -74f), new Vector2(420f, 80f));
         level.alignment = TextAlignmentOptions.Center;
 
-        // ---- Pause button (top-right) ----
         GameObject pause = NewUI("PauseButton", panel.transform, typeof(Image), typeof(Button));
         SetRect(pause, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-30f, -20f), new Vector2(110f, 110f));
         Image pauseImg = pause.GetComponent<Image>();
@@ -116,7 +108,6 @@ public static class HUDBuilder
         pauseImg.preserveAspect = true;
         pause.GetComponent<Button>().targetGraphic = pauseImg;
 
-        // ---- Remaining passenger counter, overlaid on the baked blue sign ----
         GameObject sign = NewUI("PassengerCounterSign", root.transform, typeof(PassengerCounterSign));
         SetRect(sign, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(170f, 110f));
 
@@ -139,7 +130,6 @@ public static class HUDBuilder
         signSo.FindProperty("_labelText").objectReferenceValue = label;
         signSo.ApplyModifiedProperties();
 
-        // ---- Wire HUDController ----
         SerializedObject hudSo = new SerializedObject(hud);
         hudSo.FindProperty("_levelText").objectReferenceValue = level;
         hudSo.FindProperty("_coinText").objectReferenceValue = coinText;

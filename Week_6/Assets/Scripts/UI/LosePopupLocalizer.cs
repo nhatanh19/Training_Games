@@ -1,7 +1,6 @@
 using TMPro;
 using UnityEngine;
 
-/// <summary>Updates the lose popup texts according to the saved game language.</summary>
 public class LosePopupLocalizer : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI _titleText;

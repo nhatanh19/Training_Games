@@ -138,14 +138,6 @@ public class CoinFlyEffectManager : MonoBehaviour
         _availableCoins.Enqueue(coin);
     }
 
-    /// <summary>
-    /// Executes the Fly-to-Target Coin Effect matching Week 6 criteria:
-    /// 1. Spawn 5-10 coin icons from UI Object Pool.
-    /// 2. Burst outward randomly around starting point (Ease.OutQuad).
-    /// 3. Curved fly towards HUD Coin Icon (DOMove / DOPath).
-    /// 4. HUD Coin punch, coin counter increment, and leng keng ASMR audio.
-    /// 5. Recycle coin back into pool.
-    /// </summary>
     public void PlayFlyCoins(Vector3 startScreenPos, Vector3 targetScreenPos, int coinCount = 8, int totalReward = 100, Action onComplete = null)
     {
         if (!_isInitialized) InitializePool();
@@ -169,7 +161,6 @@ public class CoinFlyEffectManager : MonoBehaviour
             coin.position = startScreenPos;
             coin.localScale = Vector3.zero;
 
-            // Step 2: Nổ bung nhẹ ra xung quanh vị trí xuất phát (góc phân kỳ ngẫu nhiên)
             float angle = (index * (Mathf.PI * 2f / coinCount)) + UnityEngine.Random.Range(-0.25f, 0.25f);
             float radius = UnityEngine.Random.Range(_burstRadius * 0.65f, _burstRadius);
             Vector3 burstTarget = startScreenPos + new Vector3(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius, 0f);
@@ -177,18 +168,15 @@ public class CoinFlyEffectManager : MonoBehaviour
             Sequence seq = DOTween.Sequence();
             seq.SetLink(coin.gameObject);
 
-            // Phase 1: Nổ bung (Burst)
             seq.Append(coin.DOScale(Vector3.one, _burstDuration * 0.6f).SetEase(Ease.OutBack));
             seq.Join(coin.DOMove(burstTarget, _burstDuration).SetEase(Ease.OutQuad));
 
-            // Phase 2: Stagger delay
             float delay = index * _staggerDelay;
             if (delay > 0)
             {
                 seq.AppendInterval(delay);
             }
 
-            // Step 3: Từng đồng tiền bay về phía Icon Tiền trên HUD theo quỹ đạo mượt mà (DOMove / DOPath)
             Vector3 midPoint = (burstTarget + targetScreenPos) * 0.5f;
             Vector3 perpendicular = Vector3.Cross(targetScreenPos - burstTarget, Vector3.forward).normalized;
             float curveOffset = UnityEngine.Random.Range(-80f, 80f);
@@ -197,13 +185,11 @@ public class CoinFlyEffectManager : MonoBehaviour
 
             seq.Append(coin.DOPath(path, _flyDuration, PathType.CatmullRom).SetEase(Ease.InQuad));
 
-            // Step 4 & 5: Chạm đích, nảy nhẹ icon, leng keng, nảy số, thu hồi về Pool
             seq.OnComplete(() =>
             {
-                // Step 5: Thu hồi icon tiền về Pool
+
                 ReturnCoin(coin);
 
-                // Step 4: Khi mỗi đồng tiền chạm đích: Icon trên HUD nảy nhẹ (DOPunchScale), âm thanh tích xu kêu leng keng, bộ đếm số tăng dần theo từng nhịp chạm
                 HUDController hud = UIManager.Instance?.HUD;
                 if (hud != null)
                 {

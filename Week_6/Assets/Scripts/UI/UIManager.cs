@@ -39,11 +39,6 @@ public class UIManager : MonoBehaviour
         ResolveReferences();
     }
 
-    /// <summary>
-    /// The serialized fields are the source of truth (wired in the Inspector by
-    /// Tools > Bus Jam > Wire Scene UI References). The name-based lookups below only
-    /// rescue a scene whose wiring was lost, and always report it.
-    /// </summary>
     public void ResolveReferences()
     {
         if (IsFullyWired())

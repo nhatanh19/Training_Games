@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Adjusts the RectTransform anchors to conform to Screen.safeArea (Notch, Dynamic Island, Home Bar).
-/// Conforms to Week 6 Task 2 specification.
-/// </summary>
 [RequireComponent(typeof(RectTransform))]
 [ExecuteAlways]
 public class SafeAreaFitter : MonoBehaviour
@@ -16,7 +12,7 @@ public class SafeAreaFitter : MonoBehaviour
 
     [Header("Editor Simulation")]
     [SerializeField] private bool _simulateInEditor = false;
-    [SerializeField] private Rect _editorSimulatedSafeArea = new Rect(0f, 102f, 1080f, 1716f); // iPhone 14/15 Pro notch & home bar
+    [SerializeField] private Rect _editorSimulatedSafeArea = new Rect(0f, 102f, 1080f, 1716f);
 
     private RectTransform _rectTransform;
     private Rect _lastSafeArea = Rect.zero;
@@ -142,7 +138,7 @@ public class SafeAreaFitter : MonoBehaviour
         }
         else if (isTopAnchored)
         {
-            // For a top-pinned bar, anchorMax.y follows the safeArea top edge
+
             if (_applyTop)
             {
                 float topDelta = 1f - maxYRatio;

@@ -12,7 +12,7 @@ public class GamePoolManager : MonoBehaviour
             if (_instance == null)
             {
                 _instance = FindObjectOfType<GamePoolManager>();
-                
+
             }
             return _instance;
         }
@@ -42,9 +42,6 @@ public class GamePoolManager : MonoBehaviour
         Initialize();
     }
 
-    /// <summary>
-    /// Creates the object pools once. Safe to call repeatedly; existing pools are reused.
-    /// </summary>
     public void Initialize()
     {
         InitPools();

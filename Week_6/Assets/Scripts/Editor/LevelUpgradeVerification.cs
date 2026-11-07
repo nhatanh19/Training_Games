@@ -9,7 +9,6 @@ public static class LevelUpgradeVerification
     {
         Debug.Log("=== [BUS JAM] VERIFYING DIFFICULTY & ON-SCREEN TRAJECTORY ===");
 
-        // 1. Check Camera Viewport fitting logic
         float[] testAspects = new float[] { 9f / 16f, 9f / 19.5f, 9f / 20f };
         string[] aspectNames = new string[] { "9:16", "9:19.5", "9:20" };
 
@@ -26,7 +25,6 @@ public static class LevelUpgradeVerification
             }
         }
 
-        // 2. Check 5 Level assets
         for (int lvl = 1; lvl <= 5; lvl++)
         {
             LevelDataSO data = AssetDatabase.LoadAssetAtPath<LevelDataSO>($"Assets/Levels/Level_{lvl}.asset");

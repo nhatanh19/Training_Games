@@ -11,7 +11,6 @@ public static class Task4Verification
         Debug.Log("=== [Task 4 Verification Started] ===");
         bool allPassed = true;
 
-        // 1. Verify Naming Conventions (_camelCase)
         System.Type[] typesToCheck = new System.Type[]
         {
             typeof(HapticManager),
@@ -36,14 +35,12 @@ public static class Task4Verification
         }
         Debug.Log("[Task 4] Naming convention checked: All private fields follow _camelCase.");
 
-        // 2. Verify HapticManager Logic and IsHapticOn Check
         GameObject dummyHapticHost = new GameObject("Test_HapticHost");
         try
         {
             HapticManager hapticMgr = dummyHapticHost.AddComponent<HapticManager>();
             hapticMgr.Initialize();
 
-            // Test trigger calls without exceptions
             hapticMgr.TriggerLight();
             hapticMgr.TriggerImpact();
             hapticMgr.TriggerSuccess();
@@ -56,7 +53,6 @@ public static class Task4Verification
             Object.DestroyImmediate(dummyHapticHost);
         }
 
-        // 3. Verify Master Audio Controller (SFXSource & BGMSource separation)
         GameObject dummyAudioHost = new GameObject("Test_AudioHost");
         try
         {
@@ -79,7 +75,6 @@ public static class Task4Verification
                 allPassed = false;
             }
 
-            // Test PlayPop ASMR
             audioMgr.PlayPop();
             Debug.Log("[Task 4] PlayPop() ASMR clip loaded and playable.");
         }

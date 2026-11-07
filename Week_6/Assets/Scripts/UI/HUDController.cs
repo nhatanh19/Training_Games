@@ -13,7 +13,7 @@ public class HUDController : MonoBehaviour
     [Header("Buttons")]
     [SerializeField] private Button _restartButton;
     [SerializeField] private Button _settingsButton;
-    [SerializeField] private Button _addCoinButton; // Placeholder: purchase flow will be hooked up later
+    [SerializeField] private Button _addCoinButton;
 
     public const string COIN_PREF_KEY = "TotalCoins";
 
@@ -82,7 +82,7 @@ public class HUDController : MonoBehaviour
     {
         if (_coinTargetTransform != null)
         {
-            // 1. Ensure CoinContainer background retains its sleek dark pill styling
+
             if (_coinTargetTransform.name == "CoinContainer")
             {
                 Image bgImg = _coinTargetTransform.GetComponent<Image>();
@@ -93,11 +93,10 @@ public class HUDController : MonoBehaviour
                 }
             }
 
-            // 2. Find the actual CoinIcon child to replace the placeholder
             Transform iconTrans = _coinTargetTransform.Find("CoinIcon");
             if (iconTrans == null)
             {
-                // Fallback search in children
+
                 Image[] images = _coinTargetTransform.GetComponentsInChildren<Image>(true);
                 foreach (Image img in images)
                 {
