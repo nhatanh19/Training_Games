@@ -39,72 +39,73 @@ public class UIManager : MonoBehaviour
         ResolveReferences();
     }
 
+    /// <summary>
+    /// The serialized fields are the source of truth (wired in the Inspector by
+    /// Tools > Bus Jam > Wire Scene UI References). The name-based lookups below only
+    /// rescue a scene whose wiring was lost, and always report it.
+    /// </summary>
     public void ResolveReferences()
     {
+        if (IsFullyWired())
+        {
+            BindButtons();
+            return;
+        }
+
         if (_hudController == null)
         {
-            _hudController = FindObjectOfType<HUDController>();
+            Debug.LogError("[UIManager] _hudController chưa được gán trong Inspector — chạy Tools > Bus Jam > Wire Scene UI References rồi Save scene.");
         }
 
         GameObject popupCanvas = GameObject.Find("PopupCanvas");
         if (popupCanvas != null)
         {
-            if (_winPopup == null)
-            {
-                Transform t = popupCanvas.transform.Find("WinPopup");
-                if (t != null) _winPopup = t.gameObject;
-            }
-            if (_losePopup == null)
-            {
-                Transform t = popupCanvas.transform.Find("LosePopup");
-                if (t != null) _losePopup = t.gameObject;
-            }
-            if (_settingsPopup == null)
-            {
-                Transform t = popupCanvas.transform.Find("SettingsPopup");
-                if (t != null) _settingsPopup = t.gameObject;
-            }
-            if (_continuePopup == null)
-            {
-                Transform t = popupCanvas.transform.Find("ContinuePopup");
-                if (t != null) _continuePopup = t.gameObject;
-            }
+            Transform root = popupCanvas.transform;
+            _winPopup = ResolvePopup(root, "WinPopup", _winPopup);
+            _losePopup = ResolvePopup(root, "LosePopup", _losePopup);
+            _settingsPopup = ResolvePopup(root, "SettingsPopup", _settingsPopup);
+            _continuePopup = ResolvePopup(root, "ContinuePopup", _continuePopup);
         }
 
         if (_winPopup != null)
         {
-            if (_nextLevelButton == null)
-            {
-                Transform b = _winPopup.transform.Find("Card/MainButton");
-                if (b != null) _nextLevelButton = b.GetComponent<Button>();
-            }
-            if (_replayWinButton == null)
-            {
-                Transform b = _winPopup.transform.Find("Card/SubButton");
-                if (b != null) _replayWinButton = b.GetComponent<Button>();
-            }
+            _nextLevelButton = ResolveButton(_winPopup.transform, "Card/MainButton", _nextLevelButton);
+            _replayWinButton = ResolveButton(_winPopup.transform, "Card/SubButton", _replayWinButton);
         }
 
-        if (_losePopup != null && _retryLoseButton == null)
+        if (_losePopup != null)
         {
-            Transform b = _losePopup.transform.Find("Card/MainButton");
-            if (b != null) _retryLoseButton = b.GetComponent<Button>();
-        }
-
-        if (CoinFlyEffectManager.Instance == null)
-        {
-            CoinFlyEffectManager effectMgr = FindObjectOfType<CoinFlyEffectManager>();
-            if (effectMgr == null)
-            {
-                GameObject vfxCanvas = GameObject.Find("VFXCanvas");
-                if (vfxCanvas != null)
-                {
-                    vfxCanvas.AddComponent<CoinFlyEffectManager>();
-                }
-            }
+            _retryLoseButton = ResolveButton(_losePopup.transform, "Card/MainButton", _retryLoseButton);
         }
 
         BindButtons();
+    }
+
+    private bool IsFullyWired()
+    {
+        return _hudController != null &&
+               _winPopup != null && _losePopup != null && _settingsPopup != null && _continuePopup != null &&
+               _nextLevelButton != null && _replayWinButton != null && _retryLoseButton != null;
+    }
+
+    private static GameObject ResolvePopup(Transform root, string popupName, GameObject current)
+    {
+        if (current != null) return current;
+
+        Debug.LogError($"[UIManager] Popup '{popupName}' chưa được gán trong Inspector — chạy Tools > Bus Jam > Wire Scene UI References rồi Save scene.");
+
+        Transform found = root.Find(popupName);
+        return found != null ? found.gameObject : null;
+    }
+
+    private static Button ResolveButton(Transform root, string path, Button current)
+    {
+        if (current != null) return current;
+
+        Debug.LogError($"[UIManager] Nút '{path}' chưa được gán trong Inspector — chạy Tools > Bus Jam > Wire Scene UI References rồi Save scene.");
+
+        Transform found = root.Find(path);
+        return found != null ? found.GetComponent<Button>() : null;
     }
 
     private void Start()
@@ -181,11 +182,6 @@ public class UIManager : MonoBehaviour
 
     public void UpdateLevelDisplay(int levelNumber)
     {
-        if (_hudController == null)
-        {
-            _hudController = FindObjectOfType<HUDController>();
-        }
-
         if (_hudController != null)
         {
             _hudController.SetLevel(levelNumber);

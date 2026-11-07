@@ -83,18 +83,16 @@ public static class Task3Verification
         GameObject vfxGo = GameObject.Find("VFXCanvas");
         if (vfxGo == null)
         {
-            GameObject vfxPrefab = Resources.Load<GameObject>("Prefabs/UI/VFXCanvas");
-            if (vfxPrefab != null)
-            {
-                vfxGo = Object.Instantiate(vfxPrefab);
-                vfxGo.name = "VFXCanvas";
-            }
+            Debug.LogError("[Task 3] VFXCanvas không có trong scene — kéo Assets/Prefabs/UI/VFXCanvas.prefab vào hierarchy.");
+            allPassed = false;
         }
-
-        if (vfxGo != null)
+        else if (vfxGo.GetComponent<CoinFlyEffectManager>() == null)
         {
-            CoinFlyEffectManager comp = vfxGo.GetComponent<CoinFlyEffectManager>();
-            if (comp == null) comp = vfxGo.AddComponent<CoinFlyEffectManager>();
+            Debug.LogError("[Task 3] VFXCanvas thiếu CoinFlyEffectManager — chạy Tools > Bus Jam > Install Coin Fly Effect On VFXCanvas.");
+            allPassed = false;
+        }
+        else
+        {
             Debug.Log("[Task 3] VFXCanvas integration with CoinFlyEffectManager verified.");
         }
 

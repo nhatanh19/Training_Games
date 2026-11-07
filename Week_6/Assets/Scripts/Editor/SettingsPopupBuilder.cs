@@ -7,7 +7,6 @@ using UnityEngine.UI;
 public static class SettingsPopupBuilder
 {
     private const string PopupPrefabPath = "Assets/Prefabs/UI/PopupCanvas.prefab";
-    private const string ResPopupPrefabPath = "Assets/Resources/Prefabs/UI/PopupCanvas.prefab";
     private const string SpriteDir = "Assets/Art/Sprites/UI/";
 
     [MenuItem("Tools/Bus Jam/Rebuild Settings Popup UI (Target Design)")]
@@ -23,14 +22,11 @@ public static class SettingsPopupBuilder
         }
 
         RebuildInPrefab(PopupPrefabPath, defaultFont);
-        if (System.IO.File.Exists(ResPopupPrefabPath))
-        {
-            AssetDatabase.CopyAsset(PopupPrefabPath, ResPopupPrefabPath);
-        }
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
         Debug.Log("[SettingsPopupBuilder] Successfully rebuilt and saved SettingsPopup!");
+        BusJamSceneWiring.WireSceneReferences();
     }
 
     public static TMP_FontAsset GetOrCreateDynamicFont()

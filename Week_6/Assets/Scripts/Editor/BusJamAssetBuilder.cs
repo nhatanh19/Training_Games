@@ -155,18 +155,11 @@ public static class BusJamAssetBuilder
 
         // 5. VFXCanvas (Sorting Order: 30)
         GameObject vfxCanvasGo = GetOrCreateCanvasObject("VFXCanvas", 30);
-        if (vfxCanvasGo.GetComponent<CoinFlyEffectManager>() == null)
-        {
-            vfxCanvasGo.AddComponent<CoinFlyEffectManager>();
-        }
         PrefabUtility.SaveAsPrefabAssetAndConnect(vfxCanvasGo, UIDir + "/VFXCanvas.prefab", InteractionMode.AutomatedAction);
-        if (System.IO.Directory.Exists("Assets/Resources/Prefabs/UI"))
-        {
-            PrefabUtility.SaveAsPrefabAsset(vfxCanvasGo, "Assets/Resources/Prefabs/UI/VFXCanvas.prefab");
-        }
 
-        // 5b. Build CoinItem Prefab
+        // 5b. CoinItem prefab first, then CoinFlyEffectManager authored onto the VFXCanvas prefab.
         BuildCoinPrefab();
+        BusJamSceneWiring.InstallCoinFlyEffect();
 
         // 6. Connect to GameBootstrap
         GameBootstrap bootstrap = Object.FindObjectOfType<GameBootstrap>();
@@ -179,6 +172,8 @@ public static class BusJamAssetBuilder
             bSo.ApplyModifiedProperties();
             EditorUtility.SetDirty(bootstrap);
         }
+
+        BusJamSceneWiring.WireSceneReferences();
     }
 
     private static GameObject GetOrCreateCanvasObject(string canvasName, int sortingOrder)
@@ -213,7 +208,6 @@ public static class BusJamAssetBuilder
     public static GameObject BuildCoinPrefab()
     {
         EnsureFolderExists(UIDir);
-        EnsureFolderExists("Assets/Resources/Prefabs/UI");
 
         GameObject coinObj = new GameObject("CoinItem", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         RectTransform rt = coinObj.GetComponent<RectTransform>();
@@ -244,12 +238,6 @@ public static class BusJamAssetBuilder
 
         string prefabPath = UIDir + "/CoinItem.prefab";
         GameObject savedPrefab = PrefabUtility.SaveAsPrefabAsset(coinObj, prefabPath);
-
-        string resourcesPrefabDir = "Assets/Resources/Prefabs/UI";
-        if (System.IO.Directory.Exists(resourcesPrefabDir))
-        {
-            PrefabUtility.SaveAsPrefabAsset(coinObj, resourcesPrefabDir + "/CoinItem.prefab");
-        }
 
         Object.DestroyImmediate(coinObj);
         AssetDatabase.SaveAssets();

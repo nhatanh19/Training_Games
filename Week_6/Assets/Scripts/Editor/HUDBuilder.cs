@@ -11,7 +11,6 @@ using UnityEngine.UI;
 public static class HUDBuilder
 {
     private const string HudPrefabPath = "Assets/Prefabs/UI/HUDCanvas.prefab";
-    private const string ResHudPrefabPath = "Assets/Resources/Prefabs/UI/HUDCanvas.prefab";
     private const string SpriteDir = "Assets/Art/Sprites/UI/";
 
     [MenuItem("Tools/Bus Jam/Rebuild HUD UI (Target Design)")]
@@ -29,10 +28,6 @@ public static class HUDBuilder
         {
             Rebuild(root, font);
             PrefabUtility.SaveAsPrefabAsset(root, HudPrefabPath);
-            if (System.IO.File.Exists(ResHudPrefabPath))
-            {
-                PrefabUtility.SaveAsPrefabAsset(root, ResHudPrefabPath);
-            }
         }
         finally
         {
@@ -42,6 +37,7 @@ public static class HUDBuilder
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
         Debug.Log("[HUDBuilder] Successfully rebuilt HUD!");
+        BusJamSceneWiring.WireSceneReferences();
     }
 
     private static void Rebuild(GameObject root, TMP_FontAsset font)

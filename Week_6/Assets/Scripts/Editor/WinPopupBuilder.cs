@@ -8,7 +8,6 @@ using UnityEngine.UI;
 public static class WinPopupBuilder
 {
     private const string PrefabPath = "Assets/Prefabs/UI/PopupCanvas.prefab";
-    private const string ResPrefabPath = "Assets/Resources/Prefabs/UI/PopupCanvas.prefab";
     private const string SpriteDir = "Assets/Art/Sprites/UI/";
 
     [MenuItem("Tools/Bus Jam/Rebuild Win Popup UI (Target Design)")]
@@ -22,8 +21,6 @@ public static class WinPopupBuilder
         {
             Rebuild(root, font);
             PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
-            if (System.IO.File.Exists(ResPrefabPath))
-                PrefabUtility.SaveAsPrefabAsset(root, ResPrefabPath);
         }
         finally
         {
@@ -32,6 +29,7 @@ public static class WinPopupBuilder
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
         Debug.Log("[WinPopupBuilder] Successfully rebuilt WinPopup!");
+        BusJamSceneWiring.WireSceneReferences();
     }
 
     private static void Rebuild(GameObject root, TMP_FontAsset font)
