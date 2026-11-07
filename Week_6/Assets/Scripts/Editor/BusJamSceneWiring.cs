@@ -10,6 +10,7 @@ public static class BusJamSceneWiring
     private const string VFXPrefabPath = "Assets/Prefabs/UI/VFXCanvas.prefab";
     private const string CoinPrefabPath = "Assets/Prefabs/UI/CoinItem.prefab";
     private const string CoinPoolName = "CoinPool";
+    private const string MusicFolder = "Assets/Audio/Music";
 
     [MenuItem("Tools/Bus Jam/Wire Scene UI References", false, 23)]
     public static void WireFromMenu()
@@ -154,6 +155,76 @@ public static class BusJamSceneWiring
         }
     }
 
+    [MenuItem("Tools/Bus Jam/Wire Background Music", false, 26)]
+    public static void WireMusicFromMenu()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode)
+        {
+            Debug.LogWarning("[Bus Jam] Exit Play Mode before wiring the background music reference.");
+            return;
+        }
+
+        if (WireBackgroundMusic(true))
+        {
+            Scene scene = SceneManager.GetActiveScene();
+            if (scene.IsValid() && scene.isLoaded && scene.isDirty)
+            {
+                EditorSceneManager.SaveScene(scene);
+            }
+        }
+    }
+
+    public static bool WireBackgroundMusic(bool verbose = false)
+    {
+        Scene scene = SceneManager.GetActiveScene();
+        if (!scene.IsValid() || !scene.isLoaded) return false;
+
+        AudioManager audio = Object.FindObjectOfType<AudioManager>();
+        if (audio == null)
+        {
+            if (verbose) Debug.LogError("[Bus Jam] Không có AudioManager trong scene — bỏ qua bước nối nhạc nền.");
+            return false;
+        }
+
+        AudioClip bgm = FirstAudioClip(MusicFolder);
+        if (bgm == null)
+        {
+            if (verbose) Debug.LogError($"[Bus Jam] Không có AudioClip nào trong {MusicFolder} — copy file nhạc vào folder đó rồi chạy Tools > Bus Jam > Wire Background Music.");
+            return false;
+        }
+
+        AudioSource[] sources = audio.GetComponents<AudioSource>();
+        bool changed = false;
+
+        if (sources.Length < 2)
+        {
+            AudioSource extra = Undo.AddComponent(audio.gameObject, typeof(AudioSource)) as AudioSource;
+            extra.loop = true;
+            extra.playOnAwake = false;
+            extra.spatialBlend = 0f;
+            EditorUtility.SetDirty(extra);
+            sources = audio.GetComponents<AudioSource>();
+            changed = true;
+        }
+
+        SerializedObject so = new SerializedObject(audio);
+        changed |= Assign(so, "_sfxSource", sources[0]);
+        changed |= Assign(so, "_bgmSource", sources[1]);
+        changed |= Assign(so, "_bgmClip", bgm);
+        if (changed) so.ApplyModifiedProperties();
+
+        if (changed) EditorSceneManager.MarkSceneDirty(scene);
+
+        if (verbose)
+        {
+            Debug.Log(changed
+                ? $"[Bus Jam] Đã nối nhạc nền: _bgmClip = {bgm.name}, _sfxSource + _bgmSource = 2 AudioSource trên '{audio.gameObject.name}'."
+                : $"[Bus Jam] Nhạc nền đã được nối sẵn với {bgm.name}.");
+        }
+
+        return changed;
+    }
+
     [MenuItem("Tools/Bus Jam/Validate Scene Wiring", false, 24)]
     public static void ValidateFromMenu()
     {
@@ -168,6 +239,7 @@ public static class BusJamSceneWiring
         failures += Report("HUDCanvas/HUDPanel anchor nằm trong [0,1]", HudAnchorCheck());
         failures += Report("Không còn Assets/Resources/Prefabs trùng lặp", DuplicatePrefabCheck());
         failures += Report("Scene không còn override chết _hudController", DeadOverrideCheck());
+        failures += Report("AudioManager có _bgmClip + _sfxSource + _bgmSource đã gán", BgmCheck());
 
         if (failures == 0)
         {
@@ -235,6 +307,41 @@ public static class BusJamSceneWiring
 
         return prefab != null && prefab.objectReferenceValue != null &&
                container != null && container.objectReferenceValue != null;
+    }
+
+    private static bool BgmCheck()
+    {
+        AudioManager audio = Object.FindObjectOfType<AudioManager>();
+        if (audio == null) return false;
+
+        SerializedObject so = new SerializedObject(audio);
+        string[] fields = { "_bgmClip", "_sfxSource", "_bgmSource" };
+
+        for (int i = 0; i < fields.Length; i++)
+        {
+            SerializedProperty prop = so.FindProperty(fields[i]);
+            if (prop == null || prop.objectReferenceValue == null) return false;
+        }
+
+        return true;
+    }
+
+    private static AudioClip FirstAudioClip(string folder)
+    {
+        if (!System.IO.Directory.Exists(folder)) return null;
+
+        string[] guids = AssetDatabase.FindAssets("t:AudioClip", new[] { folder });
+        string[] paths = new string[guids.Length];
+        for (int i = 0; i < guids.Length; i++) paths[i] = AssetDatabase.GUIDToAssetPath(guids[i]);
+        System.Array.Sort(paths, System.StringComparer.Ordinal);
+
+        for (int i = 0; i < paths.Length; i++)
+        {
+            AudioClip clip = AssetDatabase.LoadAssetAtPath<AudioClip>(paths[i]);
+            if (clip != null) return clip;
+        }
+
+        return null;
     }
 
     private static bool HudAnchorCheck()
