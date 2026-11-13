@@ -216,8 +216,6 @@ public static class SettingsPopupBuilder
             scSo.FindProperty("_replayButton").objectReferenceValue = replayBtn;
             scSo.FindProperty("_replayText").objectReferenceValue = replayTMP;
             scSo.FindProperty("_headerTitleText").objectReferenceValue = titleTMP;
-            scSo.FindProperty("_canvasGroup").objectReferenceValue = cg;
-            scSo.FindProperty("_cardRect").objectReferenceValue = cRect;
 
             WireToggleView(scSo.FindProperty("_soundToggleView"), soundView);
             WireToggleView(scSo.FindProperty("_musicToggleView"), musicView);

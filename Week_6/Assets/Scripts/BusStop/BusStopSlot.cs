@@ -5,11 +5,15 @@ using UnityEngine;
 public class BusStopSlot : MonoBehaviour
 {
     [SerializeField] private SpriteRenderer slotRenderer;
+    [SerializeField] private Color reservedTint = new Color(0.72f, 0.9f, 1f, 1f);
+    [SerializeField, Range(0f, 1f)] private float reservedTintStrength = 0.55f;
 
     private TextMeshPro _lockLabel;
     private BoxCollider2D _clickCollider;
     private Tween _fullFeedbackTween;
     private Color _fullFeedbackColor;
+    private Color _unreservedColor;
+    private bool _showingReservation;
 
     public Transform SlotTransform => transform;
     public BusController CurrentBus { get; private set; }
@@ -20,6 +24,7 @@ public class BusStopSlot : MonoBehaviour
     public void SetLocked(bool locked)
     {
         StopFullFeedback();
+        ClearReservationVisual();
         IsLocked = locked;
         EnsureSlotVisual();
         if (slotRenderer != null)
@@ -70,6 +75,7 @@ public class BusStopSlot : MonoBehaviour
     private void OnDisable()
     {
         StopFullFeedback();
+        ClearReservationVisual();
         SettingsController.LanguageChanged -= OnLanguageChanged;
     }
 
@@ -167,12 +173,36 @@ public class BusStopSlot : MonoBehaviour
 
     public void AssignBus(BusController bus)
     {
+        StopFullFeedback();
+        ClearReservationVisual();
         CurrentBus = bus;
+        if (bus == null || slotRenderer == null) return;
+
+        _unreservedColor = slotRenderer.color;
+        Color tint = reservedTint;
+        tint.a = _unreservedColor.a;
+        slotRenderer.color = Color.Lerp(_unreservedColor, tint, Mathf.Clamp01(reservedTintStrength));
+        _showingReservation = true;
+    }
+
+    public void NotifyBusArrived(BusController bus)
+    {
+        if (CurrentBus != bus) return;
+        StopFullFeedback();
+        ClearReservationVisual();
+    }
+
+    private void ClearReservationVisual()
+    {
+        if (!_showingReservation) return;
+        if (slotRenderer != null) slotRenderer.color = _unreservedColor;
+        _showingReservation = false;
     }
 
     public void ClearSlot()
     {
         StopFullFeedback();
+        ClearReservationVisual();
         CurrentBus = null;
     }
 }

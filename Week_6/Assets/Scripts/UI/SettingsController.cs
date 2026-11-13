@@ -35,13 +35,10 @@ public class SettingsController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _replayText;
     [SerializeField] private TextMeshProUGUI _headerTitleText;
 
-    [Header("Animation Components")]
-    [SerializeField] private CanvasGroup _canvasGroup;
-    [SerializeField] private RectTransform _cardRect;
-
     public const string LANGUAGE_KEY = "GameLanguage";
     private string _currentLanguage = "vi";
     private bool _isSubscribed;
+    private bool _closing;
 
     public bool IsVietnamese => _currentLanguage == "vi";
     public string CurrentLanguage => _currentLanguage;
@@ -58,10 +55,10 @@ public class SettingsController : MonoBehaviour
 
     private void OnEnable()
     {
+        _closing = false;
         LoadLanguage();
         SyncSettingsUI();
         SubscribeEvents();
-        AnimateOpen();
     }
 
     private void OnDisable()
@@ -290,54 +287,22 @@ public class SettingsController : MonoBehaviour
 
     private void OnReplayClicked()
     {
+        if (_closing) return;
+        _closing = true;
         AudioManager.Instance?.PlayClick();
         HapticManager.Instance?.TriggerLight();
-        AnimateClose(() =>
-        {
-            UIManager.Instance?.CloseSettings();
+        if (UIManager.Instance != null)
+            UIManager.Instance.CloseSettings(() => GameManager.Instance?.RestartLevel());
+        else
             GameManager.Instance?.RestartLevel();
-        });
     }
 
     private void OnCloseClicked()
     {
+        if (_closing) return;
+        _closing = true;
         AudioManager.Instance?.PlayClick();
         HapticManager.Instance?.TriggerLight();
-        AnimateClose(() =>
-        {
-            UIManager.Instance?.CloseSettings();
-        });
-    }
-
-    private void AnimateOpen()
-    {
-        if (_canvasGroup != null)
-        {
-            _canvasGroup.DOKill();
-            _canvasGroup.alpha = 0f;
-            _canvasGroup.DOFade(1f, 0.25f).SetLink(gameObject);
-        }
-
-        if (_cardRect != null)
-        {
-            _cardRect.DOKill();
-            _cardRect.localScale = Vector3.one * 0.6f;
-            _cardRect.DOScale(Vector3.one, 0.35f).SetEase(Ease.OutBack).SetLink(gameObject);
-        }
-    }
-
-    public void AnimateClose(Action onComplete)
-    {
-        Sequence seq = DOTween.Sequence();
-        if (_cardRect != null)
-        {
-            seq.Join(_cardRect.DOScale(Vector3.zero, 0.2f).SetEase(Ease.InBack));
-        }
-        if (_canvasGroup != null)
-        {
-            seq.Join(_canvasGroup.DOFade(0f, 0.2f));
-        }
-        seq.SetLink(gameObject);
-        seq.OnComplete(() => onComplete?.Invoke());
+        UIManager.Instance?.CloseSettings();
     }
 }

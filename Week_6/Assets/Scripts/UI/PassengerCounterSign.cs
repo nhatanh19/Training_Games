@@ -18,11 +18,13 @@ public class PassengerCounterSign : MonoBehaviour
     private SpriteRenderer _background;
     private Camera _camera;
     private int _lastCount = -1;
+    private Vector3 _countTextScale;
 
     private void Awake()
     {
         _canvas = GetComponentInParent<Canvas>();
         if (_canvas != null) _canvasRect = _canvas.transform as RectTransform;
+        if (_countText != null) _countTextScale = _countText.transform.localScale;
     }
 
     private void OnEnable()
@@ -69,8 +71,8 @@ public class PassengerCounterSign : MonoBehaviour
         if (animate)
         {
             _countText.transform.DOKill();
-            _countText.transform.localScale = Vector3.one;
-            _countText.transform.DOPunchScale(Vector3.one * 0.25f, 0.2f, 2, 0.5f).SetLink(gameObject);
+            _countText.transform.localScale = _countTextScale;
+            _countText.transform.DOPunchScale(_countTextScale * 0.15f, 0.2f, 2, 0.5f).SetLink(gameObject);
         }
     }
 

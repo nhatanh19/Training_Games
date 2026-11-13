@@ -112,7 +112,7 @@ public class CoinFlyEffectManager : MonoBehaviour
         _availableCoins.Enqueue(coin);
     }
 
-    public void PlayFlyCoins(Vector3 startScreenPos, Vector3 targetScreenPos, int coinCount = 8, int totalReward = 100, Action onComplete = null)
+    public void PlayFlyCoins(Vector3 startScreenPos, Vector3 targetScreenPos, int coinCount = 8, Action onComplete = null)
     {
         if (!_isInitialized) InitializePool();
         if (coinCount <= 0)
@@ -121,15 +121,15 @@ public class CoinFlyEffectManager : MonoBehaviour
             return;
         }
 
-        int rewardPerCoin = Mathf.Max(1, totalReward / coinCount);
-        int remainingReward = totalReward - (rewardPerCoin * coinCount);
         int completedCoins = 0;
+        int scheduledCoins = 0;
 
         for (int i = 0; i < coinCount; i++)
         {
             int index = i;
             RectTransform coin = GetCoin();
             if (coin == null) continue;
+            scheduledCoins++;
 
             coin.gameObject.SetActive(true);
             coin.position = startScreenPos;
@@ -176,24 +176,19 @@ public class CoinFlyEffectManager : MonoBehaviour
                             .SetLink(hud.gameObject);
                     }
 
-                    int addAmount = rewardPerCoin;
-                    if (index == coinCount - 1)
-                    {
-                        addAmount += remainingReward;
-                    }
-                    hud.AddCoin(addAmount, animate: true);
                 }
 
                 float pitch = 0.95f + (index * 0.04f);
                 AudioManager.Instance?.PlayCoin(pitch);
 
                 completedCoins++;
-                if (completedCoins >= coinCount)
+                if (completedCoins >= scheduledCoins)
                 {
                     DOVirtual.DelayedCall(0.2f, () => onComplete?.Invoke())
                         .SetLink(gameObject);
                 }
             });
         }
+        if (scheduledCoins == 0) onComplete?.Invoke();
     }
 }

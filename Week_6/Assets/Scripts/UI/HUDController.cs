@@ -19,6 +19,7 @@ public class HUDController : MonoBehaviour
     private int _currentCoin = 0;
     private int _currentLevel = 1;
     private Vector3 _coinTargetScale;
+    private Vector3 _coinTextScale;
 
     public int CurrentCoin => _currentCoin;
     public Vector3 CoinTargetScale => _coinTargetScale;
@@ -40,6 +41,7 @@ public class HUDController : MonoBehaviour
     {
         BindButtons();
         _coinTargetScale = CoinTargetTransform.localScale;
+        if (_coinText != null) _coinTextScale = _coinText.transform.localScale;
         LoadCoinsFromPrefs();
     }
 
@@ -109,8 +111,8 @@ public class HUDController : MonoBehaviour
             if (animate)
             {
                 _coinText.transform.DOKill();
-                _coinText.transform.localScale = Vector3.one;
-                _coinText.transform.DOPunchScale(Vector3.one * 0.25f, 0.2f, 2, 0.5f)
+                _coinText.transform.localScale = _coinTextScale;
+                _coinText.transform.DOPunchScale(_coinTextScale * 0.15f, 0.2f, 2, 0.5f)
                     .SetLink(gameObject);
             }
         }

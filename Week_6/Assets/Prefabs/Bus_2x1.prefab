@@ -493,7 +493,6 @@ MonoBehaviour:
   seatPoints:
   - {fileID: 2133508249786308037}
   - {fileID: 8713072676597503528}
-  - {fileID: 1169993413067376392}
   moveSpeed: 12
   turnDuration: 0.15
   departDuration: 1

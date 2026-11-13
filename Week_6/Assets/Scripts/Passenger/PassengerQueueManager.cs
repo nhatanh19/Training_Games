@@ -12,6 +12,10 @@ public class PassengerQueueManager : MonoBehaviour
     [SerializeField] private Vector2 queueDirection = Vector2.right;
     [SerializeField] private float spacing = 0.80f;
 
+    [Header("Queue Motion")]
+    [SerializeField, Min(0f)] private float stepStagger = 0.025f;
+    [SerializeField, Min(0f)] private float maxStepDelay = 0.12f;
+
     [Header("Initial Passengers")]
     [SerializeField] private List<PassengerController> initialPassengers = new List<PassengerController>();
 
@@ -20,7 +24,7 @@ public class PassengerQueueManager : MonoBehaviour
     private PassengerController _boardingPassenger;
     private bool _initialized = false;
 
-    public int RemainingPassengersCount => _queue.Count;
+    public int RemainingPassengersCount => _queue.Count + (_boardingPassenger != null ? 1 : 0);
     public bool IsBoarding => _isBoarding;
     public PassengerController PeekNextPassenger() => _queue.Count > 0 ? _queue.Peek() : null;
     public event System.Action OnPassengerBoarded;
@@ -153,11 +157,13 @@ public class PassengerQueueManager : MonoBehaviour
 
     private IEnumerator BoardRoutine(PassengerController passenger, BusController bus)
     {
+        Transform seatPoint = bus.GetNextSeatTransform();
+        if (seatPoint == null) yield break;
+
         _isBoarding = true;
         _queue.Dequeue();
         _boardingPassenger = passenger;
 
-        Transform seatPoint = bus.GetNextSeatTransform();
         bool jumped = false;
 
         passenger.MoveToSeat(seatPoint, () =>
@@ -185,7 +191,8 @@ public class PassengerQueueManager : MonoBehaviour
         {
             if (passenger != null)
             {
-                passenger.StepForward(GetQueuePosition(index));
+                float delay = Mathf.Min(index * Mathf.Max(0f, stepStagger), Mathf.Max(0f, maxStepDelay));
+                passenger.StepForward(GetQueuePosition(index), delay);
                 index++;
             }
         }

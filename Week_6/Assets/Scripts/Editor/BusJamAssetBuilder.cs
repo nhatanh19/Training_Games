@@ -428,8 +428,6 @@ public static class BusJamAssetBuilder
         SetObjProp(scSo, "_musicToggle", musicToggle);
         SetObjProp(scSo, "_hapticToggle", hapticToggle);
         SetObjProp(scSo, "_closeButton", closeBtn);
-        SetObjProp(scSo, "_canvasGroup", cg);
-        SetObjProp(scSo, "_cardRect", cardGo.GetComponent<RectTransform>());
         scSo.ApplyModifiedProperties();
         EditorUtility.SetDirty(sc);
 
@@ -912,41 +910,6 @@ public static class BusJamAssetBuilder
         GameObject instance = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
         if (instance == null) return;
 
-        Transform frontGlass = instance.transform.Find("FrontGlass");
-        if (frontGlass != null)
-        {
-            Object.DestroyImmediate(frontGlass.gameObject);
-        }
-
-        for (int i = 0; i < 3; i++)
-        {
-            Transform seat = instance.transform.Find($"Seat_{i}");
-            if (seat != null)
-            {
-                SpriteRenderer seatSr = seat.GetComponent<SpriteRenderer>();
-                if (seatSr != null)
-                {
-                    Object.DestroyImmediate(seatSr);
-                }
-            }
-        }
-
-        Transform s0 = instance.transform.Find("Seat_0");
-        Transform s1 = instance.transform.Find("Seat_1");
-        Transform s2 = instance.transform.Find("Seat_2");
-        if (length == 3)
-        {
-            if (s0 != null) s0.localPosition = new Vector3(-0.75f, 0f, 0f);
-            if (s1 != null) s1.localPosition = new Vector3(-0.15f, 0f, 0f);
-            if (s2 != null) s2.localPosition = new Vector3(0.45f, 0f, 0f);
-        }
-        else
-        {
-            if (s0 != null) s0.localPosition = new Vector3(-0.50f, 0f, 0f);
-            if (s1 != null) s1.localPosition = new Vector3(-0.15f, 0f, 0f);
-            if (s2 != null) s2.localPosition = new Vector3(0.20f, 0f, 0f);
-        }
-
         SpriteRenderer rootSr = instance.GetComponent<SpriteRenderer>();
         if (rootSr == null) rootSr = instance.AddComponent<SpriteRenderer>();
         rootSr.sortingOrder = 10;
@@ -977,13 +940,6 @@ public static class BusJamAssetBuilder
         {
             arrowSr.sprite = arrowSprite;
             arrowSr.color = Color.white;
-        }
-
-        BoxCollider2D col = instance.GetComponent<BoxCollider2D>();
-        if (col != null)
-        {
-            col.size = new Vector2(length, 1f);
-            col.offset = Vector2.zero;
         }
 
         BusController bc = instance.GetComponent<BusController>();

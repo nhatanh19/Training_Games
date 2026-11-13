@@ -16,7 +16,7 @@ public class BusController : MonoBehaviour
     [SerializeField] private int length = 2;
     [SerializeField] private Vector2Int rootGridPosition;
 
-    [Header("Seats (Must be 3 points)")]
+    [Header("Seat Points (in boarding order)")]
     [SerializeField] private List<Transform> seatPoints = new List<Transform>();
 
     [Header("Movement Settings")]
@@ -24,6 +24,8 @@ public class BusController : MonoBehaviour
     [SerializeField] private float turnDuration = 0.15f;
     [SerializeField] private float departDuration = 1.0f;
     [SerializeField] private float departDelay = 0.4f;
+    [SerializeField, Min(0f)] private float parkingApproachOffset = 1.4f;
+    [SerializeField, Min(0f)] private float parkingSettleDuration = 0.12f;
 
     [Header("Blocked Feedback")]
     [SerializeField, Min(0f)] private float impactClearance = 0.04f;
@@ -67,16 +69,6 @@ public class BusController : MonoBehaviour
         _defaultScale = transform.localScale;
     }
 
-    private void ConfigureCollider()
-    {
-        BoxCollider2D col = GetComponent<BoxCollider2D>();
-        if (col != null)
-        {
-            col.size = new Vector2(length, 1f);
-            col.offset = Vector2.zero;
-        }
-    }
-
     private void OnValidate()
     {
         ApplyColor(allowCreateArrow: false);
@@ -85,7 +77,6 @@ public class BusController : MonoBehaviour
     private void Start()
     {
 
-        ConfigureCollider();
         ApplyColor(allowCreateArrow: true);
         AlignToGrid();
         RegisterToGrid();
@@ -97,7 +88,6 @@ public class BusController : MonoBehaviour
         direction = dir;
         length = len;
         rootGridPosition = rootPos;
-        ConfigureCollider();
         ApplyColor(allowCreateArrow: true);
         AlignToGrid();
         RegisterToGrid();
@@ -117,19 +107,6 @@ public class BusController : MonoBehaviour
         if (bodyRenderer != null)
         {
             bodyRenderer.sortingOrder = 10;
-        }
-
-        Transform fg = transform.Find("FrontGlass");
-        if (fg != null) fg.gameObject.SetActive(false);
-
-        for (int i = 0; i < seatPoints.Count; i++)
-        {
-            var seat = seatPoints[i];
-            if (seat != null)
-            {
-                SpriteRenderer sr = seat.GetComponent<SpriteRenderer>();
-                if (sr != null) sr.enabled = false;
-            }
         }
 
         float arrowX = length == 3 ? 0.95f : 0.55f;
@@ -153,29 +130,6 @@ public class BusController : MonoBehaviour
             else
             {
                 arrowRenderer = arrowTr.GetComponent<SpriteRenderer>();
-            }
-        }
-
-        if (seatPoints != null && seatPoints.Count > 0)
-        {
-            if (length == 3)
-            {
-                if (seatPoints.Count > 0 && seatPoints[0] != null) seatPoints[0].localPosition = new Vector3(-0.75f, 0f, 0f);
-                if (seatPoints.Count > 1 && seatPoints[1] != null) seatPoints[1].localPosition = new Vector3(-0.15f, 0f, 0f);
-                if (seatPoints.Count > 2 && seatPoints[2] != null)
-                {
-                    seatPoints[2].gameObject.SetActive(true);
-                    seatPoints[2].localPosition = new Vector3(0.45f, 0f, 0f);
-                }
-            }
-            else
-            {
-                if (seatPoints.Count > 0 && seatPoints[0] != null) seatPoints[0].localPosition = new Vector3(-0.35f, 0f, 0f);
-                if (seatPoints.Count > 1 && seatPoints[1] != null) seatPoints[1].localPosition = new Vector3(0.20f, 0f, 0f);
-                if (seatPoints.Count > 2 && seatPoints[2] != null)
-                {
-                    seatPoints[2].gameObject.SetActive(false);
-                }
             }
         }
 
@@ -363,11 +317,17 @@ public class BusController : MonoBehaviour
             AudioManager.Instance?.PlayHonk();
         });
         seq.Append(BuildDriveSequence(targetPos));
+        if (parkingSettleDuration > 0f)
+        {
+            Vector3 settlePunch = Vector3.Scale(_defaultScale, new Vector3(0.025f, -0.035f, 0f));
+            seq.Append(transform.DOPunchScale(settlePunch, parkingSettleDuration, 2, 0.5f));
+        }
         seq.OnComplete(() =>
         {
             _movementSequence = null;
             _isBusy = false;
             IsReadyForPassengers = true;
+            _assignedSlot?.NotifyBusArrived(this);
             HapticManager.Instance?.TriggerSuccess();
             BusStopManager.Instance.NotifyBusArrived(this);
         });
@@ -382,12 +342,25 @@ public class BusController : MonoBehaviour
         float rightX = grid != null ? grid.RightLaneX : 3.10f;
         float leftX = grid != null ? grid.LeftLaneX : -3.10f;
         float bottomY = grid != null ? grid.BottomLaneY : -4.30f;
-        float approachY = targetPos.y - 1.4f;
+        float approachY = targetPos.y - Mathf.Max(0f, parkingApproachOffset);
 
         float GetDuration(Vector3 from, Vector3 to)
         {
             float dist = Vector3.Distance(from, to);
-            return Mathf.Max(dist / moveSpeed, 0.05f);
+            return Mathf.Max(dist / Mathf.Max(0.01f, moveSpeed), 0.05f);
+        }
+
+        void AppendMove(Vector3 from, Vector3 to, Ease ease = Ease.Linear)
+        {
+            seq.Append(transform.DOMove(to, GetDuration(from, to)).SetEase(ease));
+        }
+
+        void AppendTurnMove(Vector3 from, Vector3 to, float angle, Ease ease = Ease.Linear)
+        {
+            float duration = GetDuration(from, to);
+            seq.Append(transform.DOMove(to, duration).SetEase(ease));
+            seq.Join(transform.DORotate(new Vector3(0f, 0f, angle),
+                Mathf.Min(duration, Mathf.Max(0.01f, turnDuration))).SetEase(Ease.InOutSine));
         }
 
         switch (direction)
@@ -401,14 +374,11 @@ public class BusController : MonoBehaviour
                 Vector3 p3 = new Vector3(rightX, approachY, 0f);
                 Vector3 p4 = new Vector3(targetPos.x, approachY, 0f);
 
-                seq.Append(transform.DOMove(p1, GetDuration(currentPos, p1)).SetEase(Ease.Linear));
-                seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
-                seq.Append(transform.DOMove(p2, GetDuration(p1, p2)).SetEase(Ease.Linear));
-                seq.Append(transform.DOMove(p3, GetDuration(p2, p3)).SetEase(Ease.Linear));
-                seq.Append(transform.DORotate(new Vector3(0, 0, 180f), turnDuration));
-                seq.Append(transform.DOMove(p4, GetDuration(p3, p4)).SetEase(Ease.Linear));
-                seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
-                seq.Append(transform.DOMove(targetPos, GetDuration(p4, targetPos)).SetEase(Ease.Linear));
+                AppendMove(currentPos, p1, Ease.InSine);
+                AppendTurnMove(p1, p2, 90f);
+                AppendMove(p2, p3);
+                AppendTurnMove(p3, p4, 180f);
+                AppendTurnMove(p4, targetPos, 90f, Ease.OutSine);
                 break;
             }
 
@@ -421,14 +391,11 @@ public class BusController : MonoBehaviour
                 Vector3 p3 = new Vector3(leftX, approachY, 0f);
                 Vector3 p4 = new Vector3(targetPos.x, approachY, 0f);
 
-                seq.Append(transform.DOMove(p1, GetDuration(currentPos, p1)).SetEase(Ease.Linear));
-                seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
-                seq.Append(transform.DOMove(p2, GetDuration(p1, p2)).SetEase(Ease.Linear));
-                seq.Append(transform.DOMove(p3, GetDuration(p2, p3)).SetEase(Ease.Linear));
-                seq.Append(transform.DORotate(Vector3.zero, turnDuration));
-                seq.Append(transform.DOMove(p4, GetDuration(p3, p4)).SetEase(Ease.Linear));
-                seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
-                seq.Append(transform.DOMove(targetPos, GetDuration(p4, targetPos)).SetEase(Ease.Linear));
+                AppendMove(currentPos, p1, Ease.InSine);
+                AppendTurnMove(p1, p2, 90f);
+                AppendMove(p2, p3);
+                AppendTurnMove(p3, p4, 0f);
+                AppendTurnMove(p4, targetPos, 90f, Ease.OutSine);
                 break;
             }
 
@@ -436,7 +403,7 @@ public class BusController : MonoBehaviour
             {
                 if (Mathf.Abs(currentPos.x - targetPos.x) < 0.05f)
                 {
-                    seq.Append(transform.DOMove(targetPos, GetDuration(currentPos, targetPos)).SetEase(Ease.Linear));
+                    AppendMove(currentPos, targetPos, Ease.InOutSine);
                 }
                 else
                 {
@@ -444,11 +411,9 @@ public class BusController : MonoBehaviour
                     Vector3 p2 = new Vector3(targetPos.x, approachY, 0f);
                     float angleToBay = targetPos.x >= currentPos.x ? 0f : 180f;
 
-                    seq.Append(transform.DOMove(p1, GetDuration(currentPos, p1)).SetEase(Ease.Linear));
-                    seq.Append(transform.DORotate(new Vector3(0, 0, angleToBay), turnDuration));
-                    seq.Append(transform.DOMove(p2, GetDuration(p1, p2)).SetEase(Ease.Linear));
-                    seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
-                    seq.Append(transform.DOMove(targetPos, GetDuration(p2, targetPos)).SetEase(Ease.Linear));
+                    AppendMove(currentPos, p1, Ease.InSine);
+                    AppendTurnMove(p1, p2, angleToBay);
+                    AppendTurnMove(p2, targetPos, 90f, Ease.OutSine);
                 }
                 break;
             }
@@ -464,15 +429,11 @@ public class BusController : MonoBehaviour
                 Vector3 p3 = new Vector3(sideX, approachY, 0f);
                 Vector3 p4 = new Vector3(targetPos.x, approachY, 0f);
 
-                seq.Append(transform.DOMove(p1, GetDuration(currentPos, p1)).SetEase(Ease.Linear));
-                seq.Append(transform.DORotate(new Vector3(0, 0, goRight ? 0f : 180f), turnDuration));
-                seq.Append(transform.DOMove(p2, GetDuration(p1, p2)).SetEase(Ease.Linear));
-                seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
-                seq.Append(transform.DOMove(p3, GetDuration(p2, p3)).SetEase(Ease.Linear));
-                seq.Append(transform.DORotate(new Vector3(0, 0, goRight ? 180f : 0f), turnDuration));
-                seq.Append(transform.DOMove(p4, GetDuration(p3, p4)).SetEase(Ease.Linear));
-                seq.Append(transform.DORotate(new Vector3(0, 0, 90f), turnDuration));
-                seq.Append(transform.DOMove(targetPos, GetDuration(p4, targetPos)).SetEase(Ease.Linear));
+                AppendMove(currentPos, p1, Ease.InSine);
+                AppendTurnMove(p1, p2, goRight ? 0f : 180f);
+                AppendTurnMove(p2, p3, 90f);
+                AppendTurnMove(p3, p4, goRight ? 180f : 0f);
+                AppendTurnMove(p4, targetPos, 90f, Ease.OutSine);
                 break;
             }
         }
@@ -483,11 +444,37 @@ public class BusController : MonoBehaviour
 
     public Transform GetNextSeatTransform()
     {
-        if (!HasEmptySeat || _passengersCount >= Capacity || _passengersCount >= seatPoints.Count) return null;
+        if (!HasEmptySeat) return null;
+        if (seatPoints == null || _passengersCount >= seatPoints.Count)
+        {
+            Debug.LogError($"[BusController] Not enough seat points on {name}; expected {Capacity}.", this);
+            return null;
+        }
         Transform seat = seatPoints[_passengersCount];
+        if (seat == null || !seat.gameObject.activeInHierarchy)
+        {
+            Debug.LogError($"[BusController] Seat {_passengersCount} is missing or inactive on {name}.", this);
+            return null;
+        }
         _passengersCount++;
         return seat;
     }
+
+#if UNITY_EDITOR
+    private void OnDrawGizmosSelected()
+    {
+        if (seatPoints == null) return;
+
+        for (int i = 0; i < seatPoints.Count && i < Capacity; i++)
+        {
+            Transform seat = seatPoints[i];
+            if (seat == null) continue;
+            Gizmos.color = seat.gameObject.activeInHierarchy ? UnityEngine.Color.cyan : UnityEngine.Color.red;
+            Gizmos.DrawWireSphere(seat.position, 0.12f);
+            UnityEditor.Handles.Label(seat.position + Vector3.up * 0.15f, $"Seat {i + 1}/{Capacity}");
+        }
+    }
+#endif
 
     public void OnPassengerSeated(PassengerController passenger)
     {
@@ -509,10 +496,11 @@ public class BusController : MonoBehaviour
 
         Sequence seq = DOTween.Sequence();
         _movementSequence = seq;
-        seq.Append(transform.DOPunchScale(new Vector3(-0.12f, 0.18f, 0f), departDelay, 4, 0.5f));
+        Vector3 departPunch = Vector3.Scale(_defaultScale, new Vector3(-0.04f, 0.06f, 0f));
+        seq.Append(transform.DOPunchScale(departPunch, Mathf.Max(0.01f, departDelay), 2, 0.5f));
         seq.AppendCallback(() =>
         {
-            CameraShakeManager.Instance?.ShakeHeavy();
+            CameraShakeManager.Instance?.ShakeLight();
             VFXManager.Instance?.PlayDust(transform.position, transform.rotation);
             AudioManager.Instance?.PlayEngine();
             HapticManager.Instance?.TriggerSuccess();

@@ -26,6 +26,7 @@ public class ContinuePopupController : MonoBehaviour
     private bool _closing;
     private BusStopSlot _targetSlot;
     private bool _isRevive;
+    private Vector3 _noticeScale;
 
     public void Configure(BusStopSlot targetSlot)
     {
@@ -49,15 +50,16 @@ public class ContinuePopupController : MonoBehaviour
         _noticeText.DOKill();
         _noticeText.gameObject.SetActive(true);
         _noticeText.alpha = 1f;
-        _noticeText.transform.localScale = Vector3.one;
         _noticeText.transform.DOKill();
-        _noticeText.transform.DOPunchScale(Vector3.one * 0.2f, 0.25f, 2, 0.5f).SetLink(_noticeText.gameObject);
+        _noticeText.transform.localScale = _noticeScale;
+        _noticeText.transform.DOPunchScale(_noticeScale * 0.15f, 0.25f, 2, 0.5f).SetLink(_noticeText.gameObject);
         _noticeText.DOFade(0f, 0.4f).SetDelay(1.4f).SetLink(_noticeText.gameObject)
             .OnComplete(() => _noticeText.gameObject.SetActive(false));
     }
 
     private void Awake()
     {
+        if (_noticeText != null) _noticeScale = _noticeText.transform.localScale;
         Bind();
     }
 
