@@ -153,6 +153,11 @@ public class LevelLoader : MonoBehaviour
 
     public void ClearCurrentLevel()
     {
+        if (PassengerQueueManager.Instance != null)
+        {
+            PassengerQueueManager.Instance.ClearQueue();
+        }
+
         if (BusStopManager.Instance != null)
         {
             BusStopManager.Instance.ClearAllSlots();
@@ -174,11 +179,6 @@ public class LevelLoader : MonoBehaviour
             {
                 GamePoolManager.Instance.ReleaseBus(bus);
             }
-        }
-
-        if (PassengerQueueManager.Instance != null)
-        {
-            PassengerQueueManager.Instance.ClearQueue();
         }
     }
 }

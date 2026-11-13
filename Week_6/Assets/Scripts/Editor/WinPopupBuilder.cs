@@ -60,7 +60,6 @@ public static class WinPopupBuilder
         Sprite headerSp = Load("ui_settings_header_banner.png");
         Sprite faceSp = Load("win_face_happy.png");
         Sprite greenBtnSp = Load("lose_btn_green.png");
-        Sprite yellowBtnSp = Load("ui_btn_yellow_replay.png");
         Sprite pillSp = Load("hud_coin_pill.png");
         Sprite coinSp = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Resources/Sprites/coin_icon.png");
 
@@ -102,7 +101,7 @@ public static class WinPopupBuilder
         Place(rewardText.gameObject, new Vector2(28f, 0f), new Vector2(110f, 60f));
 
         GameObject main = New("MainButton", card.transform, typeof(Image), typeof(Button));
-        Place(main, new Vector2(160f, -245f), new Vector2(290f, 116f));
+        Place(main, new Vector2(0f, -245f), new Vector2(290f, 116f));
         Image mi = main.GetComponent<Image>();
         mi.sprite = greenBtnSp; mi.preserveAspect = true;
         main.GetComponent<Button>().targetGraphic = mi;
@@ -111,16 +110,6 @@ public static class WinPopupBuilder
         nextText.enableWordWrapping = false;
         nextText.enableAutoSizing = true; nextText.fontSizeMin = 20; nextText.fontSizeMax = 36;
 
-        GameObject sub = New("SubButton", card.transform, typeof(Image), typeof(Button));
-        Place(sub, new Vector2(-160f, -245f), new Vector2(290f, 116f));
-        Image si = sub.GetComponent<Image>();
-        si.sprite = yellowBtnSp; si.preserveAspect = true;
-        sub.GetComponent<Button>().targetGraphic = si;
-        TextMeshProUGUI replayText = Text("Text", sub.transform, "CHƠI LẠI", font, 36, Color.white);
-        Place(replayText.gameObject, new Vector2(0f, 4f), new Vector2(250f, 75f));
-        replayText.enableWordWrapping = false;
-        replayText.enableAutoSizing = true; replayText.fontSizeMin = 20; replayText.fontSizeMax = 36;
-
         WinPopupLocalizer loc = popup.GetComponent<WinPopupLocalizer>();
         if (loc == null) loc = popup.AddComponent<WinPopupLocalizer>();
         SerializedObject so = new SerializedObject(loc);
@@ -128,7 +117,6 @@ public static class WinPopupBuilder
         so.FindProperty("_subtitleText").objectReferenceValue = subtitle;
         so.FindProperty("_rewardText").objectReferenceValue = rewardText;
         so.FindProperty("_nextButtonText").objectReferenceValue = nextText;
-        so.FindProperty("_replayButtonText").objectReferenceValue = replayText;
         so.ApplyModifiedProperties();
 
         UIManager uim = root.GetComponent<UIManager>();
@@ -138,7 +126,6 @@ public static class WinPopupBuilder
             SerializedObject us = new SerializedObject(uim);
             us.FindProperty("_winPopup").objectReferenceValue = popup;
             us.FindProperty("_nextLevelButton").objectReferenceValue = main.GetComponent<Button>();
-            us.FindProperty("_replayWinButton").objectReferenceValue = sub.GetComponent<Button>();
             us.ApplyModifiedProperties();
         }
     }

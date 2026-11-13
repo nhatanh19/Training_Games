@@ -200,6 +200,9 @@ public static class BusJamAssetBuilder
     public static GameObject BuildCoinPrefab()
     {
         EnsureFolderExists(UIDir);
+        string prefabPath = UIDir + "/CoinItem.prefab";
+        GameObject existingPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+        if (existingPrefab != null) return existingPrefab;
 
         GameObject coinObj = new GameObject("CoinItem", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         RectTransform rt = coinObj.GetComponent<RectTransform>();
@@ -228,7 +231,6 @@ public static class BusJamAssetBuilder
             img.color = new Color(1f, 0.84f, 0.1f, 1f);
         }
 
-        string prefabPath = UIDir + "/CoinItem.prefab";
         GameObject savedPrefab = PrefabUtility.SaveAsPrefabAsset(coinObj, prefabPath);
 
         Object.DestroyImmediate(coinObj);
@@ -331,18 +333,20 @@ public static class BusJamAssetBuilder
         UIManager uiMgr = canvasGo.GetComponent<UIManager>();
         if (uiMgr == null) uiMgr = canvasGo.AddComponent<UIManager>();
 
-        Button nextBtn, replayWinBtn;
+        Button nextBtn, unusedWinBtn;
         GameObject winPopup = CreatePopupWithTMP(canvasGo.transform, "WinPopup", font,
             "LEVEL COMPLETED!", "All passengers are on their way!",
             "NEXT LEVEL", out nextBtn,
-            "REPLAY", out replayWinBtn,
+            null, out unusedWinBtn,
             new Color(0.2f, 0.75f, 0.35f, 0.98f));
+        Transform oldWinReplay = winPopup.transform.Find("Card/SubButton");
+        if (oldWinReplay != null) oldWinReplay.gameObject.SetActive(false);
 
-        Button retryLoseBtn, unusedBtn;
+        Button retryLoseBtn, reviveLoseBtn;
         GameObject losePopup = CreatePopupWithTMP(canvasGo.transform, "LosePopup", font,
             "OUT OF MOVES!", "Bus stop is full! Try a different strategy.",
             "TRY AGAIN", out retryLoseBtn,
-            null, out unusedBtn,
+            "REVIVE", out reviveLoseBtn,
             new Color(0.85f, 0.25f, 0.25f, 0.98f));
 
         GameObject settingsPopup = CreateSettingsPopupWithTMP(canvasGo.transform, font);
@@ -353,7 +357,6 @@ public static class BusJamAssetBuilder
         SetObjProp(uiSo, "_losePopup", losePopup);
         SetObjProp(uiSo, "_settingsPopup", settingsPopup);
         SetObjProp(uiSo, "_nextLevelButton", nextBtn);
-        SetObjProp(uiSo, "_replayWinButton", replayWinBtn);
         SetObjProp(uiSo, "_retryLoseButton", retryLoseBtn);
         uiSo.ApplyModifiedProperties();
         EditorUtility.SetDirty(uiMgr);
@@ -570,7 +573,8 @@ public static class BusJamAssetBuilder
 
         if (!string.IsNullOrEmpty(subBtnText))
         {
-            subBtn = GetOrCreateButton(cardGo.transform, "SubButton", subBtnText, font,
+            string subButtonName = popupName == "LosePopup" ? "ReviveButton" : "SubButton";
+            subBtn = GetOrCreateButton(cardGo.transform, subButtonName, subBtnText, font,
                 new Vector2(0.5f, 0.5f), new Vector2(0f, -170f), new Vector2(400f, 85f),
                 new Color(1f, 1f, 1f, 0.85f), new Color(0.2f, 0.2f, 0.2f, 1f), 34);
         }
@@ -961,10 +965,9 @@ public static class BusJamAssetBuilder
             GameObject arrowGo = new GameObject("DirectionArrow");
             arrowTr = arrowGo.transform;
             arrowTr.SetParent(instance.transform, false);
+            arrowTr.localPosition = new Vector3(arrowX, 0f, 0f);
+            arrowTr.localScale = new Vector3(0.42f, 0.42f, 1f);
         }
-        arrowTr.localPosition = new Vector3(arrowX, 0f, 0f);
-        arrowTr.localRotation = Quaternion.identity;
-        arrowTr.localScale = new Vector3(0.42f, 0.42f, 1f);
 
         SpriteRenderer arrowSr = arrowTr.GetComponent<SpriteRenderer>();
         if (arrowSr == null) arrowSr = arrowTr.gameObject.AddComponent<SpriteRenderer>();
@@ -989,13 +992,6 @@ public static class BusJamAssetBuilder
             SerializedObject so = new SerializedObject(bc);
             SetObjProp(so, "bodyRenderer", rootSr);
             SetObjProp(so, "arrowRenderer", arrowSr);
-            SerializedProperty scaleProp = so.FindProperty("defaultScale");
-            Vector3 targetScale = new Vector3(0.95f, 0.95f, 1f);
-            if (scaleProp != null)
-            {
-                scaleProp.vector3Value = targetScale;
-            }
-            instance.transform.localScale = targetScale;
             so.ApplyModifiedProperties();
         }
 
@@ -1038,7 +1034,6 @@ public static class BusJamAssetBuilder
                     slotSr.sprite = slotSprite;
                     slotSr.color = Color.white;
                 }
-                slotGo.transform.localScale = new Vector3(1.0f, 0.95f, 1.0f);
             }
         }
         Debug.Log("[Bus Jam] SceneBackground and BusStopSlots configured in scene!");

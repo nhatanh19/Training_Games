@@ -76,7 +76,7 @@ public static class ContinuePopupBuilder
         Place(header, new Vector2(0f, 405f), new Vector2(600f, 131f));
         Image hi = header.GetComponent<Image>();
         hi.sprite = headerSp; hi.preserveAspect = true;
-        TextMeshProUGUI title = Text("TitleText", header.transform, "TIẾP TỤC", font, 46, FontStyles.Bold, Color.white);
+        TextMeshProUGUI title = Text("TitleText", header.transform, "MỞ KHÓA", font, 46, FontStyles.Bold, Color.white);
         Place(title.gameObject, new Vector2(0f, 4f), new Vector2(500f, 80f));
 
         GameObject close = New("CloseButton", card.transform, typeof(Image), typeof(Button));
@@ -90,11 +90,12 @@ public static class ContinuePopupBuilder
         Image pi = panel.GetComponent<Image>();
         pi.sprite = panelSp; pi.preserveAspect = true; pi.raycastTarget = false;
 
-        TextMeshProUGUI headline = Text("HeadlineText", card.transform, "HỒI SINH", font, 64, FontStyles.Bold,
+        TextMeshProUGUI headline = Text("HeadlineText", card.transform, "MỞ CHỖ ĐẬU", font, 64, FontStyles.Bold,
             new Color(0.82f, 0.12f, 0.12f, 1f));
         Place(headline.gameObject, new Vector2(0f, -55f), new Vector2(600f, 90f));
+        headline.enableAutoSizing = true; headline.fontSizeMin = 28; headline.fontSizeMax = 64;
 
-        TextMeshProUGUI desc = Text("DescriptionText", card.transform, "VÀ MỞ KHÓA MỘT CHỖ ĐẬU XE", font, 30,
+        TextMeshProUGUI desc = Text("DescriptionText", card.transform, "DÙNG XU HOẶC ADS GIẢ LẬP", font, 30,
             FontStyles.Bold, green);
         Place(desc.gameObject, new Vector2(0f, -120f), new Vector2(640f, 60f));
         desc.enableAutoSizing = true; desc.fontSizeMin = 18; desc.fontSizeMax = 30;
@@ -120,7 +121,7 @@ public static class ContinuePopupBuilder
         Place(vid, new Vector2(-115f, 4f), new Vector2(66f, 66f));
         Image vi = vid.GetComponent<Image>();
         vi.sprite = videoSp; vi.preserveAspect = true; vi.raycastTarget = false;
-        TextMeshProUGUI adText = Text("AdText", adBtn.transform, "SỬ DỤNG", font, 36, FontStyles.Bold, Color.white);
+        TextMeshProUGUI adText = Text("AdText", adBtn.transform, "ADS DEMO", font, 36, FontStyles.Bold, Color.white);
         Place(adText.gameObject, new Vector2(30f, 4f), new Vector2(210f, 70f));
         adText.enableWordWrapping = false;
         adText.enableAutoSizing = true; adText.fontSizeMin = 18; adText.fontSizeMax = 34;

@@ -139,7 +139,9 @@ public class GameManager : MonoBehaviour
 
         if (LevelLoader.Instance != null)
         {
-            LevelLoader.Instance.LoadLevelByIndex(levelIndex);
+            int levelCount = LevelLoader.Instance.LevelCount;
+            int dataIndex = levelCount > 0 ? levelIndex % levelCount : 0;
+            LevelLoader.Instance.LoadLevelByIndex(dataIndex);
         }
 
         CurrentState = GameState.Playing;
@@ -152,12 +154,19 @@ public class GameManager : MonoBehaviour
         StartLevel(CurrentLevelIndex);
     }
 
+    public void ResumeAfterRevive()
+    {
+        if (CurrentState != GameState.GameOver) return;
+
+        CurrentState = GameState.Playing;
+        OnGameStateChanged?.Invoke(CurrentState);
+        PassengerQueueManager.Instance?.TryBoardNextPassenger();
+        TriggerStatusCheck();
+    }
+
     public void NextLevel()
     {
-        int totalLevels = LevelLoader.Instance != null ? LevelLoader.Instance.LevelCount : 1;
-        if (totalLevels <= 0) totalLevels = 1;
-        int nextIndex = (CurrentLevelIndex + 1) % totalLevels;
-        StartLevel(nextIndex);
+        StartLevel(CurrentLevelIndex + 1);
     }
 
     private void OnBusArrived(BusController bus)
@@ -226,6 +235,7 @@ public class GameManager : MonoBehaviour
         if (head == null) return false;
 
         if (BusStopManager.Instance == null) return false;
+        if (BusStopManager.Instance.HasBusesInTransit) return false;
 
         List<BusController> activeBuses = BusStopManager.Instance.GetActiveBuses();
 

@@ -294,7 +294,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1126754399163762040
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1169,4 +1169,3 @@ MonoBehaviour:
   _coinTargetTransform: {fileID: 4317254922608310617}
   _restartButton: {fileID: 0}
   _settingsButton: {fileID: 3524294992343872314}
-  _addCoinButton: {fileID: 579161527143403500}

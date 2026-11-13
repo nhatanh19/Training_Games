@@ -17,6 +17,7 @@ public class PassengerQueueManager : MonoBehaviour
 
     private readonly Queue<PassengerController> _queue = new Queue<PassengerController>();
     private bool _isBoarding = false;
+    private PassengerController _boardingPassenger;
     private bool _initialized = false;
 
     public int RemainingPassengersCount => _queue.Count;
@@ -103,6 +104,14 @@ public class PassengerQueueManager : MonoBehaviour
 
     public void ClearQueue()
     {
+        StopAllCoroutines();
+        _isBoarding = false;
+        if (_boardingPassenger != null)
+        {
+            GamePoolManager.Instance.ReleasePassenger(_boardingPassenger);
+            _boardingPassenger = null;
+        }
+
         while (_queue.Count > 0)
         {
             PassengerController p = _queue.Dequeue();
@@ -146,12 +155,14 @@ public class PassengerQueueManager : MonoBehaviour
     {
         _isBoarding = true;
         _queue.Dequeue();
+        _boardingPassenger = passenger;
 
         Transform seatPoint = bus.GetNextSeatTransform();
         bool jumped = false;
 
         passenger.MoveToSeat(seatPoint, () =>
         {
+            _boardingPassenger = null;
             bus.OnPassengerSeated(passenger);
             jumped = true;
             OnPassengerBoarded?.Invoke();

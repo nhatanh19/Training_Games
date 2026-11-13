@@ -80,18 +80,28 @@ public static class LosePopupBuilder
         fi.sprite = faceSp; fi.preserveAspect = true; fi.raycastTarget = false;
 
         GameObject main = New("MainButton", card.transform, typeof(Image), typeof(Button));
-        Place(main, new Vector2(0f, -250f), new Vector2(330f, 132f));
+        Place(main, new Vector2(165f, -250f), new Vector2(300f, 120f));
         Image mi = main.GetComponent<Image>();
         mi.sprite = btnSp; mi.preserveAspect = true;
         main.GetComponent<Button>().targetGraphic = mi;
         TextMeshProUGUI btnText = Text("Text", main.transform, "THỬ LẠI", font, 42, Color.white);
         Place(btnText.gameObject, new Vector2(0f, 4f), new Vector2(290f, 80f));
 
+        GameObject revive = New("ReviveButton", card.transform, typeof(Image), typeof(Button));
+        Place(revive, new Vector2(-165f, -250f), new Vector2(300f, 120f));
+        Image ri = revive.GetComponent<Image>();
+        ri.sprite = Load("ui_btn_yellow_replay.png"); ri.preserveAspect = true;
+        revive.GetComponent<Button>().targetGraphic = ri;
+        TextMeshProUGUI reviveText = Text("Text", revive.transform, "HỒI SINH", font, 36, Color.white);
+        Place(reviveText.gameObject, new Vector2(0f, 4f), new Vector2(270f, 75f));
+        reviveText.enableAutoSizing = true; reviveText.fontSizeMin = 20; reviveText.fontSizeMax = 36;
+
         LosePopupLocalizer loc = popup.GetComponent<LosePopupLocalizer>();
         if (loc == null) loc = popup.AddComponent<LosePopupLocalizer>();
         SerializedObject so = new SerializedObject(loc);
         so.FindProperty("_titleText").objectReferenceValue = title;
         so.FindProperty("_buttonText").objectReferenceValue = btnText;
+        so.FindProperty("_reviveButtonText").objectReferenceValue = reviveText;
         so.ApplyModifiedProperties();
 
         UIManager uim = root.GetComponent<UIManager>();

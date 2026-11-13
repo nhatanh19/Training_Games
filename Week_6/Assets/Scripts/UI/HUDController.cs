@@ -13,14 +13,15 @@ public class HUDController : MonoBehaviour
     [Header("Buttons")]
     [SerializeField] private Button _restartButton;
     [SerializeField] private Button _settingsButton;
-    [SerializeField] private Button _addCoinButton;
 
     public const string COIN_PREF_KEY = "TotalCoins";
 
     private int _currentCoin = 0;
     private int _currentLevel = 1;
+    private Vector3 _coinTargetScale;
 
     public int CurrentCoin => _currentCoin;
+    public Vector3 CoinTargetScale => _coinTargetScale;
 
     public Transform CoinTargetTransform
     {
@@ -38,7 +39,7 @@ public class HUDController : MonoBehaviour
     private void Awake()
     {
         BindButtons();
-        EnsureCoinDisplay();
+        _coinTargetScale = CoinTargetTransform.localScale;
         LoadCoinsFromPrefs();
     }
 
@@ -78,74 +79,12 @@ public class HUDController : MonoBehaviour
         }
     }
 
-    private void EnsureCoinDisplay()
-    {
-        if (_coinTargetTransform != null)
-        {
-
-            if (_coinTargetTransform.name == "CoinContainer")
-            {
-                Image bgImg = _coinTargetTransform.GetComponent<Image>();
-                if (bgImg != null && bgImg.sprite == null)
-                {
-                    bgImg.sprite = null;
-                    bgImg.color = new Color(0f, 0f, 0f, 0.35f);
-                }
-            }
-
-            Transform iconTrans = _coinTargetTransform.Find("CoinIcon");
-            if (iconTrans == null)
-            {
-
-                Image[] images = _coinTargetTransform.GetComponentsInChildren<Image>(true);
-                foreach (Image img in images)
-                {
-                    if (img.gameObject != _coinTargetTransform.gameObject)
-                    {
-                        iconTrans = img.transform;
-                        break;
-                    }
-                }
-            }
-
-            if (iconTrans != null)
-            {
-                Image coinImg = iconTrans.GetComponent<Image>();
-                if (coinImg != null)
-                {
-                    Sprite coinSprite = Resources.Load<Sprite>("Sprites/coin_icon");
-                    if (coinSprite == null)
-                    {
-                        Texture2D tex = Resources.Load<Texture2D>("Sprites/coin_icon");
-                        if (tex != null)
-                        {
-                            coinSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
-                        }
-                    }
-
-                    if (coinSprite != null)
-                    {
-                        coinImg.sprite = coinSprite;
-                    }
-                    coinImg.color = Color.white;
-                    coinImg.preserveAspect = true;
-                }
-            }
-        }
-    }
-
     private void BindButtons()
     {
         if (_restartButton != null)
         {
             _restartButton.onClick.RemoveAllListeners();
             _restartButton.onClick.AddListener(OnRestartClicked);
-        }
-
-        if (_addCoinButton != null)
-        {
-            _addCoinButton.onClick.RemoveAllListeners();
-            _addCoinButton.onClick.AddListener(OnAddCoinClicked);
         }
 
         if (_settingsButton != null)
@@ -193,13 +132,6 @@ public class HUDController : MonoBehaviour
         AudioManager.Instance?.PlayClick();
         HapticManager.Instance?.TriggerLight();
         GameManager.Instance?.RestartLevel();
-    }
-
-    private void OnAddCoinClicked()
-    {
-        AudioManager.Instance?.PlayClick();
-        HapticManager.Instance?.TriggerLight();
-        UIManager.Instance?.OpenContinuePopup();
     }
 
     private void OnSettingsClicked()

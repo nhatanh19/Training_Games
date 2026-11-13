@@ -66,24 +66,6 @@ public class CoinFlyEffectManager : MonoBehaviour
         }
     }
 
-    private static Sprite _cachedCoinSprite;
-
-    private static Sprite GetCoinSprite()
-    {
-        if (_cachedCoinSprite != null) return _cachedCoinSprite;
-
-        _cachedCoinSprite = Resources.Load<Sprite>("Sprites/coin_icon");
-        if (_cachedCoinSprite == null)
-        {
-            Texture2D tex = Resources.Load<Texture2D>("Sprites/coin_icon");
-            if (tex != null)
-            {
-                _cachedCoinSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
-            }
-        }
-        return _cachedCoinSprite;
-    }
-
     private RectTransform CreateNewCoin()
     {
         if (_coinPrefab == null) return null;
@@ -96,13 +78,6 @@ public class CoinFlyEffectManager : MonoBehaviour
             img = obj.AddComponent<Image>();
         }
 
-        Sprite coinSprite = GetCoinSprite();
-        if (coinSprite != null)
-        {
-            img.sprite = coinSprite;
-        }
-        img.color = Color.white;
-        img.preserveAspect = true;
         img.raycastTarget = false;
 
         RectTransform rt = obj.GetComponent<RectTransform>();
@@ -110,7 +85,6 @@ public class CoinFlyEffectManager : MonoBehaviour
         {
             rt = obj.AddComponent<RectTransform>();
         }
-        rt.sizeDelta = new Vector2(56f, 56f);
         return rt;
     }
 
@@ -168,7 +142,7 @@ public class CoinFlyEffectManager : MonoBehaviour
             Sequence seq = DOTween.Sequence();
             seq.SetLink(coin.gameObject);
 
-            seq.Append(coin.DOScale(Vector3.one, _burstDuration * 0.6f).SetEase(Ease.OutBack));
+            seq.Append(coin.DOScale(_coinPrefab.transform.localScale, _burstDuration * 0.6f).SetEase(Ease.OutBack));
             seq.Join(coin.DOMove(burstTarget, _burstDuration).SetEase(Ease.OutQuad));
 
             float delay = index * _staggerDelay;
@@ -197,7 +171,7 @@ public class CoinFlyEffectManager : MonoBehaviour
                     if (targetTransform != null)
                     {
                         targetTransform.DOKill();
-                        targetTransform.localScale = Vector3.one;
+                        targetTransform.localScale = hud.CoinTargetScale;
                         targetTransform.DOPunchScale(Vector3.one * 0.28f, 0.16f, 2, 0.5f)
                             .SetLink(hud.gameObject);
                     }

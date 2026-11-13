@@ -811,7 +811,6 @@ MonoBehaviour:
   _subtitleText: {fileID: 3554873441619136008}
   _rewardText: {fileID: 7859091299724831197}
   _nextButtonText: {fileID: 2260104779673334093}
-  _replayButtonText: {fileID: 4979461597926537342}
 --- !u!1 &1737594612306976752
 GameObject:
   m_ObjectHideFlags: 0
@@ -1056,6 +1055,7 @@ RectTransform:
   - {fileID: 38654075255300277}
   - {fileID: 5639067770282686370}
   - {fileID: 2901673841730130399}
+  - {fileID: 8294981448950655898}
   m_Father: {fileID: 7532100919146829385}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -2446,7 +2446,7 @@ GameObject:
   - component: {fileID: 4413216596040150362}
   - component: {fileID: 283680885431692920}
   m_Layer: 0
-  m_Name: SubButton
+  m_Name: ReviveButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2465,12 +2465,12 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1621130578203709362}
-  m_Father: {fileID: 2917747301973694728}
+  m_Father: {fileID: 2632422393315219018}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -160, y: -245}
-  m_SizeDelta: {x: 290, y: 116}
+  m_AnchoredPosition: {x: -165, y: -250}
+  m_SizeDelta: {x: 300, y: 120}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7816432934167029790
 CanvasRenderer:
@@ -4323,6 +4323,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _titleText: {fileID: 3491509633699353194}
   _buttonText: {fileID: 6106892176137058686}
+  _reviveButtonText: {fileID: 4979461597926537342}
 --- !u!1 &6559798399629780490
 GameObject:
   m_ObjectHideFlags: 0
@@ -4434,7 +4435,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 160, y: -245}
+  m_AnchoredPosition: {x: 0, y: -245}
   m_SizeDelta: {x: 290, y: 116}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8786801535358623462
@@ -5709,7 +5710,6 @@ RectTransform:
   - {fileID: 3926059113338547931}
   - {fileID: 6296408729673244427}
   - {fileID: 5802367731845481913}
-  - {fileID: 8294981448950655898}
   m_Father: {fileID: 8652321306894227140}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -6046,8 +6046,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -250}
-  m_SizeDelta: {x: 330, y: 132}
+  m_AnchoredPosition: {x: 165, y: -250}
+  m_SizeDelta: {x: 300, y: 120}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2318793767279452778
 CanvasRenderer:

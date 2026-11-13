@@ -570,7 +570,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bodyRenderer: {fileID: 3299440598927093871}
   arrowRenderer: {fileID: 3200000000000000003}
-  defaultScale: {x: 0.85499996, y: 0.85499996, z: 1}
   busColor: 0
   direction: 0
   length: 3

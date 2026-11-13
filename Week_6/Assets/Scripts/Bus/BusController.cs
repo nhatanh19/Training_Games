@@ -7,7 +7,7 @@ public class BusController : MonoBehaviour
     [Header("Visual")]
     [SerializeField] private SpriteRenderer bodyRenderer;
     [SerializeField] private SpriteRenderer arrowRenderer;
-    [SerializeField] private Vector3 defaultScale;
+    private Vector3 _defaultScale;
 
     [Header("Bus Properties")]
     [SerializeField] private BusColor busColor;
@@ -29,6 +29,7 @@ public class BusController : MonoBehaviour
     private BusStopSlot _assignedSlot;
     private int _passengersCount = 0;
     private bool _isBusy = false;
+    private Sequence _movementSequence;
     private readonly List<PassengerController> _seatedPassengers = new List<PassengerController>();
 
     public BusColor Color => busColor;
@@ -56,18 +57,11 @@ public class BusController : MonoBehaviour
 
     private void Awake()
     {
-        UpdateScaleToGrid();
+        _defaultScale = transform.localScale;
     }
 
-    public void UpdateScaleToGrid()
+    private void ConfigureCollider()
     {
-        GridManager grid = Grid;
-        float cs = grid != null ? grid.CellSize : 0.95f;
-
-        float scaleFactor = cs * 0.90f;
-        defaultScale = new Vector3(scaleFactor, scaleFactor, 1f);
-        transform.localScale = defaultScale;
-
         BoxCollider2D col = GetComponent<BoxCollider2D>();
         if (col != null)
         {
@@ -76,21 +70,15 @@ public class BusController : MonoBehaviour
         }
     }
 
-    private void EnsureDefaultScale()
-    {
-        UpdateScaleToGrid();
-    }
-
     private void OnValidate()
     {
-        EnsureDefaultScale();
         ApplyColor(allowCreateArrow: false);
     }
 
     private void Start()
     {
 
-        UpdateScaleToGrid();
+        ConfigureCollider();
         ApplyColor(allowCreateArrow: true);
         AlignToGrid();
         RegisterToGrid();
@@ -102,7 +90,7 @@ public class BusController : MonoBehaviour
         direction = dir;
         length = len;
         rootGridPosition = rootPos;
-        UpdateScaleToGrid();
+        ConfigureCollider();
         ApplyColor(allowCreateArrow: true);
         AlignToGrid();
         RegisterToGrid();
@@ -149,6 +137,8 @@ public class BusController : MonoBehaviour
                     GameObject arrowGo = new GameObject("DirectionArrow");
                     arrowTr = arrowGo.transform;
                     arrowTr.SetParent(transform, false);
+                    arrowTr.localPosition = new Vector3(arrowX, 0f, 0f);
+                    arrowTr.localScale = new Vector3(0.42f, 0.42f, 1f);
                     arrowRenderer = arrowGo.AddComponent<SpriteRenderer>();
                     arrowRenderer.sortingOrder = 15;
                 }
@@ -157,18 +147,6 @@ public class BusController : MonoBehaviour
             {
                 arrowRenderer = arrowTr.GetComponent<SpriteRenderer>();
             }
-
-            if (arrowTr != null)
-            {
-                arrowTr.localPosition = new Vector3(arrowX, 0f, 0f);
-                arrowTr.localRotation = Quaternion.identity;
-                arrowTr.localScale = new Vector3(0.42f, 0.42f, 1f);
-            }
-        }
-        else
-        {
-            arrowRenderer.transform.localPosition = new Vector3(arrowX, 0f, 0f);
-            arrowRenderer.transform.localScale = new Vector3(0.42f, 0.42f, 1f);
         }
 
         if (seatPoints != null && seatPoints.Count > 0)
@@ -257,8 +235,6 @@ public class BusController : MonoBehaviour
     {
         GridManager grid = Grid;
         if (grid == null) return;
-
-        UpdateScaleToGrid();
 
         Vector2Int tailPos = rootGridPosition;
         Vector2Int headPos = GetHeadCell();
@@ -351,7 +327,6 @@ public class BusController : MonoBehaviour
     {
         _isBusy = true;
         IsReadyForPassengers = false;
-        GameInputManager.SetLock(true);
         _assignedSlot = BusStopManager.Instance.GetAvailableSlot();
         _assignedSlot.AssignBus(this);
 
@@ -364,6 +339,7 @@ public class BusController : MonoBehaviour
         Vector3 targetPos = _assignedSlot.SlotTransform.position;
 
         Sequence seq = DOTween.Sequence();
+        _movementSequence = seq;
         seq.Append(transform.DOPunchScale(new Vector3(0.12f, -0.08f, 0f), 0.12f, 3, 0.5f));
         seq.AppendCallback(() =>
         {
@@ -373,9 +349,9 @@ public class BusController : MonoBehaviour
         seq.Append(BuildDriveSequence(targetPos));
         seq.OnComplete(() =>
         {
+            _movementSequence = null;
             _isBusy = false;
             IsReadyForPassengers = true;
-            GameInputManager.SetLock(false);
             HapticManager.Instance?.TriggerSuccess();
             BusStopManager.Instance.NotifyBusArrived(this);
         });
@@ -516,6 +492,7 @@ public class BusController : MonoBehaviour
         IsReadyForPassengers = false;
 
         Sequence seq = DOTween.Sequence();
+        _movementSequence = seq;
         seq.Append(transform.DOPunchScale(new Vector3(-0.12f, 0.18f, 0f), departDelay, 4, 0.5f));
         seq.AppendCallback(() =>
         {
@@ -527,6 +504,7 @@ public class BusController : MonoBehaviour
         seq.Append(transform.DOMoveY(transform.position.y + 10f, departDuration).SetEase(Ease.InQuad));
         seq.OnComplete(() =>
         {
+            _movementSequence = null;
             if (_assignedSlot != null)
             {
                 _assignedSlot.ClearSlot();
@@ -575,6 +553,9 @@ public class BusController : MonoBehaviour
 
     public void ResetBus()
     {
+        _movementSequence?.Kill();
+        _movementSequence = null;
+        transform.DOKill();
         _isBusy = false;
         IsReadyForPassengers = false;
         _passengersCount = 0;
@@ -583,9 +564,7 @@ public class BusController : MonoBehaviour
             _assignedSlot.ClearSlot();
             _assignedSlot = null;
         }
-        transform.DOKill();
-        EnsureDefaultScale();
-        transform.localScale = defaultScale;
+        transform.localScale = _defaultScale;
         transform.rotation = Quaternion.identity;
 
         foreach (var p in _seatedPassengers)

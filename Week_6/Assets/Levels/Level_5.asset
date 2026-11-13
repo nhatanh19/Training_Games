@@ -42,7 +42,7 @@ MonoBehaviour:
     length: 2
     rootGridPosition: {x: 0, y: 0}
   - color: 3
-    direction: 1
+    direction: 0
     length: 2
-    rootGridPosition: {x: 5, y: 0}
+    rootGridPosition: {x: 4, y: 0}
   passengerColors: 01000000010000000100000002000000020000000000000000000000030000000300000003000000000000000000000002000000020000000300000003000000

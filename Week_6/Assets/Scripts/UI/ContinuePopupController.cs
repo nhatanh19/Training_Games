@@ -23,6 +23,15 @@ public class ContinuePopupController : MonoBehaviour
     [SerializeField] private int _baseCoinCost = 20;
 
     private bool _bound;
+    private bool _closing;
+    private BusStopSlot _targetSlot;
+    private bool _isRevive;
+
+    public void Configure(BusStopSlot targetSlot)
+    {
+        _targetSlot = targetSlot;
+        _isRevive = targetSlot == null;
+    }
 
     private int CurrentCost
     {
@@ -54,6 +63,7 @@ public class ContinuePopupController : MonoBehaviour
 
     private void OnEnable()
     {
+        _closing = false;
         Bind();
         SettingsController.LanguageChanged += OnLanguageChanged;
         Refresh();
@@ -81,17 +91,33 @@ public class ContinuePopupController : MonoBehaviour
     private void Refresh()
     {
         bool vi = SettingsController.IsVietnameseSaved;
-        if (_titleText != null) _titleText.text = vi ? "TIẾP TỤC" : "CONTINUE";
-        if (_headlineText != null) _headlineText.text = vi ? "HỒI SINH" : "REVIVE";
+        if (_titleText != null) _titleText.text = _isRevive
+            ? (vi ? "TIẾP TỤC" : "CONTINUE")
+            : (vi ? "MỞ KHÓA" : "UNLOCK");
+        if (_headlineText != null) _headlineText.text = _isRevive
+            ? (vi ? "HỒI SINH" : "REVIVE")
+            : (vi ? "MỞ CHỖ ĐẬU" : "UNLOCK SLOT");
         if (_descriptionText != null)
-            _descriptionText.text = vi ? "VÀ MỞ KHÓA MỘT CHỖ ĐẬU XE" : "AND UNLOCK ONE PARKING SLOT";
+            _descriptionText.text = _isRevive
+                ? (vi ? "VÀ MỞ KHÓA MỘT CHỖ ĐẬU XE" : "AND UNLOCK ONE PARKING SLOT")
+                : (vi ? "DÙNG XU HOẶC ADS GIẢ LẬP" : "USE COINS OR DEMO AD");
         if (_coinCostText != null) _coinCostText.text = CurrentCost.ToString();
         if (_noticeText != null) _noticeText.gameObject.SetActive(false);
-        if (_adText != null) _adText.text = vi ? "SỬ DỤNG" : "USE";
+        if (_adText != null) _adText.text = "ADS DEMO";
+    }
+
+    private bool UnlockSelectedSlot()
+    {
+        if (BusStopManager.Instance == null) return false;
+        return _isRevive
+            ? BusStopManager.Instance.UnlockOneSlot()
+            : BusStopManager.Instance.UnlockSlot(_targetSlot);
     }
 
     private void OnCloseClicked()
     {
+        if (_closing) return;
+        _closing = true;
         AudioManager.Instance?.PlayClick();
         HapticManager.Instance?.TriggerLight();
         UIManager.Instance?.CloseContinuePopup();
@@ -99,6 +125,7 @@ public class ContinuePopupController : MonoBehaviour
 
     private void OnCoinClicked()
     {
+        if (_closing) return;
         AudioManager.Instance?.PlayClick();
         HUDController hud = UIManager.Instance != null ? UIManager.Instance.HUD : null;
         if (hud == null) return;
@@ -115,21 +142,24 @@ public class ContinuePopupController : MonoBehaviour
             return;
         }
 
-        if (!BusStopManager.Instance.UnlockOneSlot()) return;
+        if (!UnlockSelectedSlot()) return;
 
+        _closing = true;
         hud.SetCoin(hud.CurrentCoin - cost, true, true);
         HapticManager.Instance?.TriggerSuccess();
-        UIManager.Instance?.CloseContinuePopup();
+        UIManager.Instance?.CloseContinuePopup(true);
     }
 
     private void OnAdClicked()
     {
+        if (_closing) return;
         AudioManager.Instance?.PlayClick();
 
-        if (BusStopManager.Instance != null && BusStopManager.Instance.UnlockOneSlot())
+        if (UnlockSelectedSlot())
         {
+            _closing = true;
             HapticManager.Instance?.TriggerSuccess();
-            UIManager.Instance?.CloseContinuePopup();
+            UIManager.Instance?.CloseContinuePopup(true);
         }
     }
 }

@@ -5,6 +5,7 @@ public class LosePopupLocalizer : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI _titleText;
     [SerializeField] private TextMeshProUGUI _buttonText;
+    [SerializeField] private TextMeshProUGUI _reviveButtonText;
 
     private void OnEnable()
     {
@@ -27,5 +28,6 @@ public class LosePopupLocalizer : MonoBehaviour
         bool vi = SettingsController.IsVietnameseSaved;
         if (_titleText != null) _titleText.text = vi ? "CẤP ĐỘ THẤT BẠI" : "LEVEL FAILED";
         if (_buttonText != null) _buttonText.text = vi ? "THỬ LẠI" : "TRY AGAIN";
+        if (_reviveButtonText != null) _reviveButtonText.text = vi ? "HỒI SINH" : "REVIVE";
     }
 }

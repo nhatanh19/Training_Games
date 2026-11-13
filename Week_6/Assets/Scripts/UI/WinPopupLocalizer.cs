@@ -7,7 +7,6 @@ public class WinPopupLocalizer : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _subtitleText;
     [SerializeField] private TextMeshProUGUI _rewardText;
     [SerializeField] private TextMeshProUGUI _nextButtonText;
-    [SerializeField] private TextMeshProUGUI _replayButtonText;
 
     private void OnEnable()
     {
@@ -32,7 +31,6 @@ public class WinPopupLocalizer : MonoBehaviour
         if (_subtitleText != null)
             _subtitleText.text = vi ? "TẤT CẢ HÀNH KHÁCH ĐÃ LÊN XE!" : "ALL PASSENGERS ARE ON THEIR WAY!";
         if (_nextButtonText != null) _nextButtonText.text = vi ? "TIẾP THEO" : "NEXT LEVEL";
-        if (_replayButtonText != null) _replayButtonText.text = vi ? "CHƠI LẠI" : "REPLAY";
 
         if (_rewardText != null)
         {

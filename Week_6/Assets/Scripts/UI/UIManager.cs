@@ -17,10 +17,10 @@ public class UIManager : MonoBehaviour
 
     [Header("Win / Lose Buttons")]
     [SerializeField] private Button _nextLevelButton;
-    [SerializeField] private Button _replayWinButton;
     [SerializeField] private Button _retryLoseButton;
 
     private bool _initialized;
+    private Button _reviveLoseButton;
 
     public HUDController HUD => _hudController;
 
@@ -65,7 +65,6 @@ public class UIManager : MonoBehaviour
         if (_winPopup != null)
         {
             _nextLevelButton = ResolveButton(_winPopup.transform, "Card/MainButton", _nextLevelButton);
-            _replayWinButton = ResolveButton(_winPopup.transform, "Card/SubButton", _replayWinButton);
         }
 
         if (_losePopup != null)
@@ -80,7 +79,7 @@ public class UIManager : MonoBehaviour
     {
         return _hudController != null &&
                _winPopup != null && _losePopup != null && _settingsPopup != null && _continuePopup != null &&
-               _nextLevelButton != null && _replayWinButton != null && _retryLoseButton != null;
+               _nextLevelButton != null && _retryLoseButton != null;
     }
 
     private static GameObject ResolvePopup(Transform root, string popupName, GameObject current)
@@ -143,16 +142,21 @@ public class UIManager : MonoBehaviour
             _nextLevelButton.onClick.AddListener(OnNextLevelClicked);
         }
 
-        if (_replayWinButton != null)
-        {
-            _replayWinButton.onClick.RemoveAllListeners();
-            _replayWinButton.onClick.AddListener(OnRestartClicked);
-        }
-
         if (_retryLoseButton != null)
         {
             _retryLoseButton.onClick.RemoveAllListeners();
             _retryLoseButton.onClick.AddListener(OnRestartClicked);
+        }
+
+        if (_losePopup != null)
+        {
+            Transform revive = _losePopup.transform.Find("Card/ReviveButton");
+            _reviveLoseButton = revive != null ? revive.GetComponent<Button>() : null;
+            if (_reviveLoseButton != null)
+            {
+                _reviveLoseButton.onClick.RemoveAllListeners();
+                _reviveLoseButton.onClick.AddListener(OnReviveClicked);
+            }
         }
     }
 
@@ -204,6 +208,10 @@ public class UIManager : MonoBehaviour
         if (_losePopup == null) ResolveReferences();
         HidePopup(_winPopup);
         HidePopup(_settingsPopup);
+        if (_reviveLoseButton != null)
+        {
+            _reviveLoseButton.interactable = BusStopManager.Instance != null && BusStopManager.Instance.HasLockedSlot;
+        }
         ShowPopupWithAnimation(_losePopup);
     }
 
@@ -215,25 +223,38 @@ public class UIManager : MonoBehaviour
         ShowPopupWithAnimation(_settingsPopup);
     }
 
-    public void OpenContinuePopup()
+    public void OpenContinuePopup(BusStopSlot targetSlot = null)
     {
         if (_continuePopup == null) ResolveReferences();
         if (_continuePopup == null) return;
+        ContinuePopupController controller = _continuePopup.GetComponent<ContinuePopupController>();
+        if (controller != null) controller.Configure(targetSlot);
         HidePopup(_winPopup);
-        HidePopup(_losePopup);
+        HidePopupImmediate(_losePopup);
         HidePopup(_settingsPopup);
         ShowPopupWithAnimation(_continuePopup);
     }
 
-    public void CloseContinuePopup()
+    public void CloseContinuePopup(bool unlockedSlot = false)
     {
         HidePopupWithAnimation(_continuePopup, () =>
         {
-            if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.Playing && !IsAnyPopupOpen())
+            if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.GameOver)
             {
-                GameInputManager.SetLock(false);
+                if (unlockedSlot) GameManager.Instance.ResumeAfterRevive();
+                else ShowLosePopup();
             }
         });
+    }
+
+    private void OnReviveClicked()
+    {
+        if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.GameOver ||
+            BusStopManager.Instance == null || !BusStopManager.Instance.HasLockedSlot) return;
+
+        AudioManager.Instance?.PlayClick();
+        HapticManager.Instance?.TriggerLight();
+        OpenContinuePopup();
     }
 
     public void CloseSettings()

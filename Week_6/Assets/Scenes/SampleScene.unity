@@ -1742,7 +1742,6 @@ MonoBehaviour:
   _settingsPopup: {fileID: 718384284}
   _continuePopup: {fileID: 1818269739}
   _nextLevelButton: {fileID: 232772057}
-  _replayWinButton: {fileID: 6802509}
   _retryLoseButton: {fileID: 1636726387}
 --- !u!4 &2025167019
 Transform:

@@ -19,6 +19,9 @@ public class BusStopManager : MonoBehaviour
     public int OccupiedSlotCount => slots.FindAll(slot => !slot.IsAvailable).Count;
     public int TotalSlotCount => slots.Count;
     public int UnlockedSlotCount => slots.FindAll(slot => slot != null && !slot.IsLocked).Count;
+    public bool HasLockedSlot => slots.Exists(slot => slot != null && slot.IsLocked);
+    public bool HasBusesInTransit => slots.Exists(slot =>
+        slot != null && slot.CurrentBus != null && !slot.CurrentBus.IsReadyForPassengers);
 
     public int ExtraUnlockCount { get; private set; }
 
@@ -33,7 +36,13 @@ public class BusStopManager : MonoBehaviour
             if (d < bestDist) { bestDist = d; best = slot; }
         }
         if (best == null) return false;
-        best.SetLocked(false);
+        return UnlockSlot(best);
+    }
+
+    public bool UnlockSlot(BusStopSlot slot)
+    {
+        if (slot == null || !slot.IsLocked || !slots.Contains(slot)) return false;
+        slot.SetLocked(false);
         ExtraUnlockCount++;
         return true;
     }
@@ -112,22 +121,13 @@ public class BusStopManager : MonoBehaviour
 
         for (int i = 0; i < xPositions.Length; i++)
         {
-            BusStopSlot slot = null;
-            if (i < slots.Count)
-            {
-                slot = slots[i];
-            }
-            else if (allowCreate)
+            if (i >= slots.Count && allowCreate)
             {
                 GameObject slotGo = new GameObject("Slot_" + i);
                 slotGo.transform.SetParent(transform, false);
-                slot = slotGo.AddComponent<BusStopSlot>();
-                slots.Add(slot);
-            }
-            if (slot != null)
-            {
-                slot.transform.position = new Vector3(xPositions[i], bayY, 0f);
-                slot.transform.localScale = new Vector3(slotScale.x, slotScale.y, 1f);
+                slotGo.transform.position = new Vector3(xPositions[i], bayY, 0f);
+                slotGo.transform.localScale = new Vector3(slotScale.x, slotScale.y, 1f);
+                slots.Add(slotGo.AddComponent<BusStopSlot>());
             }
         }
     }

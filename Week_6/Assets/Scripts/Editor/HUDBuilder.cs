@@ -67,7 +67,6 @@ public static class HUDBuilder
         if (oldSign != null) Object.DestroyImmediate(oldSign.gameObject);
 
         Sprite pillSprite = Load("hud_coin_pill.png");
-        Sprite plusSprite = Load("hud_btn_plus.png");
         Sprite pauseSprite = Load("hud_btn_pause.png");
         Sprite coinSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Resources/Sprites/coin_icon.png");
 
@@ -87,14 +86,6 @@ public static class HUDBuilder
         TextMeshProUGUI coinText = NewText("CoinText", coin.transform, "0", font, 44, FontStyles.Bold, Color.white);
         SetRect(coinText.gameObject, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-6f, 0f), new Vector2(170f, 70f));
         coinText.alignment = TextAlignmentOptions.Center;
-
-        GameObject plus = NewUI("PlusButton", coin.transform, typeof(Image), typeof(Button));
-        SetRect(plus, new Vector2(1f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-52f, 0f), new Vector2(72f, 72f));
-        Image plusImg = plus.GetComponent<Image>();
-        plusImg.sprite = plusSprite;
-        plusImg.preserveAspect = true;
-        Button plusBtn = plus.GetComponent<Button>();
-        plusBtn.targetGraphic = plusImg;
 
         TextMeshProUGUI level = NewText("LevelText", panel.transform, "Cấp độ 1", font, 52, FontStyles.Bold,
             new Color(0.10f, 0.14f, 0.30f, 1f));
@@ -136,7 +127,6 @@ public static class HUDBuilder
         hudSo.FindProperty("_coinTargetTransform").objectReferenceValue = coin.transform;
         hudSo.FindProperty("_restartButton").objectReferenceValue = null;
         hudSo.FindProperty("_settingsButton").objectReferenceValue = pause.GetComponent<Button>();
-        hudSo.FindProperty("_addCoinButton").objectReferenceValue = plusBtn;
         hudSo.ApplyModifiedProperties();
         EditorUtility.SetDirty(hud);
     }

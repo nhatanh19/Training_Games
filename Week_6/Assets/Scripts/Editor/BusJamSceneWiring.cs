@@ -59,7 +59,6 @@ public static class BusJamSceneWiring
         changed |= Assign(so, "_settingsPopup", settings);
         changed |= Assign(so, "_continuePopup", continuePopup);
         changed |= Assign(so, "_nextLevelButton", ButtonIn(win, "Card/MainButton"));
-        changed |= Assign(so, "_replayWinButton", ButtonIn(win, "Card/SubButton"));
         changed |= Assign(so, "_retryLoseButton", ButtonIn(lose, "Card/MainButton"));
 
         if (changed)
@@ -77,7 +76,6 @@ public static class BusJamSceneWiring
             ReportMissing("SettingsPopup", settings);
             ReportMissing("ContinuePopup", continuePopup);
             ReportMissing("WinPopup/Card/MainButton", ButtonIn(win, "Card/MainButton"));
-            ReportMissing("WinPopup/Card/SubButton", ButtonIn(win, "Card/SubButton"));
             ReportMissing("LosePopup/Card/MainButton", ButtonIn(lose, "Card/MainButton"));
 
             Debug.Log(changed
@@ -234,7 +232,7 @@ public static class BusJamSceneWiring
         failures += Report("Canvas PopupCanvas tồn tại trong scene", CanvasCheck("PopupCanvas"));
         failures += Report("Canvas VFXCanvas tồn tại trong scene", CanvasCheck("VFXCanvas"));
         failures += Report("LevelLoader.levels có level và không có phần tử null", LevelsCheck());
-        failures += Report("UIManager có đủ 8 reference", UIManagerCheck());
+        failures += Report("UIManager có đủ 7 reference", UIManagerCheck());
         failures += Report("VFXCanvas có CoinFlyEffectManager với _coinPrefab + _poolContainer", CoinFlyCheck());
         failures += Report("HUDCanvas/HUDPanel anchor nằm trong [0,1]", HudAnchorCheck());
         failures += Report("Không còn Assets/Resources/Prefabs trùng lặp", DuplicatePrefabCheck());
@@ -281,7 +279,7 @@ public static class BusJamSceneWiring
         string[] fields =
         {
             "_hudController", "_winPopup", "_losePopup", "_settingsPopup", "_continuePopup",
-            "_nextLevelButton", "_replayWinButton", "_retryLoseButton"
+            "_nextLevelButton", "_retryLoseButton"
         };
 
         for (int i = 0; i < fields.Length; i++)

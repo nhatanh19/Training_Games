@@ -37,7 +37,7 @@ public class BusStopSlot : MonoBehaviour
         if (!IsLocked) return;
         AudioManager.Instance?.PlayClick();
         HapticManager.Instance?.TriggerLight();
-        UIManager.Instance?.OpenContinuePopup();
+        UIManager.Instance?.OpenContinuePopup(this);
     }
 
     private void EnsureClickCollider()
