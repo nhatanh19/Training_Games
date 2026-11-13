@@ -18,9 +18,9 @@ MonoBehaviour:
   cols: 6
   buses:
   - color: 1
-    direction: 0
+    direction: 2
     length: 2
-    rootGridPosition: {x: 1, y: 3}
+    rootGridPosition: {x: 2, y: 3}
   - color: 0
     direction: 2
     length: 2

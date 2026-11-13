@@ -21,7 +21,13 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip _popClip;
     [SerializeField] private AudioClip _bgmClip;
 
+    [Header("Repeated SFX")]
+    [SerializeField, Min(0f)] private float _footstepMinInterval = 0.08f;
+    [SerializeField, Min(0f)] private float _coinMinInterval = 0.08f;
+
     private bool _initialized;
+    private float _lastFootstepTime = float.NegativeInfinity;
+    private float _lastCoinTime = float.NegativeInfinity;
 
     private void Awake()
     {
@@ -156,6 +162,7 @@ public class AudioManager : MonoBehaviour
     public void PlayFootstep()
     {
         if (_footstepClip == null) EnsureClips();
+        if (!AllowRepeatedSound(_footstepClip, ref _lastFootstepTime, _footstepMinInterval)) return;
         PlaySound(_footstepClip, 0.85f, 1.15f, 0.7f);
     }
 
@@ -180,7 +187,16 @@ public class AudioManager : MonoBehaviour
     public void PlayCoin(float pitch = 1.0f)
     {
         if (_coinClip == null) EnsureClips();
+        if (!AllowRepeatedSound(_coinClip, ref _lastCoinTime, _coinMinInterval)) return;
         PlaySound(_coinClip, pitch, pitch, 0.9f);
+    }
+
+    private bool AllowRepeatedSound(AudioClip clip, ref float lastTime, float interval)
+    {
+        if (clip == null || (SettingsManager.Instance != null && !SettingsManager.Instance.IsSoundOn)) return false;
+        if (Time.unscaledTime - lastTime < Mathf.Max(0f, interval)) return false;
+        lastTime = Time.unscaledTime;
+        return true;
     }
 
     public void PlayPop()

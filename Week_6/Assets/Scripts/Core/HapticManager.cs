@@ -8,8 +8,11 @@ public class HapticManager : MonoBehaviour
 #pragma warning disable 0414
     [SerializeField] private bool _enableEditorLogs = false;
 #pragma warning restore 0414
+    [SerializeField, Min(0f)] private float _minimumInterval = 0.08f;
 
     private bool _isInitialized;
+    private float _lastHapticTime = float.NegativeInfinity;
+    private int _lastHapticPriority;
 
 #if UNITY_ANDROID && !UNITY_EDITOR
     private AndroidJavaObject _vibrator;
@@ -66,18 +69,24 @@ public class HapticManager : MonoBehaviour
 #endif
     }
 
-    private bool CanVibrate()
+    private bool CanVibrate(int priority)
     {
         if (SettingsManager.Instance != null && !SettingsManager.Instance.IsHapticOn)
         {
             return false;
         }
+        float now = Time.unscaledTime;
+        if (now - _lastHapticTime < Mathf.Max(0f, _minimumInterval) && priority <= _lastHapticPriority)
+            return false;
+
+        _lastHapticTime = now;
+        _lastHapticPriority = priority;
         return true;
     }
 
     public void TriggerLight()
     {
-        if (!CanVibrate()) return;
+        if (!CanVibrate(0)) return;
 
 #if UNITY_EDITOR
         if (_enableEditorLogs) Debug.Log("[Haptic] TriggerLight (Light pulse)");
@@ -90,7 +99,7 @@ public class HapticManager : MonoBehaviour
 
     public void TriggerImpact()
     {
-        if (!CanVibrate()) return;
+        if (!CanVibrate(1)) return;
 
 #if UNITY_EDITOR
         if (_enableEditorLogs) Debug.Log("[Haptic] TriggerImpact (Medium impact)");
@@ -103,7 +112,7 @@ public class HapticManager : MonoBehaviour
 
     public void TriggerSuccess()
     {
-        if (!CanVibrate()) return;
+        if (!CanVibrate(2)) return;
 
 #if UNITY_EDITOR
         if (_enableEditorLogs) Debug.Log("[Haptic] TriggerSuccess (Decisive success)");
@@ -116,7 +125,7 @@ public class HapticManager : MonoBehaviour
 
     public void TriggerWarning()
     {
-        if (!CanVibrate()) return;
+        if (!CanVibrate(3)) return;
 
 #if UNITY_EDITOR
         if (_enableEditorLogs) Debug.Log("[Haptic] TriggerWarning (Decisive warning/error)");

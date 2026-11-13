@@ -914,7 +914,11 @@ public static class BusJamAssetBuilder
         if (rootSr == null) rootSr = instance.AddComponent<SpriteRenderer>();
         rootSr.sortingOrder = 10;
         string vType = length == 3 ? "bus" : "car";
-        Sprite defaultSprite = AssetDatabase.LoadAssetAtPath<Sprite>($"Assets/Art/Sprites/Generated/Vehicles/{vType}_seat/{vType}_seat_blue_right.png");
+        Sprite defaultSprite = length == 3
+            ? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Resources/Vehicles/bus_compact/bus_compact_blue_right.png")
+            : null;
+        if (defaultSprite == null)
+            defaultSprite = AssetDatabase.LoadAssetAtPath<Sprite>($"Assets/Art/Sprites/Generated/Vehicles/{vType}_seat/{vType}_seat_blue_right.png");
         if (defaultSprite != null)
         {
             rootSr.sprite = defaultSprite;

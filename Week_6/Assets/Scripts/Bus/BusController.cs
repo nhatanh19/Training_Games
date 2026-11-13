@@ -143,7 +143,11 @@ public class BusController : MonoBehaviour
             _ => "blue"
         };
 
-        Sprite vSprite = Resources.Load<Sprite>($"Vehicles/{vehicleType}_seat/{vehicleType}_seat_{colorName}_right");
+        Sprite vSprite = length == 3
+            ? Resources.Load<Sprite>($"Vehicles/bus_compact/bus_compact_{colorName}_right")
+            : null;
+        if (vSprite == null)
+            vSprite = Resources.Load<Sprite>($"Vehicles/{vehicleType}_seat/{vehicleType}_seat_{colorName}_right");
         if (vSprite != null && bodyRenderer != null)
         {
             bodyRenderer.sprite = vSprite;
@@ -328,7 +332,7 @@ public class BusController : MonoBehaviour
             _isBusy = false;
             IsReadyForPassengers = true;
             _assignedSlot?.NotifyBusArrived(this);
-            HapticManager.Instance?.TriggerSuccess();
+            HapticManager.Instance?.TriggerLight();
             BusStopManager.Instance.NotifyBusArrived(this);
         });
     }

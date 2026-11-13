@@ -153,6 +153,9 @@ public class LevelLoader : MonoBehaviour
 
     public void ClearCurrentLevel()
     {
+        VFXManager.Instance?.ClearLevelEffects();
+        CameraShakeManager.Instance?.ResetShake();
+
         if (PassengerQueueManager.Instance != null)
         {
             PassengerQueueManager.Instance.ClearQueue();

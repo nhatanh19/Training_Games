@@ -64,6 +64,14 @@ public class CameraShakeManager : MonoBehaviour
         Shake(duration, strength, 16);
     }
 
+    public void ResetShake()
+    {
+        if (_shakeTween == null) return;
+        _shakeTween.Kill();
+        _shakeTween = null;
+        if (targetCamera != null) targetCamera.transform.position = _originalPosition;
+    }
+
     public void Shake(float duration, float strength, int vibrato)
     {
         if (targetCamera == null)
@@ -80,6 +88,7 @@ public class CameraShakeManager : MonoBehaviour
             .OnComplete(() =>
             {
                 targetCamera.transform.position = _originalPosition;
+                _shakeTween = null;
             });
     }
 }

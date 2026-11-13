@@ -100,3 +100,7 @@ MonoBehaviour:
   color: 0
   visualRenderer: {fileID: 8234227235708480044}
   defaultScale: {x: 0.85, y: 0.85, z: 1}
+  boardingJumpHeight: 0.45
+  boardingDuration: 0.35
+  queueMoveDuration: 0.2
+  landingDuration: 0.12

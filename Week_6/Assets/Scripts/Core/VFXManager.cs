@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -22,9 +23,17 @@ public class VFXManager : MonoBehaviour
     [SerializeField] private ParticleSystem hitSparkPrefab;
     [SerializeField] private ParticleSystem confettiPrefab;
 
+    [Header("Manual Burst When Emission Is Disabled")]
+    [SerializeField] private bool emitWhenEmissionDisabled = true;
+    [SerializeField, Min(0)] private int dustBurstCount = 12;
+    [SerializeField, Min(0)] private int hitBurstCount = 16;
+    [SerializeField, Min(0)] private int confettiBurstCount = 50;
+
     private ObjectPool<ParticleSystem> _dustPool;
     private ObjectPool<ParticleSystem> _hitSparkPool;
     private ObjectPool<ParticleSystem> _confettiPool;
+    private readonly Dictionary<ParticleSystem, ObjectPool<ParticleSystem>> _activeEffects =
+        new Dictionary<ParticleSystem, ObjectPool<ParticleSystem>>();
 
     private ParticleSystem _runtimeDust;
     private ParticleSystem _runtimeHit;
@@ -134,8 +143,7 @@ public class VFXManager : MonoBehaviour
                 ps.transform.position = spawnPos;
                 ps.transform.rotation = rotation;
                 EnsureSorting(ps, 100);
-                ps.Play();
-                StartCoroutine(ReleaseRoutine(ps, _dustPool, ps.main.duration + ps.main.startLifetime.constantMax));
+                PlayPooledEffect(ps, _dustPool, dustBurstCount);
                 return;
             }
             catch
@@ -147,7 +155,7 @@ public class VFXManager : MonoBehaviour
         if (_runtimeDust == null) _runtimeDust = CreateProceduralDust();
         _runtimeDust.transform.position = spawnPos;
         _runtimeDust.transform.rotation = rotation;
-        _runtimeDust.Emit(12);
+        _runtimeDust.Emit(Mathf.Max(0, dustBurstCount));
     }
 
     public void PlayHitSpark(Vector3 position)
@@ -162,8 +170,7 @@ public class VFXManager : MonoBehaviour
                 ps.transform.position = spawnPos;
                 ps.transform.rotation = Quaternion.identity;
                 EnsureSorting(ps, 100);
-                ps.Play();
-                StartCoroutine(ReleaseRoutine(ps, _hitSparkPool, ps.main.duration + ps.main.startLifetime.constantMax));
+                PlayPooledEffect(ps, _hitSparkPool, hitBurstCount);
                 return;
             }
             catch
@@ -174,7 +181,7 @@ public class VFXManager : MonoBehaviour
 
         if (_runtimeHit == null) _runtimeHit = CreateProceduralHitSpark();
         _runtimeHit.transform.position = spawnPos;
-        _runtimeHit.Emit(16);
+        _runtimeHit.Emit(Mathf.Max(0, hitBurstCount));
     }
 
     public void PlayConfetti(Vector3? position = null)
@@ -189,8 +196,7 @@ public class VFXManager : MonoBehaviour
                 ps.transform.position = spawnPos;
                 ps.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
                 EnsureSorting(ps, 100);
-                ps.Play();
-                StartCoroutine(ReleaseRoutine(ps, _confettiPool, ps.main.duration + ps.main.startLifetime.constantMax));
+                PlayPooledEffect(ps, _confettiPool, confettiBurstCount);
                 return;
             }
             catch
@@ -201,7 +207,7 @@ public class VFXManager : MonoBehaviour
 
         if (_runtimeConfetti == null) _runtimeConfetti = CreateProceduralConfetti();
         _runtimeConfetti.transform.position = spawnPos;
-        _runtimeConfetti.Emit(50);
+        _runtimeConfetti.Emit(Mathf.Max(0, confettiBurstCount));
     }
 
     private void EnsureSorting(ParticleSystem ps, int order)
@@ -211,11 +217,37 @@ public class VFXManager : MonoBehaviour
         if (r != null) r.sortingOrder = order;
     }
 
+    private void PlayPooledEffect(ParticleSystem ps, ObjectPool<ParticleSystem> pool, int burstCount)
+    {
+        ps.Play();
+        if (emitWhenEmissionDisabled && !ps.emission.enabled)
+            ps.Emit(Mathf.Max(0, burstCount));
+        _activeEffects[ps] = pool;
+        StartCoroutine(ReleaseRoutine(ps, pool, ps.main.duration + ps.main.startLifetime.constantMax));
+    }
+
+    public void ClearLevelEffects()
+    {
+        StopAllCoroutines();
+        foreach (var effect in _activeEffects)
+        {
+            if (effect.Key == null) continue;
+            effect.Key.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            effect.Value.Release(effect.Key);
+        }
+        _activeEffects.Clear();
+
+        if (_runtimeDust != null) _runtimeDust.Clear(true);
+        if (_runtimeHit != null) _runtimeHit.Clear(true);
+        if (_runtimeConfetti != null) _runtimeConfetti.Clear(true);
+    }
+
     private IEnumerator ReleaseRoutine(ParticleSystem ps, ObjectPool<ParticleSystem> pool, float delay)
     {
         yield return new WaitForSeconds(delay);
-        if (ps != null && ps.gameObject.activeSelf)
+        if (ps != null && _activeEffects.Remove(ps))
         {
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             pool.Release(ps);
         }
     }

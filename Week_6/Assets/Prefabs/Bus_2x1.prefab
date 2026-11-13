@@ -497,6 +497,11 @@ MonoBehaviour:
   turnDuration: 0.15
   departDuration: 1
   departDelay: 0.4
+  parkingApproachOffset: 1.4
+  parkingSettleDuration: 0.12
+  impactClearance: 0.04
+  impactApproachSpeed: 8
+  impactReturnDuration: 0.2
 --- !u!1 &9051335313611964670
 GameObject:
   m_ObjectHideFlags: 0
