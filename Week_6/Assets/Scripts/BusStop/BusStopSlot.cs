@@ -1,3 +1,4 @@
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 
@@ -7,6 +8,8 @@ public class BusStopSlot : MonoBehaviour
 
     private TextMeshPro _lockLabel;
     private BoxCollider2D _clickCollider;
+    private Tween _fullFeedbackTween;
+    private Color _fullFeedbackColor;
 
     public Transform SlotTransform => transform;
     public BusController CurrentBus { get; private set; }
@@ -16,6 +19,7 @@ public class BusStopSlot : MonoBehaviour
 
     public void SetLocked(bool locked)
     {
+        StopFullFeedback();
         IsLocked = locked;
         EnsureSlotVisual();
         if (slotRenderer != null)
@@ -65,7 +69,30 @@ public class BusStopSlot : MonoBehaviour
 
     private void OnDisable()
     {
+        StopFullFeedback();
         SettingsController.LanguageChanged -= OnLanguageChanged;
+    }
+
+    public void PlayFullFeedback()
+    {
+        if (IsLocked || CurrentBus == null || slotRenderer == null) return;
+
+        StopFullFeedback();
+        _fullFeedbackColor = slotRenderer.color;
+        Sequence seq = DOTween.Sequence();
+        _fullFeedbackTween = seq;
+        seq.Append(slotRenderer.DOColor(new Color(1f, 0.45f, 0.35f, _fullFeedbackColor.a), 0.12f));
+        seq.Append(slotRenderer.DOColor(_fullFeedbackColor, 0.22f));
+        seq.SetLink(gameObject);
+        seq.OnComplete(() => _fullFeedbackTween = null);
+    }
+
+    private void StopFullFeedback()
+    {
+        if (_fullFeedbackTween == null) return;
+        _fullFeedbackTween.Kill();
+        _fullFeedbackTween = null;
+        if (slotRenderer != null) slotRenderer.color = _fullFeedbackColor;
     }
 
     private void OnLanguageChanged(string language)
@@ -145,6 +172,7 @@ public class BusStopSlot : MonoBehaviour
 
     public void ClearSlot()
     {
+        StopFullFeedback();
         CurrentBus = null;
     }
 }

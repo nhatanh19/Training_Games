@@ -137,6 +137,14 @@ public class BusStopManager : MonoBehaviour
         return slots.Find(slot => slot != null && slot.IsAvailable);
     }
 
+    public void ShowFullFeedback()
+    {
+        foreach (BusStopSlot slot in slots)
+        {
+            if (slot != null) slot.PlayFullFeedback();
+        }
+    }
+
     public List<BusController> GetActiveBuses()
     {
         List<BusController> activeBuses = new List<BusController>();

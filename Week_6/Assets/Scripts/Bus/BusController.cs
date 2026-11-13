@@ -25,11 +25,18 @@ public class BusController : MonoBehaviour
     [SerializeField] private float departDuration = 1.0f;
     [SerializeField] private float departDelay = 0.4f;
 
+    [Header("Blocked Feedback")]
+    [SerializeField, Min(0f)] private float impactClearance = 0.04f;
+    [SerializeField, Min(0.01f)] private float impactApproachSpeed = 8f;
+    [SerializeField, Min(0.01f)] private float impactReturnDuration = 0.20f;
+
     private GridManager _gridManager;
     private BusStopSlot _assignedSlot;
     private int _passengersCount = 0;
     private bool _isBusy = false;
     private Sequence _movementSequence;
+    private BusController _impactBlocker;
+    private bool _reservedForImpact;
     private readonly List<PassengerController> _seatedPassengers = new List<PassengerController>();
 
     public BusColor Color => busColor;
@@ -269,20 +276,27 @@ public class BusController : MonoBehaviour
     {
         GridManager grid = Grid;
         if (grid == null) return false;
+        return FindPathBlocker() == null;
+    }
 
+    private BusController FindPathBlocker()
+    {
+        GridManager grid = Grid;
+        if (grid == null) return null;
         Vector2Int step = direction.ToVector2Int();
         Vector2Int checkPos = GetHeadCell() + step;
 
         while (grid.IsInsideGrid(checkPos))
         {
-            if (grid.IsCellOccupied(checkPos))
+            BusController blocker = grid.GetPathBlocker(checkPos);
+            if (blocker != null)
             {
-                return false;
+                return blocker;
             }
             checkPos += step;
         }
 
-        return true;
+        return null;
     }
 
     private void OnMouseDown()
@@ -297,7 +311,7 @@ public class BusController : MonoBehaviour
 
     public void OnClicked()
     {
-        if (_isBusy || _assignedSlot != null) return;
+        if (_isBusy || _assignedSlot != null || _reservedForImpact) return;
         if (GameInputManager.IsLocked) return;
         if (GameManager.Instance != null && GameManager.Instance.CurrentState != GameState.Playing) return;
         if (UIManager.Instance != null && UIManager.Instance.IsAnyPopupOpen()) return;
@@ -305,16 +319,18 @@ public class BusController : MonoBehaviour
         AudioManager.Instance?.PlayClick();
         HapticManager.Instance?.TriggerLight();
 
-        if (!CanExit())
+        BusController blocker = FindPathBlocker();
+        if (blocker != null)
         {
-            PlayBlockedFeedback();
+            PlayBlockedFeedback(blocker);
             return;
         }
 
+        if (Grid == null) return;
         if (BusStopManager.Instance == null || !BusStopManager.Instance.HasAvailableSlot)
         {
-            PlayBlockedFeedback();
-            Debug.LogWarning("Bến đón đã đầy hoặc chưa có BusStopManager!");
+            HapticManager.Instance?.TriggerWarning();
+            BusStopManager.Instance?.ShowFullFeedback();
             return;
         }
 
@@ -532,23 +548,68 @@ public class BusController : MonoBehaviour
         });
     }
 
-    private void PlayBlockedFeedback()
+    private void PlayBlockedFeedback(BusController blocker)
     {
+        if (blocker == null || blocker._isBusy || blocker._reservedForImpact ||
+            blocker._assignedSlot != null || Grid == null) return;
+
+        Collider2D ownCollider = GetComponent<Collider2D>();
+        Collider2D blockerCollider = blocker.GetComponent<Collider2D>();
+        if (ownCollider == null || blockerCollider == null ||
+            !ownCollider.enabled || !blockerCollider.enabled) return;
+        if (!Grid.ReserveImpactPath(this, blocker)) return;
+
+        blocker._reservedForImpact = true;
+        _impactBlocker = blocker;
         _isBusy = true;
-        CameraShakeManager.Instance?.ShakeLight();
-        AudioManager.Instance?.PlayCrash();
-        HapticManager.Instance?.TriggerWarning();
-
         Vector2Int step = direction.ToVector2Int();
-        Vector3 hitPoint = transform.position + new Vector3(step.x, step.y, 0f) * (length * 0.5f);
-        VFXManager.Instance?.PlayHitSpark(hitPoint);
+        Vector3 moveDirection = new Vector3(step.x, step.y, 0f);
+        Bounds ownBounds = ownCollider.bounds;
+        Bounds blockerBounds = blockerCollider.bounds;
+        float ownExtent = Mathf.Abs(step.x) * ownBounds.extents.x + Mathf.Abs(step.y) * ownBounds.extents.y;
+        float blockerExtent = Mathf.Abs(step.x) * blockerBounds.extents.x + Mathf.Abs(step.y) * blockerBounds.extents.y;
+        float gap = Vector3.Dot(blockerBounds.center - ownBounds.center, moveDirection) - ownExtent - blockerExtent;
+        float distance = Mathf.Max(0f, gap - Mathf.Max(0f, impactClearance));
+        Vector3 startPosition = transform.position;
+        Vector3 impactPosition = startPosition + moveDirection * distance;
+        Vector3 hitPoint = ownBounds.center + moveDirection * (ownExtent + distance);
 
-        Vector3 punchVector = new Vector3(step.x, step.y, 0f) * 0.2f;
-
-        transform.DOPunchPosition(punchVector, 0.25f, 8, 0.5f).OnComplete(() =>
+        Sequence seq = DOTween.Sequence();
+        _movementSequence = seq;
+        if (distance > 0.001f)
         {
-            _isBusy = false;
+            seq.Append(transform.DOMove(impactPosition, distance / Mathf.Max(0.01f, impactApproachSpeed))
+                .SetEase(Ease.OutQuad));
+        }
+        seq.AppendCallback(() =>
+        {
+            VFXManager.Instance?.PlayHitSpark(hitPoint);
+            AudioManager.Instance?.PlayCrash();
+            HapticManager.Instance?.TriggerWarning();
         });
+        if (distance > 0.001f)
+        {
+            seq.Append(transform.DOMove(startPosition, Mathf.Max(0.01f, impactReturnDuration)).SetEase(Ease.OutQuad));
+        }
+        else
+        {
+            seq.Append(transform.DOPunchScale(new Vector3(-0.04f, 0.04f, 0f), 0.15f, 2, 0.5f));
+        }
+        seq.OnComplete(() =>
+        {
+            _movementSequence = null;
+            _isBusy = false;
+            ReleaseImpactReservation();
+            if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.Playing)
+                GameManager.Instance.TriggerStatusCheck();
+        });
+    }
+
+    private void ReleaseImpactReservation()
+    {
+        if (_impactBlocker != null) _impactBlocker._reservedForImpact = false;
+        _impactBlocker = null;
+        if (_gridManager != null) _gridManager.ReleaseImpactPath(this);
     }
 
     public void ResetBus()
@@ -556,6 +617,8 @@ public class BusController : MonoBehaviour
         _movementSequence?.Kill();
         _movementSequence = null;
         transform.DOKill();
+        ReleaseImpactReservation();
+        _reservedForImpact = false;
         _isBusy = false;
         IsReadyForPassengers = false;
         _passengersCount = 0;

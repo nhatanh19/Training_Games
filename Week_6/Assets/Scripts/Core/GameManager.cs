@@ -236,6 +236,7 @@ public class GameManager : MonoBehaviour
 
         if (BusStopManager.Instance == null) return false;
         if (BusStopManager.Instance.HasBusesInTransit) return false;
+        if (GridManager.Instance != null && GridManager.Instance.HasImpactReservations) return false;
 
         List<BusController> activeBuses = BusStopManager.Instance.GetActiveBuses();
 

@@ -13,6 +13,7 @@ public class GridManager : MonoBehaviour
 
     private GridCell[,] _grid;
     private Vector3 _originPosition;
+    private readonly Dictionary<Vector2Int, BusController> _impactReservations = new Dictionary<Vector2Int, BusController>();
 
     public int Rows => rows;
     public int Cols => cols;
@@ -21,6 +22,7 @@ public class GridManager : MonoBehaviour
     public float LeftLaneX => transform.position.x - (cols * cellSize * 0.5f) - roadOffset;
     public float BottomLaneY => transform.position.y - (rows * cellSize * 0.5f) - roadOffset;
     public float TopLaneY => transform.position.y + (rows * cellSize * 0.5f) + roadOffset;
+    public bool HasImpactReservations => _impactReservations.Count > 0;
 
     public static GridManager Instance { get; private set; }
 
@@ -64,6 +66,7 @@ public class GridManager : MonoBehaviour
 
     public void InitializeGrid()
     {
+        _impactReservations.Clear();
         _grid = new GridCell[cols, rows];
         _originPosition = transform.position - new Vector3((cols - 1) * cellSize * 0.5f, (rows - 1) * cellSize * 0.5f, 0f);
 
@@ -96,6 +99,46 @@ public class GridManager : MonoBehaviour
     {
         GridCell cell = GetCell(gridPos);
         return cell != null && cell.IsOccupied;
+    }
+
+    public BusController GetPathBlocker(Vector2Int gridPos)
+    {
+        GridCell cell = GetCell(gridPos);
+        if (cell != null && cell.IsOccupied) return cell.CurrentBus;
+        return _impactReservations.TryGetValue(gridPos, out BusController owner) ? owner : null;
+    }
+
+    public bool ReserveImpactPath(BusController source, BusController blocker)
+    {
+        if (source == null || blocker == null) return false;
+
+        Vector2Int step = source.MoveDirection.ToVector2Int();
+        if (step == Vector2Int.zero) return false;
+        Vector2Int pos = source.GetHeadCell() + step;
+        var emptyCells = new List<Vector2Int>();
+        while (IsInsideGrid(pos))
+        {
+            BusController occupant = GetPathBlocker(pos);
+            if (occupant != null)
+            {
+                if (occupant != blocker || GetCell(pos).CurrentBus != blocker) return false;
+                foreach (Vector2Int cell in emptyCells) _impactReservations[cell] = source;
+                return true;
+            }
+            emptyCells.Add(pos);
+            pos += step;
+        }
+        return false;
+    }
+
+    public void ReleaseImpactPath(BusController source)
+    {
+        var cells = new List<Vector2Int>();
+        foreach (var reservation in _impactReservations)
+        {
+            if (reservation.Value == source) cells.Add(reservation.Key);
+        }
+        foreach (Vector2Int cell in cells) _impactReservations.Remove(cell);
     }
 
     public void RegisterBus(BusController bus, List<Vector2Int> occupiedCells)
