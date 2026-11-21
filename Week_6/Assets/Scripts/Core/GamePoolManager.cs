@@ -12,13 +12,12 @@ public class GamePoolManager : MonoBehaviour
             if (_instance == null)
             {
                 _instance = FindObjectOfType<GamePoolManager>();
-
             }
             return _instance;
         }
     }
 
-    [Header("Prefabs")]
+    [Header("Prefabs (Assigned in Editor)")]
     [SerializeField] private BusController bus2x1Prefab;
     [SerializeField] private BusController bus3x1Prefab;
     [SerializeField] private PassengerController passengerPrefab;
@@ -47,30 +46,15 @@ public class GamePoolManager : MonoBehaviour
         InitPools();
     }
 
-    public void SetPrefabs(BusController b2, BusController b3, PassengerController p)
-    {
-        bus2x1Prefab = b2;
-        bus3x1Prefab = b3;
-        passengerPrefab = p;
-        _bus2x1Pool = null;
-        _bus3x1Pool = null;
-        _passengerPool = null;
-        InitPools();
-    }
-
     public void InitPools()
     {
         if (_bus2x1Pool != null && _passengerPool != null) return;
 
-        if (bus2x1Prefab == null)
+        if (bus2x1Prefab == null && LevelLoader.Instance != null)
         {
-            LevelLoader loader = LevelLoader.Instance != null ? LevelLoader.Instance : FindObjectOfType<LevelLoader>();
-            if (loader != null)
-            {
-                bus2x1Prefab = loader.Bus2x1Prefab;
-                bus3x1Prefab = loader.Bus3x1Prefab;
-                passengerPrefab = loader.PassengerPrefab;
-            }
+            bus2x1Prefab = LevelLoader.Instance.Bus2x1Prefab;
+            bus3x1Prefab = LevelLoader.Instance.Bus3x1Prefab;
+            passengerPrefab = LevelLoader.Instance.PassengerPrefab;
         }
 
         if (bus2x1Prefab != null && _bus2x1Pool == null)
@@ -91,7 +75,7 @@ public class GamePoolManager : MonoBehaviour
             );
         }
 
-        if (bus3x1Prefab != null)
+        if (bus3x1Prefab != null && _bus3x1Pool == null)
         {
             _bus3x1Pool = new ObjectPool<BusController>(
                 createFunc: () => Instantiate(bus3x1Prefab, transform),
@@ -104,12 +88,12 @@ public class GamePoolManager : MonoBehaviour
                 },
                 actionOnDestroy: bus => Destroy(bus.gameObject),
                 collectionCheck: false,
-                defaultCapacity: 5,
+                defaultCapacity: 6,
                 maxSize: 30
             );
         }
 
-        if (passengerPrefab != null)
+        if (passengerPrefab != null && _passengerPool == null)
         {
             _passengerPool = new ObjectPool<PassengerController>(
                 createFunc: () => Instantiate(passengerPrefab, transform),
@@ -122,8 +106,8 @@ public class GamePoolManager : MonoBehaviour
                 },
                 actionOnDestroy: passenger => Destroy(passenger.gameObject),
                 collectionCheck: false,
-                defaultCapacity: 15,
-                maxSize: 60
+                defaultCapacity: 20,
+                maxSize: 80
             );
         }
     }
@@ -132,13 +116,8 @@ public class GamePoolManager : MonoBehaviour
     {
         if (_bus2x1Pool == null || _bus3x1Pool == null) InitPools();
 
-        ObjectPool<BusController> pool = (length == 3) ? _bus3x1Pool : _bus2x1Pool;
-        if (pool == null)
-        {
-            InitPools();
-            pool = (length == 3) ? _bus3x1Pool : _bus2x1Pool;
-            if (pool == null) return null;
-        }
+        ObjectPool<BusController> pool = (length >= 3) ? _bus3x1Pool : _bus2x1Pool;
+        if (pool == null) return null;
 
         BusController bus = pool.Get();
         if (parent != null)
@@ -153,7 +132,7 @@ public class GamePoolManager : MonoBehaviour
         if (bus == null) return;
         if (_bus2x1Pool == null) InitPools();
 
-        if (bus.Length == 3 && _bus3x1Pool != null)
+        if (bus.Length >= 3 && _bus3x1Pool != null)
         {
             _bus3x1Pool.Release(bus);
         }
@@ -172,7 +151,7 @@ public class GamePoolManager : MonoBehaviour
         if (parent != null)
         {
             p.transform.SetParent(parent, false);
-        p.ResetPassenger();
+            p.ResetPassenger();
         }
         return p;
     }

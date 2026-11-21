@@ -1,0 +1,240 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b03987d3ab4e7a4ab3792b652d02afd, type: 3}
+  m_Name: LocalizationTable
+  m_EditorClassIdentifier: 
+  entries:
+  - key: loading_status
+    vi: "\u0110ANG T\u1EA2I..."
+    en: LOADING...
+  - key: loading_tag
+    vi: BUS JAM!
+    en: BUS JAM!
+  - key: tab_shop
+    vi: "C\u1EECA H\xC0NG"
+    en: SHOP
+  - key: tab_home
+    vi: "TRANG CH\u1EE6"
+    en: HOME
+  - key: tab_collection
+    vi: "B\u1ED8 S\u01AFU T\u1EACP"
+    en: COLLECTION
+  - key: home_level_number
+    vi: "C\u1EA4P \u0110\u1ED8 {0}"
+    en: LEVEL {0}
+  - key: home_play_btn
+    vi: "CH\u01A0I NGAY"
+    en: PLAY
+  - key: home_reward_label
+    vi: "PH\u1EA6N TH\u01AF\u1EDENG"
+    en: REWARD
+  - key: home_next_unlock
+    vi: "M\u1EDF kh\xF3a {0} \u1EDF C\u1EA5p {1}"
+    en: Unlocks {0} at Lv.{1}
+  - key: home_all_unlocked
+    vi: "\u0110\xE3 m\u1EDF kh\xF3a to\xE0n b\u1ED9 xe!"
+    en: All vehicles unlocked!
+  - key: difficulty_normal
+    vi: "TH\u01AF\u1EDCNG"
+    en: NORMAL
+  - key: difficulty_hard
+    vi: "KH\xD3"
+    en: HARD
+  - key: difficulty_superhard
+    vi: "SI\xCAU KH\xD3"
+    en: SUPER HARD
+  - key: intro_hard
+    vi: "M\xC0N CH\u01A0I KH\xD3!"
+    en: HARD LEVEL!
+  - key: intro_superhard
+    vi: "M\xC0N SI\xCAU KH\xD3!"
+    en: SUPER HARD LEVEL!
+  - key: hud_level
+    vi: "C\u1EA5p {0}"
+    en: Lv.{0}
+  - key: hud_left
+    vi: "C\xD2N L\u1EA0I"
+    en: LEFT
+  - key: shop_title
+    vi: "C\u1EECA H\xC0NG"
+    en: SHOP
+  - key: shop_bundles_header
+    vi: "G\xD3I \u01AFU \u0110\xC3I"
+    en: SPECIAL BUNDLES
+  - key: shop_coins_header
+    vi: "G\xD3I XU"
+    en: COIN PACKS
+  - key: shop_boosters_header
+    vi: "V\u1EACT PH\u1EA8M H\u1ED6 TR\u1EE2"
+    en: BOOSTERS
+  - key: shop_bundle_starter
+    vi: "G\xD3I KH\u1EDEI \u0110\u1EA6U"
+    en: STARTER BUNDLE
+  - key: shop_bundle_starter_desc
+    vi: "250 Xu + \u0110\u1EE7 3 Booster"
+    en: 250 Coins + Full Boosters
+  - key: shop_bundle_pro
+    vi: "G\xD3I CAO TH\u1EE6"
+    en: PRO BUNDLE
+  - key: shop_bundle_pro_desc
+    vi: 600 Xu + 5 Booster VIP
+    en: 600 Coins + 5 Boosters
+  - key: shop_coin_small
+    vi: "T\xDAI XU NH\u1ECE"
+    en: COIN POUCH
+  - key: shop_coin_medium
+    vi: "R\u01AF\u01A0NG XU V\u1EEAA"
+    en: COIN STACK
+  - key: shop_coin_mega
+    vi: "KHO B\xC1U XU"
+    en: MEGA COINS
+  - key: shop_free_ad
+    vi: ADS DEMO
+    en: FREE AD
+  - key: shop_purchase_success
+    vi: "\u0110\xC3 NH\u1EACN QU\xC0!"
+    en: PURCHASED!
+  - key: collection_title
+    vi: "B\u1ED8 S\u01AFU T\u1EACP XE"
+    en: VEHICLE COLLECTION
+  - key: collection_coming_soon
+    vi: "S\u1EAEP RA M\u1EAET..."
+    en: COMING SOON...
+  - key: collection_unlocked
+    vi: "\u0110\xC3 M\u1EDE"
+    en: UNLOCKED
+  - key: collection_claimed
+    vi: "\u0110\xC3 NH\u1EACN"
+    en: CLAIMED
+  - key: collection_claim_btn
+    vi: "NH\u1EACN"
+    en: CLAIM
+  - key: collection_unlock_level
+    vi: "M\u1EDF \u1EDF C\u1EA5p {0}"
+    en: Unlock Lv.{0}
+  - key: veh_red
+    vi: "Xe \u0110\u1ECF"
+    en: Red Car
+  - key: veh_blue
+    vi: "Xe Xanh D\u01B0\u01A1ng"
+    en: Blue Car
+  - key: veh_green
+    vi: "Xe Xanh L\xE1"
+    en: Green Car
+  - key: veh_yellow
+    vi: "Xe V\xE0ng"
+    en: Yellow Car
+  - key: veh_purple
+    vi: "Xe T\xEDm"
+    en: Purple Car
+  - key: veh_pink
+    vi: "Xe H\u1ED3ng"
+    en: Pink Car
+  - key: veh_cyan
+    vi: "Xe Ng\u1ECDc"
+    en: Cyan Car
+  - key: veh_mystery
+    vi: "Xe B\xED \u1EA8n"
+    en: Mystery
+  - key: booster_sort
+    vi: "X\u1EBEP H\xC0NG"
+    en: SORT
+  - key: booster_shuffle
+    vi: "\u0110\u1EA2O M\xC0U"
+    en: SHUFFLE
+  - key: booster_vip
+    vi: XE VIP
+    en: VIP
+  - key: booster_unlock_lv
+    vi: "C\u1EA5p {0}"
+    en: Lv.{0}
+  - key: booster_vip_prompt
+    vi: "CH\u1EA0M XE \u0110\u1EC2 \u0110\u01AFA L\xCAN B\u1EBEN NGAY"
+    en: TAP ANY VEHICLE TO SEND VIP
+  - key: booster_cancel
+    vi: "H\u1EE6Y"
+    en: CANCEL
+  - key: booster_locked_msg
+    vi: "CH\u01AFA M\u1EDE KH\xD3A BOOSTER"
+    en: BOOSTER LOCKED
+  - key: booster_bay_full
+    vi: "B\u1EBEN \u0110\u1ED6 \u0110\xC3 \u0110\u1EA6Y!"
+    en: PARKING BAYS FULL!
+  - key: booster_already_sorted
+    vi: "H\xC0NG \u0110\xC3 \u0110\u01AF\u1EE2C X\u1EBEP \u0110\xDANG!"
+    en: QUEUE ALREADY SORTED!
+  - key: booster_no_target
+    vi: "KH\xD4NG C\xD3 M\u1EE4C TI\xCAU PH\xD9 H\u1EE2P"
+    en: NO VALID TARGET
+  - key: settings_title
+    vi: "C\xC0I \u0110\u1EB6T"
+    en: SETTINGS
+  - key: settings_language_label
+    vi: "NG\xD4N NG\u1EEE"
+    en: LANGUAGE
+  - key: settings_lang_value
+    vi: "Ti\u1EBFng Vi\u1EC7t"
+    en: English
+  - key: settings_replay
+    vi: "CH\u01A0I L\u1EA0I"
+    en: REPLAY
+  - key: settings_quit
+    vi: "V\u1EC0 TRANG CH\u1EE6"
+    en: QUIT LEVEL
+  - key: settings_restore
+    vi: "KH\xD4I PH\u1EE4C"
+    en: RESTORE
+  - key: win_subtitle
+    vi: "T\u1EA4T C\u1EA2 H\xC0NH KH\xC1CH \u0110\xC3 L\xCAN XE!"
+    en: ALL PASSENGERS BOARDED!
+  - key: win_claim_mult
+    vi: "NH\u1EACN +{0}"
+    en: CLAIM +{0}
+  - key: win_next
+    vi: "TI\u1EBEP THEO"
+    en: NEXT LEVEL
+  - key: oos_headline_revive
+    vi: "H\u1ED2I SINH?"
+    en: CONTINUE?
+  - key: oos_headline_unlock
+    vi: "M\u1EDE TH\xCAM \xD4 \u0110\u1ED6"
+    en: UNLOCK EXTRA BAY
+  - key: oos_desc_revive
+    vi: "M\u1EDF kh\xF3a 1 \xF4 \u0111\u1ED7 tr\u1ED1ng \u0111\u1EC3 ti\u1EBFp t\u1EE5c"
+    en: Unlock 1 extra bay to keep playing
+  - key: oos_desc_unlock
+    vi: "D\xF9ng Xu ho\u1EB7c Qu\u1EA3ng c\xE1o gi\u1EA3 l\u1EADp"
+    en: Use Coins or Demo Ad
+  - key: lose_subtitle
+    vi: "B\u1EBEN \u0110\u1ED6 \u0110\xC3 H\u1EBET CH\u1ED6!"
+    en: NO PARKING SPACE LEFT!
+  - key: lose_retry
+    vi: "TH\u1EEC L\u1EA0I"
+    en: TRY AGAIN
+  - key: lose_home
+    vi: "TRANG CH\u1EE6"
+    en: HOME
+  - key: lose_revive
+    vi: "H\u1ED2I SINH"
+    en: REVIVE
+  - key: not_enough_coins
+    vi: "KH\xD4NG \u0110\u1EE6 XU!"
+    en: NOT ENOUGH COINS!
+  - key: ads_demo
+    vi: ADS DEMO
+    en: ADS DEMO
+  - key: back_btn
+    vi: "QUAY L\u1EA0I"
+    en: BACK
+  - key: shop_coin_cost
+    vi: '{0} XU'
+    en: '{0} COINS'

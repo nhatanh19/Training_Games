@@ -1,0 +1,74 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc1d783a36bb41848b9d6935044e4625, type: 3}
+  m_Name: ShopCatalog
+  m_EditorClassIdentifier: 
+  bundles:
+  - id: bundle_starter
+    titleKey: shop_bundle_starter
+    descriptionKey: shop_bundle_starter_desc
+    priceLabel: $1.99
+    coinReward: 250
+    sortBoosters: 2
+    shuffleBoosters: 2
+    vipBoosters: 1
+    iconSprite: {fileID: 21300000, guid: 6b3419320a6d5d77b92604b8052e7a2a, type: 3}
+  - id: bundle_pro
+    titleKey: shop_bundle_pro
+    descriptionKey: shop_bundle_pro_desc
+    priceLabel: $4.99
+    coinReward: 600
+    sortBoosters: 3
+    shuffleBoosters: 3
+    vipBoosters: 2
+    iconSprite: {fileID: 21300000, guid: afe4bcb701ff5ab29d502de0d06c2d29, type: 3}
+  coinPacks:
+  - id: coin_ad
+    titleKey: shop_coin_small
+    iconSprite: {fileID: 21300000, guid: 80902aff37645820b80dc3615367f61c, type: 3}
+    coinAmount: 60
+    priceLabel: FREE
+    coinCost: 0
+    requiresSimulatedAd: 1
+  - id: coin_stack
+    titleKey: shop_coin_medium
+    iconSprite: {fileID: 21300000, guid: afe4bcb701ff5ab29d502de0d06c2d29, type: 3}
+    coinAmount: 200
+    priceLabel: $0.99
+    coinCost: 0
+    requiresSimulatedAd: 0
+  - id: coin_mega
+    titleKey: shop_coin_mega
+    iconSprite: {fileID: 21300000, guid: 6b3419320a6d5d77b92604b8052e7a2a, type: 3}
+    coinAmount: 500
+    priceLabel: $2.99
+    coinCost: 0
+    requiresSimulatedAd: 0
+  boosterPacks:
+  - id: bp_sort
+    boosterType: 0
+    titleKey: booster_sort
+    iconSprite: {fileID: 21300000, guid: 9d14b004922a64de181a93c7f956f178, type: 3}
+    quantity: 2
+    coinCost: 70
+  - id: bp_shuffle
+    boosterType: 1
+    titleKey: booster_shuffle
+    iconSprite: {fileID: 21300000, guid: 6522633ccaa2d7e4d8f21169c64f8e37, type: 3}
+    quantity: 2
+    coinCost: 90
+  - id: bp_vip
+    boosterType: 2
+    titleKey: booster_vip
+    iconSprite: {fileID: 21300000, guid: 8d2b8be1766fd8846b5efcb338f7451e, type: 3}
+    quantity: 1
+    coinCost: 75

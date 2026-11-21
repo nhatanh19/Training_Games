@@ -6,6 +6,7 @@ using UnityEngine;
 public enum GameState
 {
     Loading,
+    Menu,
     Playing,
     GameWin,
     GameOver
@@ -13,8 +14,6 @@ public enum GameState
 
 public class GameManager : MonoBehaviour
 {
-    private const string LEVEL_KEY = "CurrentLevelIndex";
-
     private static GameManager _instance;
 
     public static GameManager Instance
@@ -24,7 +23,6 @@ public class GameManager : MonoBehaviour
             if (_instance == null)
             {
                 _instance = FindObjectOfType<GameManager>();
-
             }
             return _instance;
         }
@@ -32,34 +30,15 @@ public class GameManager : MonoBehaviour
 
     public GameState CurrentState { get; private set; } = GameState.Loading;
     public LevelDataSO CurrentLevelData => LevelLoader.Instance != null ? LevelLoader.Instance.CurrentLevelData : null;
-    public int CurrentLevelIndex { get; private set; } = 0;
-    public const string COIN_KEY = "TotalCoins";
 
-    public int TotalCoins
-    {
-        get => PlayerPrefs.GetInt(COIN_KEY, 0);
-        set
-        {
-            PlayerPrefs.SetInt(COIN_KEY, value);
-            PlayerPrefs.Save();
-        }
-    }
-
-    public void AddCoins(int amount)
-    {
-        TotalCoins += amount;
-        if (UIManager.Instance?.HUD != null)
-        {
-            UIManager.Instance.HUD.SetCoin(TotalCoins, true, false);
-        }
-    }
+    public int CurrentLevelIndex => ProgressManager.Instance != null ? ProgressManager.Instance.CurrentLevelIndex : 0;
+    public int TotalCoins => ProgressManager.Instance != null ? ProgressManager.Instance.TotalCoins : 0;
 
     public event Action<GameState> OnGameStateChanged;
     public event Action<int> OnLevelStarted;
 
     private Coroutine _statusCheckRoutine;
     private bool _initialized;
-    private bool _started;
 
     private void Awake()
     {
@@ -72,17 +51,12 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-
-        CurrentLevelIndex = PlayerPrefs.GetInt(LEVEL_KEY, 0);
     }
 
     private void Start()
     {
-
         if (GameBootstrap.IsDriving) return;
-
         Initialize();
-        StartGame();
     }
 
     public void Initialize()
@@ -102,14 +76,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void StartGame()
-    {
-        if (_started) return;
-        _started = true;
-
-        StartLevel(CurrentLevelIndex);
-    }
-
     private void OnDestroy()
     {
         if (BusStopManager.Instance != null)
@@ -124,29 +90,41 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void AddCoins(int amount)
+    {
+        ProgressManager.Instance?.AddCoins(amount);
+    }
+
+    public void EnterMenuState()
+    {
+        StopStatusCheck();
+        BoosterManager.Instance?.CancelVipTargeting();
+        LevelLoader.Instance?.ClearCurrentLevel();
+        CurrentState = GameState.Menu;
+        OnGameStateChanged?.Invoke(CurrentState);
+    }
+
+    public void EnterGameplay()
+    {
+        StartLevel(CurrentLevelIndex);
+    }
+
     public void StartLevel(int levelIndex)
     {
-        if (_statusCheckRoutine != null)
-        {
-            StopCoroutine(_statusCheckRoutine);
-            _statusCheckRoutine = null;
-        }
+        StopStatusCheck();
+        BoosterManager.Instance?.CancelVipTargeting();
 
         CurrentState = GameState.Loading;
-        CurrentLevelIndex = levelIndex;
-        PlayerPrefs.SetInt(LEVEL_KEY, CurrentLevelIndex);
-        PlayerPrefs.Save();
+        ProgressManager.Instance?.SetCurrentLevelIndex(levelIndex);
 
         if (LevelLoader.Instance != null)
         {
-            int levelCount = LevelLoader.Instance.LevelCount;
-            int dataIndex = levelCount > 0 ? levelIndex % levelCount : 0;
-            LevelLoader.Instance.LoadLevelByIndex(dataIndex);
+            LevelLoader.Instance.LoadLevelByIndex(levelIndex);
         }
 
         CurrentState = GameState.Playing;
         OnGameStateChanged?.Invoke(CurrentState);
-        OnLevelStarted?.Invoke(CurrentLevelIndex + 1);
+        OnLevelStarted?.Invoke(levelIndex + 1);
     }
 
     public void RestartLevel()
@@ -169,27 +147,22 @@ public class GameManager : MonoBehaviour
         StartLevel(CurrentLevelIndex + 1);
     }
 
-    private void OnBusArrived(BusController bus)
-    {
-        TriggerStatusCheck();
-    }
-
-    private void OnBusDeparted()
-    {
-        TriggerStatusCheck();
-    }
-
-    private void OnPassengerBoarded()
-    {
-        TriggerStatusCheck();
-    }
-
-    public void TriggerStatusCheck()
+    private void StopStatusCheck()
     {
         if (_statusCheckRoutine != null)
         {
             StopCoroutine(_statusCheckRoutine);
+            _statusCheckRoutine = null;
         }
+    }
+
+    private void OnBusArrived(BusController bus) => TriggerStatusCheck();
+    private void OnBusDeparted() => TriggerStatusCheck();
+    private void OnPassengerBoarded() => TriggerStatusCheck();
+
+    public void TriggerStatusCheck()
+    {
+        StopStatusCheck();
         _statusCheckRoutine = StartCoroutine(CheckStatusRoutine());
     }
 
@@ -201,6 +174,8 @@ public class GameManager : MonoBehaviour
 
         if (CheckWin())
         {
+            BoosterManager.Instance?.CancelVipTargeting();
+            ProgressManager.Instance?.MarkLevelCompleted(CurrentLevelIndex + 1);
             CurrentState = GameState.GameWin;
             OnGameStateChanged?.Invoke(CurrentState);
             VFXManager.Instance?.PlayConfetti();
@@ -211,6 +186,7 @@ public class GameManager : MonoBehaviour
 
         if (CheckDeadlock())
         {
+            BoosterManager.Instance?.CancelVipTargeting();
             CurrentState = GameState.GameOver;
             OnGameStateChanged?.Invoke(CurrentState);
             AudioManager.Instance?.PlayLose();
@@ -255,7 +231,7 @@ public class GameManager : MonoBehaviour
             bool anyGridBusCanMove = false;
             foreach (var bus in LevelLoader.Instance.SpawnedBuses)
             {
-                if (bus != null && bus.gameObject.activeInHierarchy && !activeBuses.Contains(bus) && bus.CanExit())
+                if (bus != null && bus.gameObject.activeInHierarchy && !bus.IsParkedOrInTransit && bus.CanExit())
                 {
                     anyGridBusCanMove = true;
                     break;

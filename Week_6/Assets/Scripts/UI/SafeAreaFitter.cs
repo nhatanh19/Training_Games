@@ -24,12 +24,6 @@ public class SafeAreaFitter : MonoBehaviour
 
     public Vector2 DesignAnchorMin { get => _designAnchorMin; set { _designAnchorMin = value; Refresh(true); } }
     public Vector2 DesignAnchorMax { get => _designAnchorMax; set { _designAnchorMax = value; Refresh(true); } }
-    public bool ApplyTop { get => _applyTop; set { _applyTop = value; Refresh(true); } }
-    public bool ApplyBottom { get => _applyBottom; set { _applyBottom = value; Refresh(true); } }
-    public bool ApplyLeft { get => _applyLeft; set { _applyLeft = value; Refresh(true); } }
-    public bool ApplyRight { get => _applyRight; set { _applyRight = value; Refresh(true); } }
-    public bool SimulateInEditor { get => _simulateInEditor; set { _simulateInEditor = value; Refresh(true); } }
-    public Rect EditorSimulatedSafeArea { get => _editorSimulatedSafeArea; set { _editorSimulatedSafeArea = value; Refresh(true); } }
 
     private void Awake()
     {
@@ -114,24 +108,10 @@ public class SafeAreaFitter : MonoBehaviour
 
         bool isFullStretchY = Mathf.Approximately(_designAnchorMin.y, 0f) && Mathf.Approximately(_designAnchorMax.y, 1f);
         bool isTopAnchored = Mathf.Approximately(_designAnchorMax.y, 1f) && !isFullStretchY;
+        bool isBottomAnchored = Mathf.Approximately(_designAnchorMin.y, 0f) && !isFullStretchY;
 
-        if (_applyLeft)
-        {
-            newAnchorMin.x = minXRatio;
-        }
-        else
-        {
-            newAnchorMin.x = _designAnchorMin.x;
-        }
-
-        if (_applyRight)
-        {
-            newAnchorMax.x = maxXRatio;
-        }
-        else
-        {
-            newAnchorMax.x = _designAnchorMax.x;
-        }
+        newAnchorMin.x = _applyLeft ? minXRatio : _designAnchorMin.x;
+        newAnchorMax.x = _applyRight ? maxXRatio : _designAnchorMax.x;
 
         if (isFullStretchY)
         {
@@ -140,17 +120,19 @@ public class SafeAreaFitter : MonoBehaviour
         }
         else if (isTopAnchored)
         {
-
             if (_applyTop)
             {
                 float topDelta = 1f - maxYRatio;
                 newAnchorMax.y = 1f - topDelta;
                 newAnchorMin.y = _designAnchorMin.y - topDelta;
             }
-            else
+        }
+        else if (isBottomAnchored)
+        {
+            if (_applyBottom)
             {
-                newAnchorMax.y = _designAnchorMax.y;
-                newAnchorMin.y = _designAnchorMin.y;
+                newAnchorMin.y = minYRatio;
+                newAnchorMax.y = _designAnchorMax.y + minYRatio;
             }
         }
         else

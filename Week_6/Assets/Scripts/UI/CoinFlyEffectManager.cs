@@ -2,22 +2,21 @@ using System;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class CoinFlyEffectManager : MonoBehaviour
 {
     public static CoinFlyEffectManager Instance { get; private set; }
 
     [Header("Pool Configuration")]
-    [SerializeField] private GameObject _coinPrefab;
+    [SerializeField] private RectTransform _coinPrefab;
     [SerializeField] private Transform _poolContainer;
     [SerializeField] private int _initialPoolSize = 20;
 
     [Header("Fly Configuration")]
     [SerializeField] private float _burstRadius = 95f;
     [SerializeField] private float _burstDuration = 0.25f;
-    [SerializeField] private float _flyDuration = 0.55f;
-    [SerializeField] private float _staggerDelay = 0.05f;
+    [SerializeField] private float _flyDuration = 0.52f;
+    [SerializeField] private float _staggerDelay = 0.045f;
 
     private readonly Queue<RectTransform> _availableCoins = new Queue<RectTransform>();
     private readonly List<RectTransform> _allCoins = new List<RectTransform>();
@@ -50,7 +49,7 @@ public class CoinFlyEffectManager : MonoBehaviour
 
         if (_coinPrefab == null)
         {
-            Debug.LogError("[CoinFlyEffectManager] _coinPrefab chưa được gán — gán Assets/Prefabs/UI/CoinItem.prefab vào component CoinFlyEffectManager trên VFXCanvas rồi Apply changes lên prefab.");
+            Debug.LogError("[CoinFlyEffectManager] _coinPrefab is not assigned in Inspector.");
             return;
         }
 
@@ -69,23 +68,7 @@ public class CoinFlyEffectManager : MonoBehaviour
     private RectTransform CreateNewCoin()
     {
         if (_coinPrefab == null) return null;
-
-        GameObject obj = Instantiate(_coinPrefab, _poolContainer);
-
-        Image img = obj.GetComponent<Image>();
-        if (img == null)
-        {
-            img = obj.AddComponent<Image>();
-        }
-
-        img.raycastTarget = false;
-
-        RectTransform rt = obj.GetComponent<RectTransform>();
-        if (rt == null)
-        {
-            rt = obj.AddComponent<RectTransform>();
-        }
-        return rt;
+        return Instantiate(_coinPrefab, _poolContainer);
     }
 
     private RectTransform GetCoin()
@@ -114,12 +97,30 @@ public class CoinFlyEffectManager : MonoBehaviour
 
     public void PlayFlyCoins(Vector3 startScreenPos, Vector3 targetScreenPos, int coinCount = 8, Action onComplete = null)
     {
+        Transform fallbackTarget = UIManager.Instance != null && UIManager.Instance.HUD != null
+            ? UIManager.Instance.HUD.CoinTargetTransform
+            : null;
+        PlayFlyCoinsInternal(startScreenPos, targetScreenPos, fallbackTarget, coinCount, onComplete);
+    }
+
+    public void PlayFlyCoins(Vector3 startScreenPos, Transform targetTransform, int coinCount = 8, Action onComplete = null)
+    {
+        Vector3 targetPos = targetTransform != null ? targetTransform.position : startScreenPos;
+        PlayFlyCoinsInternal(startScreenPos, targetPos, targetTransform, coinCount, onComplete);
+    }
+
+    private void PlayFlyCoinsInternal(Vector3 startScreenPos, Vector3 targetScreenPos, Transform punchTarget, int coinCount, Action onComplete)
+    {
         if (!_isInitialized) InitializePool();
-        if (coinCount <= 0)
+        if (coinCount <= 0 || _coinPrefab == null)
         {
             onComplete?.Invoke();
             return;
         }
+
+        Vector3 targetBaseScale = punchTarget != null && punchTarget.localScale != Vector3.zero
+            ? punchTarget.localScale
+            : Vector3.one;
 
         int completedCoins = 0;
         int scheduledCoins = 0;
@@ -139,17 +140,12 @@ public class CoinFlyEffectManager : MonoBehaviour
             float radius = UnityEngine.Random.Range(_burstRadius * 0.65f, _burstRadius);
             Vector3 burstTarget = startScreenPos + new Vector3(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius, 0f);
 
-            Sequence seq = DOTween.Sequence();
-            seq.SetLink(coin.gameObject);
-
-            seq.Append(coin.DOScale(_coinPrefab.transform.localScale, _burstDuration * 0.6f).SetEase(Ease.OutBack));
+            Sequence seq = DOTween.Sequence().SetUpdate(true).SetLink(coin.gameObject);
+            seq.Append(coin.DOScale(_coinPrefab.localScale, _burstDuration * 0.6f).SetEase(Ease.OutBack));
             seq.Join(coin.DOMove(burstTarget, _burstDuration).SetEase(Ease.OutQuad));
 
             float delay = index * _staggerDelay;
-            if (delay > 0)
-            {
-                seq.AppendInterval(delay);
-            }
+            if (delay > 0f) seq.AppendInterval(delay);
 
             Vector3 midPoint = (burstTarget + targetScreenPos) * 0.5f;
             Vector3 perpendicular = Vector3.Cross(targetScreenPos - burstTarget, Vector3.forward).normalized;
@@ -161,21 +157,15 @@ public class CoinFlyEffectManager : MonoBehaviour
 
             seq.OnComplete(() =>
             {
-
                 ReturnCoin(coin);
 
-                HUDController hud = UIManager.Instance?.HUD;
-                if (hud != null)
+                if (punchTarget != null && punchTarget.gameObject.activeInHierarchy)
                 {
-                    Transform targetTransform = hud.CoinTargetTransform;
-                    if (targetTransform != null)
-                    {
-                        targetTransform.DOKill();
-                        targetTransform.localScale = hud.CoinTargetScale;
-                        targetTransform.DOPunchScale(Vector3.one * 0.28f, 0.16f, 2, 0.5f)
-                            .SetLink(hud.gameObject);
-                    }
-
+                    punchTarget.DOKill();
+                    punchTarget.localScale = targetBaseScale;
+                    punchTarget.DOPunchScale(targetBaseScale * 0.25f, 0.16f, 2, 0.5f)
+                        .SetUpdate(true)
+                        .SetLink(punchTarget.gameObject);
                 }
 
                 float pitch = 0.95f + (index * 0.04f);
@@ -184,11 +174,12 @@ public class CoinFlyEffectManager : MonoBehaviour
                 completedCoins++;
                 if (completedCoins >= scheduledCoins)
                 {
-                    DOVirtual.DelayedCall(0.2f, () => onComplete?.Invoke())
+                    DOVirtual.DelayedCall(0.18f, () => onComplete?.Invoke(), true)
                         .SetLink(gameObject);
                 }
             });
         }
+
         if (scheduledCoins == 0) onComplete?.Invoke();
     }
 }

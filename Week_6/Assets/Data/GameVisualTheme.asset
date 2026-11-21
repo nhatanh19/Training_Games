@@ -1,0 +1,110 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2284ff44975aa934a853a61a2c4e7434, type: 3}
+  m_Name: GameVisualTheme
+  m_EditorClassIdentifier: 
+  vehicles:
+  - color: 0
+    sideCarSprite: {fileID: 21300000, guid: 8c95ca5e31f75394a81e3332cd12d030, type: 3}
+    sideBusSprite: {fileID: 21300000, guid: 120b232aaabbc184a9cc39cd167ce9a8, type: 3}
+    diagCarSprite: {fileID: 21300000, guid: 913ae2fcaad44a14298a8d8588bc3bb6, type: 3}
+    diagBusSprite: {fileID: 21300000, guid: b0d74e0b9469e1140944c4fb7ec5612a, type: 3}
+    upCarSprite: {fileID: 0}
+    downCarSprite: {fileID: 0}
+    upBusSprite: {fileID: 0}
+    downBusSprite: {fileID: 0}
+    passengerTint: {r: 0.95, g: 0.23, b: 0.28, a: 1}
+    uiAccentColor: {r: 0.95, g: 0.23, b: 0.28, a: 1}
+  - color: 1
+    sideCarSprite: {fileID: 21300000, guid: 4500da04a15388a4b97ebbe3d39910db, type: 3}
+    sideBusSprite: {fileID: 21300000, guid: f549bca7945761648abdfcb7b3e7512e, type: 3}
+    diagCarSprite: {fileID: 21300000, guid: d4dabde1096503d4c960414cb6a0f1d4, type: 3}
+    diagBusSprite: {fileID: 21300000, guid: f947e7b14e6136d42b00ef43b116f28c, type: 3}
+    upCarSprite: {fileID: 0}
+    downCarSprite: {fileID: 0}
+    upBusSprite: {fileID: 0}
+    downBusSprite: {fileID: 0}
+    passengerTint: {r: 0.14, g: 0.45, b: 0.98, a: 1}
+    uiAccentColor: {r: 0.14, g: 0.45, b: 0.98, a: 1}
+  - color: 2
+    sideCarSprite: {fileID: 21300000, guid: 9de753b07f1277d419b904e74455dcf8, type: 3}
+    sideBusSprite: {fileID: 21300000, guid: eb4fdbb045d45af4ead087be33ac4600, type: 3}
+    diagCarSprite: {fileID: 21300000, guid: caac796ca4ab2c5438e9503dd604917b, type: 3}
+    diagBusSprite: {fileID: 21300000, guid: 0418b219349c9e542bdd3708d02f5411, type: 3}
+    upCarSprite: {fileID: 0}
+    downCarSprite: {fileID: 0}
+    upBusSprite: {fileID: 0}
+    downBusSprite: {fileID: 0}
+    passengerTint: {r: 0.32, g: 0.82, b: 0.16, a: 1}
+    uiAccentColor: {r: 0.32, g: 0.82, b: 0.16, a: 1}
+  - color: 3
+    sideCarSprite: {fileID: 21300000, guid: 06fc58528ed4d1748a45b3f6dfc78dbb, type: 3}
+    sideBusSprite: {fileID: 21300000, guid: 0564d3e093e3ea641b5b3e2a73d8e8f4, type: 3}
+    diagCarSprite: {fileID: 21300000, guid: e55de53e58baf574db13ff5762751dbe, type: 3}
+    diagBusSprite: {fileID: 21300000, guid: 8d2b8be1766fd8846b5efcb338f7451e, type: 3}
+    upCarSprite: {fileID: 0}
+    downCarSprite: {fileID: 0}
+    upBusSprite: {fileID: 0}
+    downBusSprite: {fileID: 0}
+    passengerTint: {r: 0.99, g: 0.78, b: 0.08, a: 1}
+    uiAccentColor: {r: 0.99, g: 0.78, b: 0.08, a: 1}
+  - color: 4
+    sideCarSprite: {fileID: 21300000, guid: e0660d2f7775c9e458e7da14334066f7, type: 3}
+    sideBusSprite: {fileID: 21300000, guid: d19b31a5504a95f48b2e402d07221636, type: 3}
+    diagCarSprite: {fileID: 21300000, guid: 6522633ccaa2d7e4d8f21169c64f8e37, type: 3}
+    diagBusSprite: {fileID: 21300000, guid: 78457fe7289e2d74486c1d842dd3ef42, type: 3}
+    upCarSprite: {fileID: 0}
+    downCarSprite: {fileID: 0}
+    upBusSprite: {fileID: 0}
+    downBusSprite: {fileID: 0}
+    passengerTint: {r: 0.75, g: 0.3, b: 0.96, a: 1}
+    uiAccentColor: {r: 0.75, g: 0.3, b: 0.96, a: 1}
+  - color: 5
+    sideCarSprite: {fileID: 21300000, guid: c0279d188801f7047b2c6650b37c1d7d, type: 3}
+    sideBusSprite: {fileID: 21300000, guid: 0fd0ec5eb1b627b42b3293ca409263b1, type: 3}
+    diagCarSprite: {fileID: 21300000, guid: 9626080fa05c5e0499e63350f5472719, type: 3}
+    diagBusSprite: {fileID: 21300000, guid: cde678164cb81db4a9bfd02cdfa022f0, type: 3}
+    upCarSprite: {fileID: 0}
+    downCarSprite: {fileID: 0}
+    upBusSprite: {fileID: 0}
+    downBusSprite: {fileID: 0}
+    passengerTint: {r: 0.98, g: 0.25, b: 0.6, a: 1}
+    uiAccentColor: {r: 0.98, g: 0.25, b: 0.6, a: 1}
+  - color: 6
+    sideCarSprite: {fileID: 21300000, guid: 72fe389ee98298043b23481ae2fc02b1, type: 3}
+    sideBusSprite: {fileID: 21300000, guid: db4f721aee4e16248a03ad2e74c624c8, type: 3}
+    diagCarSprite: {fileID: 21300000, guid: 158fcba69d629974682738ded106d74b, type: 3}
+    diagBusSprite: {fileID: 21300000, guid: 6bee89617fba7dd4287cbf1f72e071eb, type: 3}
+    upCarSprite: {fileID: 0}
+    downCarSprite: {fileID: 0}
+    upBusSprite: {fileID: 0}
+    downBusSprite: {fileID: 0}
+    passengerTint: {r: 0.06, g: 0.82, b: 0.9, a: 1}
+    uiAccentColor: {r: 0.06, g: 0.82, b: 0.9, a: 1}
+  difficulties:
+  - difficulty: 0
+    homePlayButtonSprite: {fileID: 21300000, guid: f9207e3159b157878d1ffeb8d6716a17, type: 3}
+    hudLevelBadgeSprite: {fileID: 21300000, guid: d9a8033898af5ac3b6dda7d4939ab44a, type: 3}
+    badgeTitleKey: difficulty_normal
+    titleTextColor: {r: 0.12, g: 0.2, b: 0.42, a: 1}
+  - difficulty: 1
+    homePlayButtonSprite: {fileID: 21300000, guid: 0a094564281e559e916e1a6e70c53dba, type: 3}
+    hudLevelBadgeSprite: {fileID: 21300000, guid: 2a2c87a9fc0fbe04090a1dc764f9976d, type: 3}
+    badgeTitleKey: difficulty_hard
+    titleTextColor: {r: 0.45, g: 0.08, b: 0.65, a: 1}
+  - difficulty: 2
+    homePlayButtonSprite: {fileID: 21300000, guid: 74d4a7790c3f5b7595b4eff749e5aed8, type: 3}
+    hudLevelBadgeSprite: {fileID: 21300000, guid: b502d3e80f2e7564fbf061b59c1a62b7, type: 3}
+    badgeTitleKey: difficulty_superhard
+    titleTextColor: {r: 0.75, g: 0.12, b: 0.08, a: 1}
+  directionArrowSprite: {fileID: 21300000, guid: 78bcfca34da609f49808d06db88d6d24, type: 3}
+  coinIconSprite: {fileID: 21300000, guid: c5d143d9ed2a50a39bca4308d39edff6, type: 3}

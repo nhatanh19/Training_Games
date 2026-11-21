@@ -12,7 +12,6 @@ public class CameraShakeManager : MonoBehaviour
             if (_instance == null)
             {
                 _instance = FindObjectOfType<CameraShakeManager>();
-
             }
             return _instance;
         }
@@ -48,7 +47,13 @@ public class CameraShakeManager : MonoBehaviour
             targetCamera = Camera.main;
         }
 
-        if (targetCamera != null)
+        SyncOriginalPosition();
+    }
+
+    public void SyncOriginalPosition()
+    {
+        if (targetCamera == null) targetCamera = Camera.main;
+        if (targetCamera != null && _shakeTween == null)
         {
             _originalPosition = targetCamera.transform.position;
         }
@@ -87,7 +92,7 @@ public class CameraShakeManager : MonoBehaviour
         _shakeTween = targetCamera.transform.DOShakePosition(duration, new Vector3(strength, strength, 0f), vibrato, 90f, false, true)
             .OnComplete(() =>
             {
-                targetCamera.transform.position = _originalPosition;
+                if (targetCamera != null) targetCamera.transform.position = _originalPosition;
                 _shakeTween = null;
             });
     }

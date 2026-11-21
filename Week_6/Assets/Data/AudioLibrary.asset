@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed3b4731a409c3140aac8e875aab5f82, type: 3}
+  m_Name: AudioLibrary
+  m_EditorClassIdentifier: 
+  click: {fileID: 8300000, guid: e1de3e784efe5055b772adc50d443214, type: 3}
+  honk: {fileID: 8300000, guid: 7de74080a36f55d08b478a55e9d41fff, type: 3}
+  engine: {fileID: 8300000, guid: 03e270460da25b53b07f66b59e82309a, type: 3}
+  footstep: {fileID: 8300000, guid: a741557829225d5389fc84921f44098d, type: 3}
+  crash: {fileID: 8300000, guid: ed6b3dcfdc365cb3bdaa5c4e63eca5f6, type: 3}
+  win: {fileID: 8300000, guid: 3a0d08304a885af4b358a33893e166f7, type: 3}
+  lose: {fileID: 8300000, guid: d094207c856e54f987949fd820418087, type: 3}
+  coin: {fileID: 8300000, guid: f22a46f4b1a753b1a47ddf5a455001e7, type: 3}
+  pop: {fileID: 8300000, guid: 4bda964d22ed536996870c3b87aeaa89, type: 3}
+  booster: {fileID: 8300000, guid: 88a8570f089551f8952414580e5f36e3, type: 3}
+  unlock: {fileID: 8300000, guid: ec158b96e190557cb54291323b26709d, type: 3}
+  bgm: {fileID: 8300000, guid: f384b943a62bc8bf7c9ec41af344792d, type: 3}

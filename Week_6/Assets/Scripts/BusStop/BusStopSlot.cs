@@ -1,44 +1,60 @@
 using DG.Tweening;
-using TMPro;
 using UnityEngine;
 
 public class BusStopSlot : MonoBehaviour
 {
-    [SerializeField] private SpriteRenderer slotRenderer;
-    [SerializeField] private Color reservedTint = new Color(0.72f, 0.9f, 1f, 1f);
-    [SerializeField, Range(0f, 1f)] private float reservedTintStrength = 0.55f;
+    [Header("Prefab Visual & Interaction References (Authored in Editor)")]
+    [SerializeField] private SpriteRenderer bayHighlightRenderer;
+    [SerializeField] private GameObject lockedVisualRoot;
+    [SerializeField] private BoxCollider2D clickCollider;
+    [SerializeField] private Transform parkedVehicleAnchor;
+    [SerializeField, Min(0.1f)] private float parkedVehicleScale = 0.56f;
 
-    private TextMeshPro _lockLabel;
-    private BoxCollider2D _clickCollider;
-    private Tween _fullFeedbackTween;
-    private Color _fullFeedbackColor;
-    private Color _unreservedColor;
-    private bool _showingReservation;
+    [Header("State Feedback Colors")]
+    [SerializeField] private Color idleColor = new Color(1f, 1f, 1f, 0f);
+    [SerializeField] private Color reservedColor = new Color(0.45f, 0.85f, 1f, 0.35f);
+    [SerializeField] private Color nearFullWarningColor = new Color(1f, 0.65f, 0.15f, 0.45f);
+    [SerializeField] private Color fullFlashColor = new Color(1f, 0.28f, 0.22f, 0.65f);
 
-    public Transform SlotTransform => transform;
+    private Tween _feedbackTween;
+    private Tween _warningTween;
+    private bool _showingNearFull;
+
+    public Transform SlotTransform => parkedVehicleAnchor != null ? parkedVehicleAnchor : transform;
+    public Transform ParkedVehicleAnchor => parkedVehicleAnchor != null ? parkedVehicleAnchor : transform;
+    public float ParkedVehicleScale => parkedVehicleScale;
     public BusController CurrentBus { get; private set; }
-    public bool IsLocked { get; private set; } = false;
-
+    public bool IsLocked { get; private set; }
     public bool IsAvailable => !IsLocked && CurrentBus == null;
+
+    private void Awake()
+    {
+        SetHighlightImmediate(idleColor);
+    }
+
+    private void OnDisable()
+    {
+        StopFeedback();
+        StopNearFullWarning();
+    }
 
     public void SetLocked(bool locked)
     {
-        StopFullFeedback();
-        ClearReservationVisual();
+        StopFeedback();
+        StopNearFullWarning();
         IsLocked = locked;
-        EnsureSlotVisual();
-        if (slotRenderer != null)
+
+        if (lockedVisualRoot != null)
         {
-            string spritePath = locked ? "Park/park_slot_lock" : "Park/park_slot_unlock";
-            Sprite sp = Resources.Load<Sprite>(spritePath);
-            if (sp != null)
-            {
-                slotRenderer.sprite = sp;
-            }
-            slotRenderer.color = Color.white;
+            lockedVisualRoot.SetActive(locked);
         }
-        EnsureClickCollider();
-        RefreshLockLabel();
+
+        if (clickCollider != null)
+        {
+            clickCollider.enabled = locked;
+        }
+
+        SetHighlightImmediate(idleColor);
     }
 
     public void OnLockedSlotClicked()
@@ -49,160 +65,85 @@ public class BusStopSlot : MonoBehaviour
         UIManager.Instance?.OpenContinuePopup(this);
     }
 
-    private void EnsureClickCollider()
-    {
-        if (_clickCollider == null)
-        {
-            _clickCollider = GetComponent<BoxCollider2D>();
-            if (_clickCollider == null)
-            {
-                _clickCollider = gameObject.AddComponent<BoxCollider2D>();
-            }
-        }
-
-        _clickCollider.size = new Vector2(1.25f, 2.50f);
-        _clickCollider.offset = Vector2.zero;
-        _clickCollider.enabled = IsLocked;
-    }
-
-    private void OnEnable()
-    {
-        SettingsController.LanguageChanged += OnLanguageChanged;
-        EnsureClickCollider();
-        RefreshLockLabel();
-    }
-
-    private void OnDisable()
-    {
-        StopFullFeedback();
-        ClearReservationVisual();
-        SettingsController.LanguageChanged -= OnLanguageChanged;
-    }
-
-    public void PlayFullFeedback()
-    {
-        if (IsLocked || CurrentBus == null || slotRenderer == null) return;
-
-        StopFullFeedback();
-        _fullFeedbackColor = slotRenderer.color;
-        Sequence seq = DOTween.Sequence();
-        _fullFeedbackTween = seq;
-        seq.Append(slotRenderer.DOColor(new Color(1f, 0.45f, 0.35f, _fullFeedbackColor.a), 0.12f));
-        seq.Append(slotRenderer.DOColor(_fullFeedbackColor, 0.22f));
-        seq.SetLink(gameObject);
-        seq.OnComplete(() => _fullFeedbackTween = null);
-    }
-
-    private void StopFullFeedback()
-    {
-        if (_fullFeedbackTween == null) return;
-        _fullFeedbackTween.Kill();
-        _fullFeedbackTween = null;
-        if (slotRenderer != null) slotRenderer.color = _fullFeedbackColor;
-    }
-
-    private void OnLanguageChanged(string language)
-    {
-        RefreshLockLabel();
-    }
-
-    private void RefreshLockLabel()
-    {
-        if (!IsLocked)
-        {
-            if (_lockLabel != null) _lockLabel.gameObject.SetActive(false);
-            return;
-        }
-
-        if (_lockLabel == null)
-        {
-            Transform existing = transform.Find("LockLabel");
-            GameObject go = existing != null ? existing.gameObject : new GameObject("LockLabel", typeof(TextMeshPro));
-            go.transform.SetParent(transform, false);
-            _lockLabel = go.GetComponent<TextMeshPro>();
-        }
-
-        TMP_FontAsset font = Resources.Load<TMP_FontAsset>("Fonts & Materials/SettingsDynamic SDF");
-        if (font != null) _lockLabel.font = font;
-        _lockLabel.transform.localPosition = new Vector3(0f, -0.22f, 0f);
-        _lockLabel.fontSize = 1.65f;
-        _lockLabel.lineSpacing = -12f;
-        _lockLabel.fontStyle = FontStyles.Bold;
-        _lockLabel.alignment = TextAlignmentOptions.Center;
-        _lockLabel.color = Color.white;
-        _lockLabel.rectTransform.sizeDelta = new Vector2(0.95f, 0.55f);
-        _lockLabel.enableWordWrapping = false;
-        _lockLabel.GetComponent<MeshRenderer>().sortingOrder = -9;
-
-        Vector3 ls = transform.lossyScale;
-        _lockLabel.transform.localScale = new Vector3(
-            ls.x > 0.01f ? 1f / ls.x : 1f, ls.y > 0.01f ? 1f / ls.y : 1f, 1f);
-        _lockLabel.text = SettingsController.IsVietnameseSaved ? "MỞ\nKHÓA" : "UNLOCK";
-        _lockLabel.gameObject.SetActive(true);
-    }
-
-    private void Awake()
-    {
-        EnsureSlotVisual();
-    }
-
-    public void EnsureSlotVisual()
-    {
-        if (slotRenderer == null)
-        {
-            slotRenderer = GetComponent<SpriteRenderer>();
-            if (slotRenderer == null)
-            {
-                slotRenderer = gameObject.AddComponent<SpriteRenderer>();
-            }
-        }
-
-        if (slotRenderer != null)
-        {
-            if (slotRenderer.sprite == null)
-            {
-                Sprite sp = Resources.Load<Sprite>("Park/park_slot_unlock");
-                if (sp != null)
-                {
-                    slotRenderer.sprite = sp;
-                }
-            }
-            slotRenderer.sortingOrder = -10;
-        }
-    }
-
     public void AssignBus(BusController bus)
     {
-        StopFullFeedback();
-        ClearReservationVisual();
+        StopFeedback();
+        StopNearFullWarning();
         CurrentBus = bus;
-        if (bus == null || slotRenderer == null) return;
-
-        _unreservedColor = slotRenderer.color;
-        Color tint = reservedTint;
-        tint.a = _unreservedColor.a;
-        slotRenderer.color = Color.Lerp(_unreservedColor, tint, Mathf.Clamp01(reservedTintStrength));
-        _showingReservation = true;
+        SetHighlightImmediate(bus != null ? reservedColor : idleColor);
     }
 
     public void NotifyBusArrived(BusController bus)
     {
         if (CurrentBus != bus) return;
-        StopFullFeedback();
-        ClearReservationVisual();
+        StopFeedback();
+        SetHighlightImmediate(idleColor);
     }
 
-    private void ClearReservationVisual()
+    public void SetNearFullWarning(bool active)
     {
-        if (!_showingReservation) return;
-        if (slotRenderer != null) slotRenderer.color = _unreservedColor;
-        _showingReservation = false;
+        if (!IsAvailable) active = false;
+        if (_showingNearFull == active) return;
+        _showingNearFull = active;
+
+        if (!active)
+        {
+            StopNearFullWarning();
+            return;
+        }
+
+        if (bayHighlightRenderer == null) return;
+        _warningTween?.Kill();
+        bayHighlightRenderer.color = new Color(nearFullWarningColor.r, nearFullWarningColor.g, nearFullWarningColor.b, 0.08f);
+        _warningTween = bayHighlightRenderer.DOFade(nearFullWarningColor.a, 0.55f)
+            .SetLoops(-1, LoopType.Yoyo)
+            .SetEase(Ease.InOutSine)
+            .SetLink(gameObject);
+    }
+
+    public void PlayFullFeedback()
+    {
+        if (IsLocked || CurrentBus == null || bayHighlightRenderer == null) return;
+
+        StopFeedback();
+        Color restore = idleColor;
+        Sequence seq = DOTween.Sequence();
+        _feedbackTween = seq;
+        seq.Append(bayHighlightRenderer.DOColor(fullFlashColor, 0.12f));
+        seq.Append(bayHighlightRenderer.DOColor(restore, 0.24f));
+        seq.SetLink(gameObject);
+        seq.OnComplete(() => _feedbackTween = null);
     }
 
     public void ClearSlot()
     {
-        StopFullFeedback();
-        ClearReservationVisual();
+        StopFeedback();
+        StopNearFullWarning();
         CurrentBus = null;
+        SetHighlightImmediate(idleColor);
+    }
+
+    private void StopFeedback()
+    {
+        if (_feedbackTween == null) return;
+        _feedbackTween.Kill();
+        _feedbackTween = null;
+    }
+
+    private void StopNearFullWarning()
+    {
+        _showingNearFull = false;
+        if (_warningTween == null) return;
+        _warningTween.Kill();
+        _warningTween = null;
+        SetHighlightImmediate(CurrentBus != null ? reservedColor : idleColor);
+    }
+
+    private void SetHighlightImmediate(Color c)
+    {
+        if (bayHighlightRenderer != null)
+        {
+            bayHighlightRenderer.color = c;
+        }
     }
 }

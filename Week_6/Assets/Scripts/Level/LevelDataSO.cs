@@ -14,13 +14,17 @@ public class BusSpawnData
 [CreateAssetMenu(fileName = "NewLevelData", menuName = "BusJam/Level Data")]
 public class LevelDataSO : ScriptableObject
 {
-    [Header("Level Settings")]
-    [Range(1, 5)] public int unlockedSlots = 3;
-    [Range(5, 10)] public int coinReward = 10;
+    [Header("Level Identity & Rewards")]
+    public LevelDifficulty difficulty = LevelDifficulty.Normal;
+    [Range(1, 7)] public int unlockedSlots = 5;
+    [Min(0)] public int coinReward = 25;
 
-    [Header("Board Size")]
-    public int rows = 6;
-    public int cols = 6;
+    [Header("Board Size & Scaling")]
+    [Min(2)] public int rows = 6;
+    [Min(2)] public int cols = 6;
+    [Tooltip("Optional per-level override to cap maximum auto-scaled cell size.")]
+    public bool overrideMaxCellSize = false;
+    [Min(0.3f)] public float customMaxCellSize = 1.25f;
 
     [Header("Bus List")]
     public List<BusSpawnData> buses = new List<BusSpawnData>();

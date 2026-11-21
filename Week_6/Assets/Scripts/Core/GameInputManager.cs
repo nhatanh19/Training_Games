@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -9,6 +10,7 @@ public class GameInputManager : MonoBehaviour
     [SerializeField] private LayerMask busLayerMask = ~0;
 
     private Camera _mainCamera;
+    private readonly List<RaycastResult> _uiRaycastResults = new List<RaycastResult>();
 
     private void Awake()
     {
@@ -63,7 +65,6 @@ public class GameInputManager : MonoBehaviour
         }
 
         if (!hasInput) return;
-
         if (IsPointerOverUI(screenPosition)) return;
 
         ProcessClick(screenPosition);
@@ -89,9 +90,9 @@ public class GameInputManager : MonoBehaviour
         {
             position = screenPosition
         };
-        var results = new System.Collections.Generic.List<RaycastResult>();
-        EventSystem.current.RaycastAll(eventData, results);
-        return results.Count > 0;
+        _uiRaycastResults.Clear();
+        EventSystem.current.RaycastAll(eventData, _uiRaycastResults);
+        return _uiRaycastResults.Count > 0;
     }
 
     private void ProcessClick(Vector2 screenPosition)

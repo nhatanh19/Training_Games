@@ -8,18 +8,20 @@ public class LevelLoader : MonoBehaviour
     [Header("Current Level")]
     [SerializeField] private LevelDataSO currentLevelData;
 
-    [Header("Prefabs")]
+    [Header("Visual Theme & Prefabs")]
+    [SerializeField] private GameVisualThemeSO visualTheme;
     [SerializeField] private BusController bus2x1Prefab;
     [SerializeField] private BusController bus3x1Prefab;
     [SerializeField] private PassengerController passengerPrefab;
 
-    [Header("Level Collection")]
+    [Header("Level Collection (Authored in Inspector)")]
     [SerializeField] private List<LevelDataSO> levels = new List<LevelDataSO>();
 
     public BusController Bus2x1Prefab => bus2x1Prefab;
     public BusController Bus3x1Prefab => bus3x1Prefab;
     public PassengerController PassengerPrefab => passengerPrefab;
     public LevelDataSO CurrentLevelData => currentLevelData;
+    public GameVisualThemeSO VisualTheme => visualTheme;
     public int LevelCount => levels != null ? levels.Count : 0;
     public int RemainingBusesCount => _spawnedBuses.Count;
     public IReadOnlyList<BusController> SpawnedBuses => _spawnedBuses;
@@ -32,50 +34,31 @@ public class LevelLoader : MonoBehaviour
         {
             Instance = this;
         }
-        else
+        else if (Instance != this)
         {
             Destroy(gameObject);
         }
+    }
 
+    public void Initialize()
+    {
+        if (levels == null) levels = new List<LevelDataSO>();
         if (levels.Count == 0 && currentLevelData == null)
         {
-            Debug.LogError("[LevelLoader] 'levels' rỗng và currentLevelData chưa gán — kéo Assets/Levels/Level_*.asset vào list 'Levels' trên Inspector.");
+            Debug.LogError("[LevelLoader] No levels assigned in Inspector.");
         }
     }
 
-#if UNITY_EDITOR
-
-    [ContextMenu("Append Missing Levels From Assets/Levels")]
-    public void AppendMissingLevels()
+    public LevelDataSO GetLevelDataByIndex(int index)
     {
-        if (levels == null)
+        if (levels != null && levels.Count > 0)
         {
-            levels = new List<LevelDataSO>();
+            int safeIndex = index % levels.Count;
+            if (safeIndex < 0) safeIndex += levels.Count;
+            return levels[safeIndex];
         }
-
-        string[] guids = UnityEditor.AssetDatabase.FindAssets("t:LevelDataSO", new[] { "Assets/Levels" });
-        var paths = new List<string>(guids.Length);
-        for (int i = 0; i < guids.Length; i++)
-        {
-            paths.Add(UnityEditor.AssetDatabase.GUIDToAssetPath(guids[i]));
-        }
-        paths.Sort(System.StringComparer.Ordinal);
-
-        int added = 0;
-        for (int i = 0; i < paths.Count; i++)
-        {
-            LevelDataSO level = UnityEditor.AssetDatabase.LoadAssetAtPath<LevelDataSO>(paths[i]);
-            if (level != null && !levels.Contains(level))
-            {
-                levels.Add(level);
-                added++;
-            }
-        }
-
-        UnityEditor.EditorUtility.SetDirty(this);
-        Debug.Log($"[LevelLoader] Đã bổ sung {added} level vào list 'levels' (tổng: {levels.Count}).");
+        return currentLevelData;
     }
-#endif
 
     public void RemoveSpawnedBus(BusController bus)
     {
@@ -87,29 +70,10 @@ public class LevelLoader : MonoBehaviour
 
     public void LoadLevelByIndex(int index)
     {
-        if (levels != null && levels.Count > 0)
+        LevelDataSO data = GetLevelDataByIndex(index);
+        if (data != null)
         {
-            int safeIndex = Mathf.Clamp(index, 0, levels.Count - 1);
-            LoadLevel(levels[safeIndex]);
-        }
-        else if (currentLevelData != null)
-        {
-            LoadLevel(currentLevelData);
-        }
-    }
-
-    public void Initialize()
-    {
-        if (levels == null)
-        {
-            levels = new List<LevelDataSO>();
-        }
-
-        if (levels.Count == 0)
-        {
-            Debug.LogError(currentLevelData != null
-                ? "[LevelLoader] 'levels' rỗng — game chỉ chơi được 1 level (currentLevelData). Kéo Assets/Levels/Level_*.asset vào list 'Levels' trên Inspector."
-                : "[LevelLoader] 'levels' rỗng và currentLevelData chưa gán — kéo Assets/Levels/Level_*.asset vào list 'Levels' trên Inspector.");
+            LoadLevel(data);
         }
     }
 
@@ -121,31 +85,37 @@ public class LevelLoader : MonoBehaviour
         currentLevelData = levelData;
         ClearCurrentLevel();
 
-        GamePoolManager.Instance.Initialize();
+        GamePoolManager.Instance?.Initialize();
 
         if (BusStopManager.Instance != null)
         {
             BusStopManager.Instance.ConfigureSlots(levelData.unlockedSlots);
         }
 
+        float scaleFactor = 1f;
         if (GridManager.Instance != null)
         {
-            GridManager.Instance.InitializeGrid(levelData.rows, levelData.cols);
+            GridManager.Instance.InitializeGrid(levelData);
+            scaleFactor = GridManager.Instance.VehicleScaleFactor;
         }
 
-        foreach (var data in levelData.buses)
+        if (levelData.buses != null)
         {
-            BusController bus = GamePoolManager.Instance.GetBus(data.length, transform);
-            if (bus != null)
+            foreach (var data in levelData.buses)
             {
-                bus.Initialize(data.color, data.direction, data.length, data.rootGridPosition);
-                _spawnedBuses.Add(bus);
+                if (data == null) continue;
+                BusController bus = GamePoolManager.Instance.GetBus(data.length, transform);
+                if (bus != null)
+                {
+                    bus.Initialize(data.color, data.direction, data.length, data.rootGridPosition, scaleFactor, visualTheme);
+                    _spawnedBuses.Add(bus);
+                }
             }
         }
 
         if (PassengerQueueManager.Instance != null)
         {
-            PassengerQueueManager.Instance.LoadPassengers(levelData.passengerColors, passengerPrefab);
+            PassengerQueueManager.Instance.LoadPassengers(levelData.passengerColors, visualTheme);
         }
 
         GameInputManager.SetLock(false);

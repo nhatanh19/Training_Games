@@ -5,141 +5,206 @@ using UnityEngine.UI;
 
 public class HUDController : MonoBehaviour
 {
-    [Header("Display Elements")]
-    [SerializeField] private TextMeshProUGUI _levelText;
-    [SerializeField] private TextMeshProUGUI _coinText;
-    [SerializeField] private Transform _coinTargetTransform;
+    [Header("Data Assets")]
+    [SerializeField] private GameVisualThemeSO visualTheme;
+    [SerializeField] private LocalizationTableSO localization;
 
-    [Header("Buttons")]
-    [SerializeField] private Button _restartButton;
-    [SerializeField] private Button _settingsButton;
+    [Header("Top Display Elements")]
+    [SerializeField] private Image levelBadgeImage;
+    [SerializeField] private TextMeshProUGUI levelText;
+    [SerializeField] private GameObject difficultyTabRoot;
+    [SerializeField] private TextMeshProUGUI difficultyTabText;
+    [SerializeField] private TextMeshProUGUI coinText;
+    [SerializeField] private Transform coinTargetTransform;
 
-    public const string COIN_PREF_KEY = "TotalCoins";
+    [Header("Difficulty Intro Toast")]
+    [SerializeField] private GameObject difficultyIntroBanner;
+    [SerializeField] private CanvasGroup difficultyIntroGroup;
+    [SerializeField] private TextMeshProUGUI difficultyIntroText;
+    [SerializeField, Min(0.3f)] private float difficultyIntroDuration = 1.35f;
 
-    private int _currentCoin = 0;
+    [Header("Buttons & Modules")]
+    [SerializeField] private Button coinShopButton;
+    [SerializeField] private Button settingsButton;
+    [SerializeField] private BoosterBarController boosterBar;
+    [SerializeField] private PassengerCounterDisplay passengerCounter;
+
+    private int _displayedCoins = -1;
     private int _currentLevel = 1;
-    private Vector3 _coinTargetScale;
-    private Vector3 _coinTextScale;
+    private LevelDifficulty _currentDifficulty = LevelDifficulty.Normal;
+    private Vector3 _coinTargetScale = Vector3.one;
+    private Vector3 _coinTextScale = Vector3.one;
+    private Tween _coinTween;
+    private Sequence _introSequence;
+    private bool _bound;
 
-    public int CurrentCoin => _currentCoin;
+    public int CurrentCoin => ProgressManager.Instance != null ? ProgressManager.Instance.TotalCoins : 0;
     public Vector3 CoinTargetScale => _coinTargetScale;
-
-    public Transform CoinTargetTransform
-    {
-        get
-        {
-            if (_coinTargetTransform != null)
-            {
-                Transform iconTrans = _coinTargetTransform.Find("CoinIcon");
-                return iconTrans != null ? iconTrans : _coinTargetTransform;
-            }
-            return transform;
-        }
-    }
+    public Transform CoinTargetTransform => coinTargetTransform != null ? coinTargetTransform : transform;
 
     private void Awake()
     {
         BindButtons();
-        _coinTargetScale = CoinTargetTransform.localScale;
-        if (_coinText != null) _coinTextScale = _coinText.transform.localScale;
-        LoadCoinsFromPrefs();
+        _coinTargetScale = CoinTargetTransform.localScale == Vector3.zero ? Vector3.one : CoinTargetTransform.localScale;
+        if (coinText != null)
+        {
+            _coinTextScale = coinText.transform.localScale == Vector3.zero ? Vector3.one : coinText.transform.localScale;
+        }
+        if (difficultyIntroBanner != null) difficultyIntroBanner.SetActive(false);
     }
 
     private void OnEnable()
     {
-        LoadCoinsFromPrefs();
+        BindButtons();
         SettingsController.LanguageChanged += OnLanguageChanged;
-        RefreshLevelText();
+        if (ProgressManager.Instance != null)
+        {
+            ProgressManager.Instance.OnCoinsChanged += HandleCoinsChanged;
+            RefreshCoinImmediate();
+        }
+        RefreshLevelDisplay();
     }
 
     private void OnDisable()
     {
         SettingsController.LanguageChanged -= OnLanguageChanged;
-    }
-
-    private void OnLanguageChanged(string language)
-    {
-        RefreshLevelText();
-    }
-
-    private void RefreshLevelText()
-    {
-        if (_levelText != null)
+        if (ProgressManager.Instance != null)
         {
-            _levelText.text = SettingsController.IsVietnameseSaved
-                ? $"Cấp độ {_currentLevel}"
-                : $"Level {_currentLevel}";
-        }
-    }
-
-    public void LoadCoinsFromPrefs()
-    {
-        _currentCoin = PlayerPrefs.GetInt(COIN_PREF_KEY, 0);
-        if (_coinText != null)
-        {
-            _coinText.text = _currentCoin.ToString();
+            ProgressManager.Instance.OnCoinsChanged -= HandleCoinsChanged;
         }
     }
 
     private void BindButtons()
     {
-        if (_restartButton != null)
-        {
-            _restartButton.onClick.RemoveAllListeners();
-            _restartButton.onClick.AddListener(OnRestartClicked);
-        }
+        if (_bound) return;
+        _bound = true;
 
-        if (_settingsButton != null)
-        {
-            _settingsButton.onClick.RemoveAllListeners();
-            _settingsButton.onClick.AddListener(OnSettingsClicked);
-        }
+        if (settingsButton != null) settingsButton.onClick.AddListener(OnSettingsClicked);
+        if (coinShopButton != null) coinShopButton.onClick.AddListener(OnCoinShopClicked);
+    }
+
+    public void RefreshAll()
+    {
+        RefreshCoinImmediate();
+        int lv = GameManager.Instance != null ? GameManager.Instance.CurrentLevelIndex + 1 : 1;
+        SetLevel(lv);
+        if (boosterBar != null) boosterBar.Refresh();
+        if (passengerCounter != null) passengerCounter.ResetCounter();
+    }
+
+    public void RefreshCoinImmediate()
+    {
+        _coinTween?.Kill();
+        int total = ProgressManager.Instance != null ? ProgressManager.Instance.TotalCoins : 0;
+        _displayedCoins = total;
+        if (coinText != null) coinText.text = total.ToString();
     }
 
     public void SetLevel(int levelNumber)
     {
-        _currentLevel = levelNumber;
-        RefreshLevelText();
+        _currentLevel = Mathf.Max(1, levelNumber);
+        LevelDataSO data = GameManager.Instance != null ? GameManager.Instance.CurrentLevelData : null;
+        _currentDifficulty = data != null ? data.difficulty : LevelDifficulty.Normal;
+
+        RefreshLevelDisplay();
+        if (boosterBar != null) boosterBar.Refresh();
+        PlayDifficultyIntroIfNeeded();
     }
 
-    public void SetCoin(int amount, bool animate = false, bool saveToPrefs = true)
+    private void OnLanguageChanged(string lang)
     {
-        _currentCoin = amount;
-        if (_coinText != null)
+        RefreshLevelDisplay();
+    }
+
+    private void RefreshLevelDisplay()
+    {
+        if (levelText != null)
         {
-            _coinText.text = _currentCoin.ToString();
-            if (animate)
-            {
-                _coinText.transform.DOKill();
-                _coinText.transform.localScale = _coinTextScale;
-                _coinText.transform.DOPunchScale(_coinTextScale * 0.15f, 0.2f, 2, 0.5f)
-                    .SetLink(gameObject);
-            }
+            levelText.text = localization != null
+                ? localization.Format("hud_level", _currentLevel)
+                : $"{_currentLevel}";
         }
 
-        if (saveToPrefs)
+        GameVisualThemeSO.DifficultyVisualEntry entry = visualTheme != null
+            ? visualTheme.GetDifficultyEntry(_currentDifficulty)
+            : null;
+
+        if (levelBadgeImage != null && entry != null && entry.hudLevelBadgeSprite != null)
         {
-            PlayerPrefs.SetInt(COIN_PREF_KEY, _currentCoin);
-            PlayerPrefs.Save();
+            levelBadgeImage.sprite = entry.hudLevelBadgeSprite;
+        }
+
+        bool isSpecial = _currentDifficulty != LevelDifficulty.Normal;
+        if (difficultyTabRoot != null) difficultyTabRoot.SetActive(isSpecial);
+        if (difficultyTabText != null && isSpecial && localization != null)
+        {
+            string key = _currentDifficulty == LevelDifficulty.SuperHard ? "difficulty_superhard" : "difficulty_hard";
+            difficultyTabText.text = localization.Get(key);
         }
     }
 
-    public void AddCoin(int addedAmount, bool animate = true)
+    private void PlayDifficultyIntroIfNeeded()
     {
-        SetCoin(_currentCoin + addedAmount, animate, true);
+        if (difficultyIntroBanner == null || _currentDifficulty == LevelDifficulty.Normal)
+        {
+            if (difficultyIntroBanner != null) difficultyIntroBanner.SetActive(false);
+            return;
+        }
+
+        if (difficultyIntroText != null && localization != null)
+        {
+            string key = _currentDifficulty == LevelDifficulty.SuperHard
+                ? "intro_superhard"
+                : "intro_hard";
+            difficultyIntroText.text = localization.Get(key);
+        }
+
+        _introSequence?.Kill();
+        difficultyIntroBanner.SetActive(true);
+        if (difficultyIntroGroup != null) difficultyIntroGroup.alpha = 0f;
+        difficultyIntroBanner.transform.localScale = Vector3.one * 0.85f;
+
+        _introSequence = DOTween.Sequence().SetUpdate(true).SetLink(gameObject);
+        _introSequence.Join(difficultyIntroBanner.transform.DOScale(Vector3.one, 0.25f).SetEase(Ease.OutBack));
+        if (difficultyIntroGroup != null) _introSequence.Join(difficultyIntroGroup.DOFade(1f, 0.22f));
+        _introSequence.AppendInterval(difficultyIntroDuration);
+        if (difficultyIntroGroup != null) _introSequence.Append(difficultyIntroGroup.DOFade(0f, 0.28f));
+        _introSequence.OnComplete(() =>
+        {
+            _introSequence = null;
+            if (difficultyIntroBanner != null) difficultyIntroBanner.SetActive(false);
+        });
     }
 
-    private void OnRestartClicked()
+    private void HandleCoinsChanged(int newTotal)
     {
-        AudioManager.Instance?.PlayClick();
-        HapticManager.Instance?.TriggerLight();
-        GameManager.Instance?.RestartLevel();
+        if (coinText == null) return;
+        if (_displayedCoins < 0)
+        {
+            RefreshCoinImmediate();
+            return;
+        }
+
+        int from = _displayedCoins;
+        _coinTween?.Kill();
+        _coinTween = DOVirtual.Int(from, newTotal, 0.35f, val =>
+        {
+            _displayedCoins = val;
+            if (coinText != null) coinText.text = val.ToString();
+        }).SetUpdate(true).SetLink(gameObject);
+
+        coinText.transform.DOKill();
+        coinText.transform.localScale = _coinTextScale;
+        coinText.transform.DOPunchScale(_coinTextScale * 0.15f, 0.2f, 2, 0.5f).SetUpdate(true).SetLink(gameObject);
     }
 
     private void OnSettingsClicked()
     {
-        AudioManager.Instance?.PlayClick();
-        HapticManager.Instance?.TriggerLight();
-        UIManager.Instance?.OpenSettings();
+        UIManager.Instance?.OpenSettings(inGameplay: true);
+    }
+
+    private void OnCoinShopClicked()
+    {
+        AppFlowController.Instance?.OpenShopFromGameplay();
     }
 }

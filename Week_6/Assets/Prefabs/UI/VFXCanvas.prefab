@@ -61,7 +61,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 30
+  m_SortingOrder: 35
   m_TargetDisplay: 0
 --- !u!114 &5968382005497509583
 MonoBehaviour:
@@ -115,7 +115,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1b2c3d4e5f6789012345678abcdef01, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _coinPrefab: {fileID: 4245376046937913675, guid: c01417e4f1a234567890abcdef301122, type: 3}
+  _coinPrefab: {fileID: 8710371542709145488, guid: c01417e4f1a234567890abcdef301122, type: 3}
   _poolContainer: {fileID: 3149832149301545847}
   _initialPoolSize: 20
   _burstRadius: 95
