@@ -538,7 +538,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 7fa16715ae375c5c990c7414c9b2112c, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 86ebe79c2341491594928814d38c1263, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -4840,6 +4840,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hubGroup: {fileID: 7004026614902365551}
+  hubBackground: {fileID: 2790328375807659770}
+  catalogBackgroundSprite: {fileID: 21300000, guid: 7fa16715ae375c5c990c7414c9b2112c, type: 3}
   bottomNavRoot: {fileID: 784986042261589409}
   backToGameplayButton: {fileID: 7972258736791373423}
   shopScreen: {fileID: 4633293417122029908}

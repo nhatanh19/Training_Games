@@ -10,6 +10,8 @@ public class MainHubController : MonoBehaviour
 {
     [Header("Shell & Canvas")]
     [SerializeField] private CanvasGroup hubGroup;
+    [SerializeField] private Image hubBackground;
+    [SerializeField] private Sprite catalogBackgroundSprite;
     [SerializeField] private GameObject bottomNavRoot;
     [SerializeField] private Button backToGameplayButton;
 
@@ -131,6 +133,10 @@ public class MainHubController : MonoBehaviour
     public void SelectTab(HubTab tab, bool animateIndicator)
     {
         _activeTab = tab;
+        if (hubBackground != null)
+        {
+            hubBackground.overrideSprite = tab == HubTab.Home ? null : catalogBackgroundSprite;
+        }
 
         if (shopScreen != null) shopScreen.SetVisible(tab == HubTab.Shop);
         if (homeScreen != null) homeScreen.SetVisible(tab == HubTab.Home);
