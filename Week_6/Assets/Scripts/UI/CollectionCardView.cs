@@ -43,13 +43,19 @@ public class CollectionCardView : MonoBehaviour
     {
         _onClaim = onClaim;
 
+        bool showClaimedBadge = !entry.comingSoon && unlocked && claimed && claimedBadgeRoot != null;
+        if (titleText != null) titleText.text = title;
+        if (statusText != null)
+        {
+            statusText.text = status;
+            statusText.gameObject.SetActive(!showClaimedBadge);
+        }
+
         if (entry.comingSoon)
         {
             if (unlockedContentRoot != null) unlockedContentRoot.SetActive(false);
             if (lockedOverlayRoot != null) lockedOverlayRoot.SetActive(true);
             if (lockOverlayImage != null && entry.lockedOverlaySprite != null) lockOverlayImage.sprite = entry.lockedOverlaySprite;
-            if (titleText != null) titleText.text = title;
-            if (statusText != null) statusText.text = status;
             if (claimButton != null) claimButton.gameObject.SetActive(false);
             if (claimedBadgeRoot != null) claimedBadgeRoot.SetActive(false);
             return;
@@ -63,12 +69,9 @@ public class CollectionCardView : MonoBehaviour
             vehicleIconImage.color = unlocked ? Color.white : new Color(0.25f, 0.25f, 0.30f, 0.75f);
         }
 
-        if (titleText != null) titleText.text = title;
-        if (statusText != null) statusText.text = status;
-
         bool canClaim = unlocked && !claimed && entry.claimCoinReward > 0;
         if (claimButton != null) claimButton.gameObject.SetActive(canClaim);
         if (claimRewardText != null) claimRewardText.text = $"+{entry.claimCoinReward}";
-        if (claimedBadgeRoot != null) claimedBadgeRoot.SetActive(unlocked && claimed);
+        if (claimedBadgeRoot != null) claimedBadgeRoot.SetActive(showClaimedBadge);
     }
 }

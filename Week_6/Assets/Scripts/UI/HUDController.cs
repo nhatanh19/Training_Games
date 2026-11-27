@@ -13,6 +13,7 @@ public class HUDController : MonoBehaviour
     [SerializeField] private Image levelBadgeImage;
     [SerializeField] private TextMeshProUGUI levelText;
     [SerializeField] private GameObject difficultyTabRoot;
+    [SerializeField] private float specialLevelTextOffsetY = -14f;
     [SerializeField] private TextMeshProUGUI difficultyTabText;
     [SerializeField] private TextMeshProUGUI coinText;
     [SerializeField] private Transform coinTargetTransform;
@@ -32,6 +33,7 @@ public class HUDController : MonoBehaviour
     private int _displayedCoins = -1;
     private int _currentLevel = 1;
     private LevelDifficulty _currentDifficulty = LevelDifficulty.Normal;
+    private Vector2 _levelTextPosition;
     private Vector3 _coinTargetScale = Vector3.one;
     private Vector3 _coinTextScale = Vector3.one;
     private Tween _coinTween;
@@ -45,6 +47,7 @@ public class HUDController : MonoBehaviour
     private void Awake()
     {
         BindButtons();
+        if (levelText != null) _levelTextPosition = levelText.rectTransform.anchoredPosition;
         _coinTargetScale = CoinTargetTransform.localScale == Vector3.zero ? Vector3.one : CoinTargetTransform.localScale;
         if (coinText != null)
         {
@@ -118,8 +121,11 @@ public class HUDController : MonoBehaviour
 
     private void RefreshLevelDisplay()
     {
+        bool isSpecial = _currentDifficulty != LevelDifficulty.Normal;
         if (levelText != null)
         {
+            levelText.rectTransform.anchoredPosition = _levelTextPosition +
+                Vector2.up * (isSpecial ? specialLevelTextOffsetY : 0f);
             levelText.text = localization != null
                 ? localization.Format("hud_level", _currentLevel)
                 : $"{_currentLevel}";
@@ -134,7 +140,6 @@ public class HUDController : MonoBehaviour
             levelBadgeImage.sprite = entry.hudLevelBadgeSprite;
         }
 
-        bool isSpecial = _currentDifficulty != LevelDifficulty.Normal;
         if (difficultyTabRoot != null) difficultyTabRoot.SetActive(isSpecial);
         if (difficultyTabText != null && isSpecial && localization != null)
         {

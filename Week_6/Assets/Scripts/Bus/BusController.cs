@@ -32,7 +32,8 @@ public class BusController : MonoBehaviour
     [SerializeField] private float departDuration = 0.65f;
     [SerializeField] private float departDelay = 0.22f;
     [SerializeField, Min(0f)] private float parkingApproachOffset = 1.25f;
-    [SerializeField, Min(0f)] private float parkingSettleDuration = 0.12f;
+    [SerializeField, Min(0f)] private float parkingScaleDuration = 0.15f;
+    [SerializeField, Min(0f)] private float parkingSettleDuration = 0.06f;
 
     [Header("Blocked Feedback")]
     [SerializeField, Min(0f)] private float impactClearance = 0.04f;
@@ -312,7 +313,13 @@ public class BusController : MonoBehaviour
             ? BuildVipArcSequence(targetPos)
             : BuildDriveSequence(targetPos);
 
-        driveSeq.Join(transform.DOScale(parkedScale, Mathf.Max(0.2f, driveSeq.Duration() * 0.75f)).SetEase(Ease.InOutSine));
+        float driveDuration = driveSeq.Duration();
+        float scaleDuration = Mathf.Clamp(parkingScaleDuration, 0f, driveDuration);
+        if (scaleDuration > 0f)
+        {
+            driveSeq.Insert(driveDuration - scaleDuration,
+                transform.DOScale(parkedScale, scaleDuration).SetEase(Ease.InOutSine));
+        }
         seq.Append(driveSeq);
 
         seq.AppendCallback(() =>
@@ -391,30 +398,22 @@ public class BusController : MonoBehaviour
             return Mathf.Max(dist / Mathf.Max(0.01f, moveSpeed), 0.04f);
         }
 
-        void FaceSegment(Vector3 delta)
-        {
-            if (bodyRenderer == null) return;
-            if (Mathf.Abs(delta.x) >= Mathf.Abs(delta.y))
-            {
-                bool goLeft = delta.x < -0.01f;
-                bodyRenderer.flipX = goLeft;
-                transform.DORotate(Vector3.zero, Mathf.Max(0.02f, turnDuration * 0.6f)).SetEase(Ease.OutSine);
-            }
-            else
-            {
-                bodyRenderer.flipX = false;
-                float angle = delta.y >= 0f ? 90f : 270f;
-                transform.DORotate(new Vector3(0f, 0f, angle), Mathf.Max(0.02f, turnDuration * 0.6f)).SetEase(Ease.OutSine);
-            }
-        }
-
         void AppendLeg(Vector3 from, Vector3 to, Ease ease = Ease.Linear)
         {
             Vector3 delta = to - from;
             if (delta.sqrMagnitude < 0.0001f) return;
-            float dur = GetDuration(from, to);
-            seq.AppendCallback(() => FaceSegment(delta));
-            seq.Append(transform.DOMove(to, dur).SetEase(ease));
+            float duration = GetDuration(from, to);
+            bool horizontal = Mathf.Abs(delta.x) >= Mathf.Abs(delta.y);
+            bool facingLeft = horizontal && delta.x < -0.01f;
+            float angle = horizontal ? 0f : (delta.y >= 0f ? 90f : 270f);
+
+            seq.AppendCallback(() =>
+            {
+                if (bodyRenderer != null) bodyRenderer.flipX = facingLeft;
+            });
+            seq.Append(transform.DOMove(to, duration).SetEase(ease));
+            float rotationDuration = Mathf.Min(duration, Mathf.Max(0.02f, turnDuration * 0.6f));
+            seq.Join(transform.DORotate(new Vector3(0f, 0f, angle), rotationDuration).SetEase(Ease.OutSine));
         }
 
         switch (direction)

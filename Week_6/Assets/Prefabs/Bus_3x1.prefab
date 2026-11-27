@@ -572,7 +572,8 @@ MonoBehaviour:
   departDuration: 1
   departDelay: 0.4
   parkingApproachOffset: 1.4
-  parkingSettleDuration: 0.12
+  parkingScaleDuration: 0.15
+  parkingSettleDuration: 0.06
   impactClearance: 0.04
   impactApproachSpeed: 8
   impactReturnDuration: 0.2
